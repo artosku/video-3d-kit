@@ -19,6 +19,18 @@ export const EXPRESSIONS = {
   determined: { lidLow: 0, lidTop: 0.22, browY: -0.02, browTilt: -0.5, mouth: 0, beak: 0, cheek: 1, eyeS: 1, pupil: 1, lookX: 0, lookY: 0.2 },
   surprised: { lidLow: 0, lidTop: 0, browY: 0.2, browTilt: 0, mouth: 0.5, beak: 0.35, cheek: 1, eyeS: 1.25, pupil: 0.8, lookX: 0, lookY: 0 },
   sleepy: { lidLow: 0, lidTop: 0.65, browY: -0.03, browTilt: 0.15, mouth: 0, beak: 0, cheek: 1, eyeS: 1, pupil: 1, lookX: 0, lookY: -0.2 },
+  // added for acting: bigger faces so the feeling reads even in a wide shot
+  panic: { lidLow: 0, lidTop: 0, browY: 0.26, browTilt: 0.7, mouth: 0.9, beak: 0.5, cheek: 0.7, eyeS: 1.35, pupil: 0.6, lookX: 0, lookY: 0 },
+  shocked: { lidLow: 0, lidTop: 0, browY: 0.32, browTilt: 0.1, mouth: 0.8, beak: 0.6, cheek: 0.9, eyeS: 1.5, pupil: 0.5, lookX: 0, lookY: 0 },
+  tired: { lidLow: 0, lidTop: 0.5, browY: -0.02, browTilt: 0.3, mouth: 0, beak: 0, cheek: 0.8, eyeS: 1, pupil: 1, lookX: 0, lookY: -0.35 },
+  dread: { lidLow: 0, lidTop: 0.15, browY: 0.1, browTilt: 0.8, mouth: 0.15, beak: 0.1, cheek: 0.8, eyeS: 1.15, pupil: 0.75, lookX: 0, lookY: -0.2 },
+  delighted: { lidLow: 1, lidTop: 0, browY: 0.18, browTilt: 0, mouth: 0.95, beak: 0.55, cheek: 1.8, eyeS: 1.05, pupil: 1, lookX: 0, lookY: 0 },
+  sheepish: { lidLow: 0, lidTop: 0.25, browY: 0.05, browTilt: 0.5, mouth: 0.25, beak: 0.1, cheek: 1.7, eyeS: 1, pupil: 1, lookX: -0.5, lookY: -0.3 },
+  pleading: { lidLow: 0, lidTop: 0, browY: 0.12, browTilt: 0.7, mouth: 0.1, beak: 0, cheek: 1.2, eyeS: 1.3, pupil: 1.3, lookX: 0, lookY: 0.1 },
+  squint: { lidLow: 0.3, lidTop: 0.55, browY: -0.04, browTilt: -0.35, mouth: 0, beak: 0, cheek: 1, eyeS: 0.9, pupil: 0.8, lookX: 0.3, lookY: 0.1 },
+  laugh: { lidLow: 1.3, lidTop: 0.1, browY: 0.2, browTilt: 0, mouth: 1, beak: 0.9, cheek: 2.1, eyeS: 1, pupil: 1, lookX: 0, lookY: 0.1 },
+  angry: { lidLow: 0, lidTop: 0.32, browY: -0.06, browTilt: -0.8, mouth: 0.2, beak: 0.15, cheek: 1.1, eyeS: 1.05, pupil: 0.8, lookX: 0, lookY: 0 },
+  fed_up: { lidLow: 0, lidTop: 0.35, browY: -0.03, browTilt: -0.15, mouth: 0, beak: 0, cheek: 0.9, eyeS: 1, pupil: 0.9, lookX: 0.4, lookY: 0.1 },
 };
 
 const COLOR = {
@@ -203,6 +215,28 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
   let blinkAt = 2.2;
   let blink = 0;
   const look = { x: 0, y: 0 };
+  let act = null;   // a short gesture: { name, t0, dur }
+  const PLATEAU = (u) => Math.max(0, Math.min(1, u / 0.22, (1 - u) / 0.22));
+  function actOff() {
+    const o = { y: 0, pitch: 0, yaw: 0, roll: 0, wing: 0, sq: 0 };
+    if (!act) return o;
+    const u = (t - act.t0) / act.dur;
+    if (u >= 1) { act = null; return o; }
+    const e = Math.sin(Math.PI * u), pl = PLATEAU(u);
+    switch (act.name) {
+      case 'jolt': o.y = 0.55 * e; o.wing = 1.3 * e; o.sq = 0.1 * Math.sin(Math.PI * Math.min(1, u * 2)); break;
+      case 'bounce': o.y = 0.3 * Math.abs(Math.sin(Math.PI * 3 * u)); o.wing = 0.6 * e; break;
+      case 'shake': o.yaw = 0.5 * Math.sin(Math.PI * 6 * u) * (1 - u); break;
+      case 'slump': o.pitch = 0.28 * pl; o.sq = -0.1 * pl; break;
+      case 'panic': o.roll = 0.09 * Math.sin(t * 38); o.wing = 0.9 + 0.7 * Math.sin(t * 30); o.y = 0.08 * Math.abs(Math.sin(t * 22)); break;
+      case 'nod': o.pitch = 0.2 * Math.sin(Math.PI * 4 * u) * (1 - u); break;
+      case 'tilt': o.roll = 0.28 * pl; break;
+      case 'lean': o.pitch = 0.2 * pl; break;
+      case 'cheer': o.y = 0.5 * Math.abs(Math.sin(Math.PI * 2 * u)); o.wing = 1.5 * pl; break;
+      case 'wings_up': o.wing = 1.5 * pl; break;
+    }
+    return o;
+  }
 
   function applyFace() {
     const eyeS = st.eyeS * (1 - 0.92 * blink);
@@ -254,9 +288,10 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
       if (t > blinkAt) { blink = 1; blinkAt = t + 2 + rand() * 3; }
       blink = Math.max(0, blink - dt / 0.14);
     }
+    const A = actOff();
     const flying = pose === 'fly', cheer = pose === 'cheer';
     const flap = Math.sin(t * Math.PI * 2 * (flying ? 2.6 : 3.0));
-    const wingA = flying ? 0.96 + 0.96 * flap : cheer ? 1.75 + 0.38 * flap : 0.2 + 0.05 * Math.sin(t * 2.2);
+    const wingA = (flying ? 0.96 + 0.96 * flap : cheer ? 1.75 + 0.38 * flap : 0.2 + 0.05 * Math.sin(t * 2.2)) + A.wing;
     wingP.R.rotation.z = -wingA;
     wingP.L.rotation.z = wingA;
     tailP.rotation.x = flying ? -0.35 : cheer ? 0.1 : 0;
@@ -275,9 +310,12 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
     } else if (flying) {
       hop = 0.25 + 0.08 * Math.sin(t * 2.6 * Math.PI * 2);
     }
-    root.position.y = hop;
+    sq += A.sq;
+    root.position.y = hop + A.y;
     root.scale.set(1 / Math.sqrt(sq), sq, 1 / Math.sqrt(sq));
-    root.rotation.x = flying ? -0.45 : 0;
+    root.rotation.x = (flying ? -0.45 : 0) + A.pitch;
+    root.rotation.y = A.yaw;
+    root.rotation.z = A.roll;
     applyFace();
   }
 
@@ -301,6 +339,9 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
     group, root, parts: { body: bodyMesh, wingP, tailP, combP, beakP, eye, mouth }, EXPRESSIONS,
     update, setExpression, setViewport, setOutline,
     setPose: (p) => { pose = p; },
+    act: (name, dur = 0.9) => { act = { name, t0: t, dur }; },
+    actNames: ['jolt', 'bounce', 'shake', 'slump', 'panic', 'nod', 'tilt', 'lean', 'cheer', 'wings_up'],   // the acts that need the wings or comb; any other act comes from assets/acts.json
+    defineExpression: (name, params) => { EXPRESSIONS[name] = { ...EXPRESSIONS.neutral, ...params }; },
     talk: (on) => { talking = !!on; },
     setTalkLevel: (v) => { level = v === null ? null : clamp(v); },
     lookAt: (x, y) => { look.x = clamp(x, -1, 1); look.y = clamp(y, -1, 1); },
@@ -314,8 +355,9 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
 
 
 // the kit's character contract: create(renderer, { rand, W, H }) -> { group, setExpression(name, speed), setTalkLevel(0..1), look(x, y), update(dt), freeze?() }
-export function create(renderer, { rand, W, H }) {
+export function create(renderer, { rand, W, H, config }) {
   const c = createChicken(renderer, { rand });
+  for (const [n, p] of Object.entries(config?.expressionParams || {})) c.defineExpression(n, p);   // faces defined in character.json (expressionParams) need no code
   c.setViewport(W, H);
   c.setOutline(1.4);
   c.look = c.lookAt;

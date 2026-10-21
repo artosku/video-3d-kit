@@ -51,6 +51,8 @@ def subs(slug):
     portrait = H > W
     d = ep_dir(slug)
     lines = load_json(d / "timings.json")
+    ep = load_json(d / "episode.json")
+    dirs, mode = ep.get("directions", []), (ep.get("subtitles") or {}).get("pos", "auto")   # "top" | "bottom" | "auto": top third, except in shots where the heads are there (wide, two-shot, high angles); per line: directions[i].subs = "top" | "bottom"
     font = "Segoe UI Semibold" if IS_WINDOWS else "DejaVu Sans"
     head = f"""[Script Info]
 ScriptType: v4.00+
@@ -62,6 +64,7 @@ ScaledBorderAndShadow: yes
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: Sub,{font},{round(H * (0.0285 if portrait else 0.05))},&H00FFFFFF,&H00FFFFFF,&H99000000,&H66000000,0,0,0,0,100,100,0,0,1,{round(H * 0.0016, 1)},{round(H * 0.0012, 1)},{8 if portrait else 2},{round(W * 0.07)},{round(W * 0.07)},{round(H * (0.255 if portrait else 0.08))},1
+Style: SubBottom,{font},{round(H * (0.0285 if portrait else 0.05))},&H00FFFFFF,&H00FFFFFF,&H99000000,&H66000000,0,0,0,0,100,100,0,0,1,{round(H * 0.0016, 1)},{round(H * 0.0012, 1)},2,{round(W * 0.07)},{round(W * 0.07)},{round(H * 0.07)},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -71,7 +74,12 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         end = ln["end"] + 0.18
         if i + 1 < len(lines):
             end = min(end, lines[i + 1]["start"] - 0.02)
-        ev.append(f"Dialogue: 0,{ts(ln['start'])},{ts(end)},Sub,,0,0,0,,{wrap(ln['text'], 31 if portrait else 52)}")
+        x = dirs[i] if i < len(dirs) else {}
+        pos = x.get("subs") or mode
+        if pos == "auto":
+            cam = x.get("cam") or ""
+            pos = "bottom" if (cam in ("wide", "two", "wide_low", "wide_high") or cam.endswith("_high")) else "top"
+        ev.append(f"Dialogue: 0,{ts(ln['start'])},{ts(end)},{'SubBottom' if pos == 'bottom' else 'Sub'},,0,0,0,,{wrap(ln['text'], 31 if portrait else 52)}")
     (d / "subs.ass").write_text(head + "\n".join(ev) + "\n", encoding="utf-8")
     print(f"subtitles: {len(ev)} lines ({font})")
 

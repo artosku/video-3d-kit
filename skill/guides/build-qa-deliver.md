@@ -5,8 +5,9 @@ Run everything from the kit folder. One command per stage; never assemble things
 ## Commands (in order)
 ```
 python tools/episode.py doctor --smoke    # is this machine ready? (once per machine)
-python tools/episode.py new "<title>"     # -> episodes/epNN-<slug>/ with script.json + episode.json
-python tools/episode.py directions <slug> # a default camera/expression for every line (then edit by judgement)
+python tools/episode.py new "<title>"     # -> episodes/epNN-<slug>/ (add --number 3 and/or --slug name if the user numbers or names their own episodes)
+python tools/episode.py directions <slug> # a cinematic first plan for every line: shots, faces, body acts, camera moves, light
+python tools/episode.py review <slug>     # measures the plan and says what is flat (validate runs the same check)
 python tools/episode.py validate <slug>   # the rules, before spending anything
 python tools/episode.py build <slug>      # voices + mouth + subtitles + sound effects + soundtrack
 python tools/episode.py stills <slug>     # one picture per line + a contact sheet (--at 3,12.5 for chosen times)
@@ -18,6 +19,19 @@ python tools/episode.py organize <slug>   # out/<slug>/chosen and not_chosen
 - `python tools/browser.py shot name.png "<query>" [WxH]` = a quick look without an episode (`chars=a,b&world=x&cam=wide&left=happy&t=3`).
 - Run `video` in the BACKGROUND and check the number of files in `out/<slug>/frames/` now and then. Do not poll fast.
 - Tell the user the wait up front ("about 30 minutes") and say what they get at the end.
+
+## The director pass (before voices and stills)
+1. Run `directions`: it gives every line a shot, a face for BOTH characters, a body act, a camera move and some light. Never keep it as is: improve it line by line with `cinematic-playbook.md` and `direction.md`.
+2. Run `review` (or `validate`). A **flat plan fails** (`rules.cinematic`, on by default). The errors say what to change:
+   | error | fix |
+   |---|---|
+   | too few different shots / the same shot 3 times in a row | cut to the listener, change the angle (`over_*`, `*_low`, `*_high`), add a `wide` or `two` |
+   | no angle shots / no wide or two-shot | a low, high, extreme close-up or over-the-shoulder on key lines; show both characters once |
+   | faces barely change | give every line the face of its feeling for both characters; invent faces with `expressionParams` |
+   | too few lines with a body act (need 40%) | `directions[i].act = { "left": "nod", "right": "recoil" }` on the beats |
+   | the camera never moves | `move: { "push": 0.2 }` on emotional shots, one `roll`, a `camFx` punch or shake |
+   | no light play (need 2 changes) | `lightEvents` with a visible cause (`light-theory.md`) |
+3. Turn the check off (`project.json` -> `rules.cinematic: false`) only if the user asks.
 
 ## Look at the stills first (`out/<slug>/stills/contact.png`)
 Do NOT render the full video until these are all yes:
@@ -49,7 +63,7 @@ Fix `episode.json` (shot, expression, props) and run `stills` again.
 |---|---|
 | `doctor` says no Chrome | Install Chrome or Chromium, or set `CHROME_BIN` to its path |
 | Still or render hangs, blank, or all black | WebGL failed. Run `doctor --smoke`; close leftover `chrome` processes; update Chrome; try another `CHROME_BIN` |
-| Wrong page or old files shown | Another server is on the port. Use `VIDEO3D_PORT=5180` for every command |
+| Wrong page or old files shown | Not an issue any more: the tools check that the server on a port serves THIS kit, and take the next free port (5173, 5174, ...) otherwise. A stale server of another copy may keep running; it does no harm |
 | Render crashed halfway | Run `video` or `render` again: it only draws the missing frames |
 | `FileExistsError ... enc` at encode | A previous `ffmpeg` is still running or left the `out/<slug>/enc` folder. Wait for it to finish, or end the `ffmpeg` process, delete `out/<slug>/enc`, run `encode` then `qa` |
 | `frames are still missing` | Run `render` again (it resumes) |
@@ -60,6 +74,8 @@ Fix `episode.json` (shot, expression, props) and run `stills` again.
 | Text or subtitle overlaps something | Shorten the line (max ~70 characters), or change shot/props |
 | `validate`: light change has no cause | Move it next to a visible event, or remove it. In a world with `lightCauseCheck: "text"` only the written `cause` is needed |
 | `validate`: world has no screen/phone/outside | Remove those parts from `episode.json`; this world does not have them |
-| `validate`: unknown tone/expression | Use names from `characters/<id>/character.json` |
+| `validate`: unknown tone/expression | Use names from `characters/<id>/character.json` (a new face: add it to `expressions` and `expressionParams`) |
+| `validate`: the plan is flat | See "The director pass" above; `review` prints the numbers |
+| `validate`: unknown act | Use a name from `assets/acts.json`, the character's `acts`, or define it in `actDefs` |
 | MP4 over 30 MB | `encode` retries with more compression; if it still fails, shorten the video |
 | A custom sound is missing | Without `ELEVENLABS_API_KEY` the kit plays the bundled `whoosh` instead and says so |

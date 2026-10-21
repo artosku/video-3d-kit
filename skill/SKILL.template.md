@@ -22,24 +22,26 @@ Topic = {{ARGS}}. If it is empty, ask "What is the video about?" first.
 - If `project.defaults.lastFormat` exists, ask ONE question: "Same as last time? <format> · <length> · <mood> · <character A> + <character B> in <world>" with ★ Yes / Change something. Only if they want to change, ask the four below.
 - Otherwise ask these four together, defaults first:
   1. Shape: ★ portrait 9:16 (TikTok, Reels, Shorts) / landscape 16:9 (YouTube) / square 1:1.
-  2. Length: ★ about 60 s / short, about 30 s / long, about 90 s.
-  3. Mood: ★ sad (soft piano, warm dim light) / calm / cheerful.
+  2. Length: ★ as long as the story needs (usually 45-75 s) / short, about 30 s / long, about 90 s.
+  3. Mood: ★ let me choose from the topic / sad / calm / cheerful. (Sad is wrong for comedy: pick the music and light from the topic.)
   4. Cast and place: ★ keep "<character A> + <character B> in <world>" / change a character / change the place. If they pick a change, warn once: "a new character or place takes longer and uses more tokens", then follow `{{KIT}}/skill/guides/new-character.md` or `new-world.md`.
+- The user may name the episode ("ep3 my-title"): create it with `python {{KIT}}/tools/episode.py new "<title>" --number 3`.
 - Save the answers: `python {{KIT}}/tools/setup.py remember --format <f> --length <l> --mood <m>`.
 
 ## 2. Script first, wait for OK
 - Read `{{KIT}}/skill/guides/script-craft.md`. Write `episodes/<slug>/script.json` (create it with `python {{KIT}}/tools/episode.py new "<short title>"`, it prints the slug).
-- Show ONE compact table: `# · who · line` plus the estimated length (about 2.6 s per line). Ask only "OK, or what should change?". Make no voices before the OK (they cost credits).
+- Show ONE compact table: `# · who · line` plus the estimated length (about 2.6 s per line). Add ONE extra line: "Anything to show on the laptop screen (a screen recording or screenshots)? If not, I will make a simulation that fits the story." Ask only "OK, or what should change?". Make no voices before the OK (they cost credits).
 - Language of the lines = `project.json` language. Short spoken lines (3-8 words). No real people, no real brands, no numbers the user did not give.
 
-## 3. Build (scripts do the work)
-Run from `{{KIT}}`:
-1. `python tools/episode.py directions <slug>`, then edit `episode.json` by judgement (expressions, shots, light, ending). Read `skill/guides/direction.md` and `light-theory.md` when you do.
-2. `python tools/episode.py validate <slug>` until it says OK.
-3. `python tools/episode.py build <slug>` (voices, mouth, subtitles, sound).
-4. `python tools/episode.py stills <slug>`, then LOOK at `out/<slug>/stills/contact.png` (one picture). Fix `episode.json`, repeat. Never render the full video before the stills are right.
-5. Tell the user once: "Rendering takes about half a minute per second of video (a 60 s video is about 30 min)". Then run `python tools/episode.py video <slug>` in the background and wait for it to finish; do not poll.
-6. `python tools/episode.py deliver <slug>`.
+## 3. Build (scripts do the work). The director pass is MANDATORY
+Run from `{{KIT}}`. Never skip a step; a flat video is a failed video.
+1. Read `skill/guides/cinematic-playbook.md` FIRST and fully, then `direction.md` and `light-theory.md`. Do this every time, even if you think you remember.
+2. `python tools/episode.py directions <slug>` gives a first plan. It is only a start. Then go LINE BY LINE (shot and angle, the face of BOTH characters, a body act on the key beats, a camera move, the light) as the playbook says. Make new faces, gestures, shots or a screen simulation when the scene needs them; you are not limited to the shipped ones.
+3. `python tools/episode.py review <slug>` must print `cinematic check: OK`. Then `python tools/episode.py validate <slug>` until it says OK.
+4. `python tools/episode.py build <slug>` (voices, mouth, subtitles, sound). If a line's voice came out wrong (an extra sound at the end), offer takes: `python tools/episode.py variants <slug> <line>`, let the user pick, then `python tools/episode.py lock <slug> <line> <file>`.
+5. `python tools/episode.py stills <slug>`, then LOOK at `out/<slug>/stills/contact.png` (one picture) and go through the visual checklist at the end of the playbook. Fix `episode.json`, repeat. Never render the full video before the stills are right.
+6. Tell the user once: "Rendering takes about half a minute per second of video (a 60 s video is about 30 min)". Then run `python tools/episode.py video <slug>` in the background and wait for it to finish; do not poll.
+7. `python tools/episode.py deliver <slug>`.
 
 ## 4. Final message (bullets, nothing else)
 - The full path of the MP4, its length and size.
@@ -50,8 +52,8 @@ Run from `{{KIT}}`:
 - Only redo what changed: edit the script or `episode.json`, then `build` again (unchanged lines are reused, no new credits) and `video`.
 - If the user asks for another moment outside the window, see `skill/guides/direction.md` (the `outside` field).
 
-## Guides (read only when needed)
-`{{KIT}}/skill/guides/`: `script-craft.md` · `direction.md` · `light-theory.md` · `audio.md` · `new-character.md` · `new-world.md` · `build-qa-deliver.md` (troubleshooting) · `formats-and-voices.md`.
+## Guides (read only when needed, except the playbook)
+`{{KIT}}/skill/guides/`: `cinematic-playbook.md` (always, step 3) · `script-craft.md` · `direction.md` · `light-theory.md` · `audio.md` · `new-character.md` · `new-world.md` · `build-qa-deliver.md` (troubleshooting) · `formats-and-voices.md`.
 
 ## Fixed rules
 - Do not change the voices or look of existing characters unless the user asks.

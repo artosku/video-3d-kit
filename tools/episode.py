@@ -1,7 +1,8 @@
 """The one command for the 3D dialogue videos. Repetitive work lives here, not in the agent's head.
    python tools/episode.py doctor [--smoke]        check this machine (Python, Node, ffmpeg, Chrome, keys) and say exactly how to fix what is missing
    python tools/episode.py new "<title>"           scaffold episodes/epNN-<slug>/ (script.json, episode.json)
-   python tools/episode.py directions <slug>       fill episode.json "directions" with a default for every line (then edit by judgement)
+   python tools/episode.py directions <slug>       a cinematic first plan for every line: shots, faces, acts, camera moves, light (then improve it by judgement)
+   python tools/episode.py review <slug>           measures the plan and says what is flat (validate fails a flat plan)
    python tools/episode.py validate <slug>         the rules (project rules, light causes, files, durations)
    python tools/episode.py build <slug>            validate + voices + mouth + subtitles + sound effects + soundtrack
    python tools/episode.py stills <slug> [--at 3,12.5]   stills at every line (and the special moments) + a contact sheet
@@ -11,11 +12,14 @@
    python tools/episode.py video <slug>            render + encode + qa
    python tools/episode.py deliver <slug>          copy the MP4 to the delivery folder (project.json delivery.folder, or VIDEO3D_DRIVE)
    python tools/episode.py organize <slug>         out/<slug>/chosen (what was chosen) and not_chosen (the options that were not)
+   python tools/episode.py variants <slug> <line> [--n 3]   3 takes of one line (as written, with a full stop, a little faster) to choose from, in out/<slug>/variants/
+   python tools/episode.py lock <slug> <line> <file>         pin the take you chose: it is used as it is whenever that exact text is spoken by that character
    python tools/episode.py voices [--provider cartesia|elevenlabs] [--language id]    list the voices an account can use
    python tools/episode.py characters              list the characters and worlds this kit has, and which ones the project uses
 """
 import concurrent.futures as cf
 import math
+from pathlib import Path
 import os
 import re
 import shutil
@@ -98,14 +102,14 @@ def slugify(s):
     return s or "episode"
 
 
-def new(title):
+def new(title, number=None, slug_override=None):
     proj, W = project(), None
     W = world(proj)
     chars = characters(proj)
     EPISODES.mkdir(exist_ok=True)
     nums = [int(m.group(1)) for p in EPISODES.iterdir() if (m := re.match(r"ep(\d+)-", p.name))]
-    n = (max(nums) + 1) if nums else 1
-    slug = f"ep{n:02d}-{slugify(title)}"
+    n = number if number else ((max(nums) + 1) if nums else 1)
+    slug = f"ep{n:02d}-{slugify(slug_override or title)}"
     d = EPISODES / slug
     d.mkdir()
     a, b = chars[0]["id"], (chars[1]["id"] if len(chars) > 1 else chars[0]["id"])
@@ -127,17 +131,18 @@ def new(title):
 
 
 def init_directions(slug):
+    """A cinematic first plan for every line (shots, faces, acts, camera moves, light). A starting point: improve it by judgement (skill/guides/cinematic-playbook.md)."""
+    import direct
+    direct.generate(slug)
+
+
+def review(slug):
+    import direct
     d = ep_dir(slug)
-    script = load_json(d / "script.json")
-    ep = load_json(d / "episode.json")
-    chars = characters()
-    idl = chars[0]["id"]
-    dl, dr = chars[0]["defaultExpression"], (chars[1]["defaultExpression"] if len(chars) > 1 else None)
-    ep["directions"] = [{"cam": "left" if ln["who"] == idl else "right", "left": dl, **({"right": dr} if dr else {})} for ln in script]
-    if script and script[0].get("opening"):
-        ep["directions"][0]["cut"] = 1.0   # the camera settles on the lead during the opening call
-    save_json(d / "episode.json", ep)
-    print(f"directions: a default for each of the {len(script)} lines (edit expressions, shots, looks, hops, turns by judgement)")
+    ep, script, W = load_json(d / "episode.json"), load_json(d / "script.json"), world()
+    problems, m = direct.review(ep, script, W)
+    direct.print_report(m, problems)
+    return not problems
 
 
 # ================================================================== validate
@@ -252,7 +257,7 @@ def validate(slug, quiet=False, pre=False):   # pre: before the voices exist, so
             errs.append(f"page '{k}': theme must be one of {sorted(W.get('themes', []))}")
         if p.get("type") == "image" and not (ROOT / p.get("src", "@@")).exists():
             errs.append(f"page '{k}': image '{p.get('src')}' not found (path relative to the kit folder)")
-    exprs = [set(c["expressions"]) for c in characters(proj)]
+    exprs = [set(c["expressions"]) | set(c.get("expressionParams", {})) | set((ep.get("expressions") or {}).get(side, {})) for c, side in zip(characters(proj), ("left", "right"))]   # the faces of the character, plus faces invented in character.json (expressionParams) or in this episode (expressions)
     for i, x in enumerate(dirs):
         if x.get("cam") and x["cam"] not in shots:
             errs.append(f"directions[{i}]: unknown shot '{x['cam']}' ({sorted(shots)})")
@@ -277,6 +282,8 @@ def validate(slug, quiet=False, pre=False):   # pre: before the voices exist, so
         ep = {**ep, "lightEvents": [], "phone": ep.get("phone") and {**ep["phone"], "at": 0}, "outside": ep.get("outside") and {**ep["outside"], "at": 0}, "screen": []}
         screen_times = []
     causes = [(t - 0.3, t + 1.2, "screen change") for t in screen_times]
+    if ep.get("neon"):   # the neon sign switching on is a cause the viewer sees
+        n0 = clock(ep["neon"]["at"]); causes.append((n0 - 0.1, n0 + 2.0, "neon sign switches on"))
     for i, x in enumerate(dirs):
         if "turn" in x and i < len(lines):
             causes.append((lines[i]["start"] - 0.3, lines[i]["start"] + 1.5, "a character turns"))
@@ -339,6 +346,37 @@ def validate(slug, quiet=False, pre=False):   # pre: before the voices exist, so
             errs.append(f"screen sfx '{p['sfx']}' is not in assets/sfx/library.json")
     if not ep.get("music", {}).get("file") and ep.get("music", {}).get("mood", "sad") not in ("sad", "calm", "cheerful"):
         errs.append("music.mood must be sad, calm or cheerful")
+    # --- acts, places, neon
+    acts_lib = (set(load_json(ASSETS / "acts.json")) - {"_note"}) | set(ep.get("actDefs", {}))
+    rig_acts = [set(c.get("acts", [])) for c in characters(proj)]
+
+    def chk_act(side, name, where):
+        k = 0 if side == "left" else 1
+        if name and name not in acts_lib and not (k < len(rig_acts) and name in rig_acts[k]):
+            errs.append(f"{where}: unknown act '{name}' (library: {', '.join(sorted(acts_lib))}; this character's own: {', '.join(sorted(rig_acts[k])) if k < len(rig_acts) else ''})")
+    for i, x in enumerate(dirs):
+        for side in ("left", "right"):
+            chk_act(side, x.get(side + "Act"), f"directions[{i}]")
+            chk_act(side, (x.get("act") or {}).get(side), f"directions[{i}].act")
+    for j, a in enumerate(ep.get("acts", [])):
+        chk_act(a.get("who", "left"), a.get("name"), f"acts[{j}]")
+    for s in ep.get("stage", []):
+        if s.get("to") != "perch" and s.get("to") not in ep.get("places", {}):
+            errs.append(f"stage: place '{s.get('to')}' is not defined in places")
+    if ep.get("neon") and not str(ep["neon"].get("text", "")).strip():
+        errs.append("neon needs a text (the letters of the sign): neon: { text: \"OPEN\", at: \"end+1.2\" }")
+    # --- a take the author locked wins over the tone and speed written on its line
+    for i, ln in enumerate(script):
+        c = chars.get(ln.get("who"))
+        if c and any(t["text"] == ln.get("text") for t in c.get("locked_takes", [])) and ln.get("tone"):
+            warns.append(f"line {i} '{ln['text']}' uses a locked take: its tone/speed are ignored (remove the lock in characters/{c['id']}/character.json to act it again)")
+    # --- the video must not be flat
+    if not pre and R.get("cinematic", True):
+        import direct
+        problems, m = direct.review(ep, script, W)
+        if problems:
+            errs.append("the plan is flat (project.json rules.cinematic). Fix it with skill/guides/cinematic-playbook.md, then run: python tools/episode.py review " + slug)
+            errs.extend(problems)
     # --- facts and brands
     if R.get("numbersNeedFacts") and any(NUMBERS.search(ln.get("text", "")) for ln in script) and not ep.get("facts"):
         errs.append("the script uses numbers but episode.json has no 'facts': list each number/claim with its source")
@@ -550,6 +588,51 @@ def organize(slug):
     print(f"organize: {chosen} (chosen) and {rest} (options not chosen, kept)")
 
 
+def variants(slug, line, n=3):
+    """A few takes of ONE line so the author can pick the one that sounds right (a short line with '!' sometimes gets an extra sound at its end)."""
+    import tts
+    from dialog import params
+    from common import read_audio, SR
+    proj = project()
+    provider = proj["tts"]["provider"]
+    d = ep_dir(slug)
+    script = load_json(d / "script.json")
+    ln = script[line]
+    ch = next(c for c in characters(proj) if c["id"] == ln["who"])
+    p = params(ln, ch, provider)
+    cv = ch["voice"][provider]
+    t = ln["text"].strip()
+    base = re.sub(r"[!?.…]+$", "", t).rstrip()
+    options = [("as_written", t, p["speed"]), ("full_stop", base + ".", p["speed"]), ("full_stop_faster", base + ".", min(1.5, p["speed"] * 1.12)), ("slower", t, max(0.6, p["speed"] * 0.9))][:n]
+    out = out_dir(slug) / "variants"
+    out.mkdir(exist_ok=True)
+    for name, text, sp in options:
+        dst = out / f"L{line}_{name}.wav"
+        tts.synth(provider, text, cv, {**p, "speed": sp}, proj, dst)
+        print(f"  {dst}   ({len(read_audio(dst)) / SR:.2f} s)  text: {text!r}  speed {sp:.2f}")
+    print(f"listen, then: python tools/episode.py lock {slug} {line} <the file you chose>")
+
+
+def lock(slug, line, file):
+    """Pins a take the author chose: from now on that exact text said by that character always uses this audio (the tone and speed on the line are ignored)."""
+    proj = project()
+    provider = proj["tts"]["provider"]
+    d = ep_dir(slug)
+    ln = load_json(d / "script.json")[line]
+    src = Path(file)
+    if not src.exists():
+        sys.exit(f"no such file: {file}")
+    cf = ROOT / "characters" / ln["who"] / "character.json"
+    cj = load_json(cf)
+    vid = f"{provider}:{(cj['voice'].get(provider) or {}).get('id')}"
+    dst = ROOT / "characters" / ln["who"] / "locked" / f"{slug}_L{line}.wav"
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src, dst)
+    cj["locked_takes"] = [t for t in cj.get("locked_takes", []) if not (t["text"] == ln["text"] and t.get("voice") == vid)] + [{"text": ln["text"], "file": f"locked/{dst.name}", "voice": vid, "note": f"chosen by the author ({slug} line {line})"}]
+    save_json(cf, cj)
+    print(f"locked: '{ln['text']}' ({ln['who']}) now always uses {dst}")
+
+
 def list_assets():
     proj = project()
     print("characters (the project uses: " + ", ".join(proj["characters"]) + ")")
@@ -570,8 +653,13 @@ if __name__ == "__main__":
         sys.exit(__doc__)
     cmd, args = a[0], a[1:]
     if cmd == "doctor": sys.exit(0 if doctor("--smoke" in args) else 1)
-    elif cmd == "new": new(" ".join(args))
+    elif cmd == "new":
+        num = int(args[args.index("--number") + 1]) if "--number" in args else None
+        sl = args[args.index("--slug") + 1] if "--slug" in args else None
+        words = [a for i, a in enumerate(args) if a not in ("--number", "--slug") and (i == 0 or args[i - 1] not in ("--number", "--slug"))]
+        new(" ".join(words), num, sl)
     elif cmd == "directions": init_directions(args[0])
+    elif cmd == "review": sys.exit(0 if review(args[0]) else 1)
     elif cmd == "validate": validate(args[0])
     elif cmd == "build": build(args[0])
     elif cmd == "stills": stills(args[0], args[args.index("--at") + 1] if "--at" in args else None)
@@ -585,5 +673,7 @@ if __name__ == "__main__":
         sys.argv = ["tts.py", "voices", *args]
         import runpy
         runpy.run_path(str(ROOT / "tools" / "tts.py"), run_name="__main__")
+    elif cmd == "variants": variants(args[0], int(args[1]), int(args[args.index("--n") + 1]) if "--n" in args else 3)
+    elif cmd == "lock": lock(args[0], int(args[1]), args[2])
     elif cmd == "characters": list_assets()
     else: sys.exit(f"unknown command '{cmd}'\n{__doc__}")

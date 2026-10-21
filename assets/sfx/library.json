@@ -119,6 +119,12 @@
    "duration": 3.0,
    "rms": 600,
    "prompt": "Sky lanterns rising into the night, a very soft warm breeze and a faint gentle shimmer, peaceful and far away"
+  },
+  "neon_flicker": {
+   "source": "elevenlabs",
+   "duration": 3.0,
+   "rms": 1100,
+   "prompt": "A neon sign far away outside a window at night switching on: a few quick electric buzzing flickers and tiny zaps, off and on, then settling into a steady soft neon hum, quiet room, subtle"
   }
  }
 }

@@ -9,7 +9,18 @@
   "sad",
   "determined",
   "surprised",
-  "sleepy"
+  "sleepy",
+  "panic",
+  "shocked",
+  "tired",
+  "dread",
+  "delighted",
+  "sheepish",
+  "pleading",
+  "fed_up",
+  "squint",
+  "laugh",
+  "angry"
  ],
  "defaultExpression": "neutral",
  "voice": {
@@ -108,5 +119,17 @@
    "0.6": "a relaxed pause (default)",
    "0.3": "a tight pause: the next line follows right away"
   }
- }
+ },
+ "acts": [
+  "jolt",
+  "bounce",
+  "shake",
+  "slump",
+  "panic",
+  "nod",
+  "tilt",
+  "lean",
+  "cheer",
+  "wings_up"
+ ]
 }

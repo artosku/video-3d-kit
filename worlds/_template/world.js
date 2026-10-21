@@ -11,6 +11,7 @@
 // }
 // cfg: { base, bg, light, pages, phone, wall, props, outside, episode }
 import * as THREE from 'three';
+import { extraShots } from '../../web/lib/shots.js';
 import { createLighting } from '../../web/lib/lighting.js';
 
 const rng = (seed) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
@@ -68,6 +69,7 @@ export async function createWorld(scene, cfg) {
   return {
     group, stage, lighting, outside,
     shots: {
+      ...extraShots(stage),
       wide: { pos: [0.0, 1.95 + dy + 0.5, 13.6], look: [0, 1.25 + dy + 0.9, dz], fov: 46 },
       left: { pos: [-0.3, 1.7 + dy, 10.5], look: [-1.35, 1.5 + dy, 0.7 + dz], fov: 24 },
       right: { pos: [0.8, 1.7 + dy, 13], look: [1.4, 1.1 + dy, 0.7 + dz], fov: 24 },

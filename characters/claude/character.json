@@ -8,7 +8,18 @@
   "smug",
   "worried",
   "wow",
-  "sleepy"
+  "sleepy",
+  "shocked",
+  "fakewow",
+  "guilty",
+  "panic",
+  "proud",
+  "deadeye",
+  "squint",
+  "skeptical",
+  "annoyed",
+  "sad",
+  "glee"
  ],
  "defaultExpression": "deadpan",
  "voice": {
@@ -81,5 +92,17 @@
    "voice": "cartesia:f3b7c445-d015-40f7-a665-9595e0bc0c90",
    "note": "berlebihan: cepat dan keras, kecepatan 1,2"
   }
+ ],
+ "acts": [
+  "jolt",
+  "bounce",
+  "shrug",
+  "nod",
+  "shake",
+  "lean",
+  "lean_back",
+  "panic",
+  "proud",
+  "type"
  ]
 }

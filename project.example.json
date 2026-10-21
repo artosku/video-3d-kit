@@ -27,7 +27,8 @@
   "confirmOutside": false,
   "noRepeatOutside": false,
   "numbersNeedFacts": false,
-  "durationHint": []
+  "durationHint": [],
+  "cinematic": true
  },
  "defaults": {
   "music": "sad",
@@ -40,5 +41,6 @@
  },
  "delivery": {
   "folder": ""
- }
+ },
+ "alive": 1.0
 }

@@ -14,19 +14,67 @@
   "tail": true,
   "cheeks": true
  },
- "expressions": ["neutral", "happy", "sad", "angry", "surprised", "sleepy"],
+ "expressions": [
+  "neutral",
+  "happy",
+  "sad",
+  "angry",
+  "surprised",
+  "sleepy",
+  "shocked",
+  "smug",
+  "embarrassed",
+  "laugh",
+  "deadpan"
+ ],
  "defaultExpression": "neutral",
  "voice": {
   "level": 1.0,
-  "cartesia": { "id": null, "name": null, "emotion": "neutral", "speed": 1.0, "volume": 1.0 },
-  "elevenlabs": { "id": null, "name": null, "stability": 0.45, "similarity": 0.75, "style": 0.3, "speed": 1.0 },
+  "cartesia": {
+   "id": null,
+   "name": null,
+   "emotion": "neutral",
+   "speed": 1.0,
+   "volume": 1.0
+  },
+  "elevenlabs": {
+   "id": null,
+   "name": null,
+   "stability": 0.45,
+   "similarity": 0.75,
+   "style": 0.3,
+   "speed": 1.0
+  },
   "note": "Pick the id with: python tools/episode.py voices --provider <cartesia|elevenlabs> --language <code>"
  },
  "tones": {
-  "calm": { "speed": 1.0, "volume": 1.0, "level": 1.0, "use": "a normal line (the default)" },
-  "soft": { "speed": 0.85, "volume": 1.2, "level": 0.9, "use": "sad, shy or whispered" },
-  "excited": { "speed": 1.12, "volume": 1.3, "level": 1.1, "use": "happy or surprised" },
-  "slow": { "speed": 0.75, "volume": 1.2, "level": 0.85, "use": "a heavy, dramatic line" }
+  "calm": {
+   "speed": 1.0,
+   "volume": 1.0,
+   "level": 1.0,
+   "use": "a normal line (the default)"
+  },
+  "soft": {
+   "speed": 0.85,
+   "volume": 1.2,
+   "level": 0.9,
+   "use": "sad, shy or whispered"
+  },
+  "excited": {
+   "speed": 1.12,
+   "volume": 1.3,
+   "level": 1.1,
+   "use": "happy or surprised"
+  },
+  "slow": {
+   "speed": 0.75,
+   "volume": 1.2,
+   "level": 0.85,
+   "use": "a heavy, dramatic line"
+  }
  },
- "locked_takes": []
+ "locked_takes": [],
+ "acts": [],
+ "expressionParams": {},
+ "_expressionParams_note": "Add your own faces here: name -> the numbers of rig.js EXPRESSIONS (lid, brow, tilt, mouth, wide, eye); then list the name in expressions."
 }

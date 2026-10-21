@@ -9,6 +9,7 @@
 Short 3D videos where two characters talk, made by your AI agent from one line: `/video-3d <topic>`.
 
 - Voiced dialogue, subtitles, soft music, sound effects, lighting that follows the mood.
+- Every video is directed per line (shots, faces, body acts, camera moves, light) and a built-in check refuses flat videos.
 - Portrait (TikTok, Reels, Shorts), landscape (YouTube) or square. Needs no GPU.
 - Two ready characters (a round chicken and a pixel mascot) and a ready night bedroom. Make your own character or place if you want.
 - Voices from Cartesia or ElevenLabs (you need an account at one of them).

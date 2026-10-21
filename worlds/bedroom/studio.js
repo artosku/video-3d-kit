@@ -68,6 +68,15 @@ export async function createStudio(scene, cfg = {}) {
   const metal = std('#2B2F3A', 0.55);
   const deck = new THREE.Mesh(new THREE.BoxGeometry(7.2, 0.2, 4.7), metal); deck.position.set(0, 0.3, 3.0); deck.castShadow = deck.receiveShadow = true; group.add(deck);
   const kb = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.6), std('#14161F', 0.7, { emissive: '#1E2C55', emissiveIntensity: 0.6 })); kb.rotation.x = -Math.PI / 2; kb.position.set(0, 0.405, 3.3); group.add(kb);
+  if (cfg.keys) {   // real keycaps on the deck (only when the episode asks: cfg.keys), a faint backlight, a long space bar and a trackpad
+    const capM = std('#1A1D29', 0.55, { emissive: '#27386E', emissiveIntensity: 0.55 });
+    const spec = []; const pitch = 0.46, zs = [2.35, 2.78, 3.21, 3.64];
+    zs.forEach((z) => { for (let i = 0; i < 13; i++) spec.push([-2.76 + i * pitch, z, 0.38]); });
+    for (let i = 0; i < 3; i++) spec.push([-2.76 + i * 0.5, 4.07, 0.44]); for (let i = 0; i < 3; i++) spec.push([1.45 + i * 0.5, 4.07, 0.44]); spec.push([-0.1, 4.07, 2.2]);
+    const caps = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 0.1, 0.34), capM, spec.length); const m4 = new THREE.Matrix4();
+    spec.forEach(([x, z, w], i) => { m4.makeScale(w, 1, 1); m4.setPosition(x, 0.47, z); caps.setMatrixAt(i, m4); }); caps.castShadow = true; group.add(caps);
+    const pad = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.03, 0.62), std('#222637', 0.4, { emissive: '#1B2850', emissiveIntensity: 0.4 })); pad.position.set(0, 0.425, 4.42); group.add(pad);
+  }
   const hinge = new THREE.Group(); hinge.position.set(0, 0.4, 0.7); hinge.rotation.x = -0.2; group.add(hinge);
   const lid = new THREE.Mesh(new THREE.BoxGeometry(7.2, 4.8, 0.14), metal); lid.position.set(0, 2.4, 0); lid.castShadow = true; hinge.add(lid);
   const scr = canvasTex(1024, 640, () => {});
@@ -79,6 +88,8 @@ export async function createStudio(scene, cfg = {}) {
   const specs = cfg.pages || { idle: { type: 'text', theme: 'dark', title: '', lines: [] } };
   const imgs = {};
   for (const [name, p] of Object.entries(specs)) if (p.type === 'image' && p.src) imgs[name] = await loadImage(`${base}/${p.src}`);
+  const vids = {};   // a video page: numbered frames dir/f_0001.jpg ... played from the moment the page is switched to (p.fps, default 30), the last frame stays
+  for (const [name, p] of Object.entries(specs)) if (p.type === 'video') vids[name] = await Promise.all(Array.from({ length: p.count }, (_, i) => loadImage(`${base}/${p.dir}/f_${String(i + 1).padStart(4, '0')}.jpg`)));
   const tabsOf = (g, p, th) => {
     const tabs = p.tabs ?? ['Home', 'Notes', 'Browser'];
     if (!tabs.length) return;
@@ -125,6 +136,68 @@ export async function createStudio(scene, cfg = {}) {
       g.drawImage(im, (1024 - im.width * k) / 2, top + (H - im.height * k) / 2, im.width * k, im.height * k);
       if (p.caption) { g.fillStyle = 'rgba(0,0,0,0.55)'; g.fillRect(0, 590, 1024, 50); g.fillStyle = '#fff'; g.font = `600 26px ${FONT}`; g.fillText(p.caption, 24, 624); }
     },
+    video: (g, p, th, t, lt, name) => {   // numbered frames of a screen recording, fitted like an image
+      g.fillStyle = p.bgColor || th.bg; g.fillRect(0, 0, 1024, 640); tabsOf(g, p, th);
+      const fr = vids[name], im = fr[Math.max(0, Math.min(fr.length - 1, Math.floor(lt * (p.fps ?? 30))))];
+      const top = p.tabs && p.tabs.length === 0 ? 0 : 48, H = 640 - top, k = (p.fit === 'cover' ? Math.max : Math.min)(1024 / im.width, H / im.height);
+      g.drawImage(im, (1024 - im.width * k) / 2, top + (H - im.height * k) / 2, im.width * k, im.height * k);
+    },
+    loginapp: (g, p, th, t, lt) => {   // a login page in a browser: p.hide 'login'|'daftar' (a button vanishes p.at s after the page starts, with a console error); p.restore 'login'|'daftar'|'both' (it pops back in with a green "fixed")
+      const norm = (v) => (v === 'register' ? 'daftar' : v); p = { ...p, hide: norm(p.hide), restore: norm(p.restore) };   // 'register' = 'daftar'
+      const X = { title: 'Welcome', sub: 'Sign in or create an account', email: 'email@example.com', login: 'Login', register: 'Sign up', fixed: 'Fixed', url: 'localhost:3000/login', ...(p.texts || {}) };   // every text of the page can be changed (and translated) with p.texts
+      const cl = (x) => Math.max(0, Math.min(1, x)), rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      g.fillStyle = '#EAEEF7'; g.fillRect(0, 0, 1024, 640);
+      g.fillStyle = '#D7DDEB'; g.fillRect(0, 0, 1024, 56); g.fillStyle = '#FFFFFF'; rr(150, 10, 724, 36, 18); g.fill(); g.fillStyle = '#6B7488'; g.font = `20px ${FONT}`; g.fillText(X.url, 178, 34);
+      g.fillStyle = 'rgba(40,50,90,0.12)'; rr(318, 108, 400, 460, 22); g.fill();
+      g.fillStyle = '#FFFFFF'; rr(312, 96, 400, 460, 22); g.fill();
+      g.fillStyle = '#1B2240'; g.font = `700 34px ${FONT}`; g.textAlign = 'center'; g.fillText(X.title, 512, 160); g.fillStyle = '#7A839B'; g.font = `20px ${FONT}`; g.fillText(X.sub, 512, 192);
+      g.fillStyle = '#F2F4FA'; rr(352, 222, 320, 50, 12); g.fill(); rr(352, 288, 320, 50, 12); g.fill();
+      g.fillStyle = '#A6AEC4'; g.font = `20px ${FONT}`; g.textAlign = 'left'; g.fillText(X.email, 372, 253); g.fillText('••••••••', 372, 319);
+      const state = (name) => {   // scale of a button 0..1 (+ overshoot when it pops back)
+        let sc = 1;
+        if (p.restore && (p.restore === name || p.restore === 'both')) { const u = cl(lt / 0.4); sc = u < 1 ? 1 + 2.7 * Math.pow(u - 1, 3) + 1.7 * Math.pow(u - 1, 2) : 1; sc = Math.max(0, sc * (u > 0 ? 1 : 0)); if (u === 0) sc = 0; }
+        if (p.hide === name) { const a = p.at ?? 0.6; sc = lt < a ? 1 : 1 - cl((lt - a) / 0.22); }
+        return sc;
+      };
+      const btn = (name, label, y, fill, ink, stroke) => {
+        const sc = state(name), w = 320, h = 56, cx = 512, cy = y + h / 2;
+        if (sc > 0.01) { g.save(); g.translate(cx, cy); g.scale(sc, sc); g.globalAlpha = Math.min(1, sc); if (fill) { g.fillStyle = fill; rr(-w / 2, -h / 2, w, h, 14); g.fill(); } if (stroke) { g.strokeStyle = stroke; g.lineWidth = 3; rr(-w / 2, -h / 2, w, h, 14); g.stroke(); } g.fillStyle = ink; g.font = `700 24px ${FONT}`; g.textAlign = 'center'; g.fillText(label, 0, 8); g.restore(); }
+        else { g.save(); g.strokeStyle = '#D5DAEA'; g.setLineDash([8, 8]); g.lineWidth = 2; rr(cx - w / 2, y, w, h, 14); g.stroke(); g.restore(); }
+        if (p.hide === name && lt >= (p.at ?? 0.6) && lt < (p.at ?? 0.6) + 0.4) {   // a little puff where it was
+          const u = (lt - (p.at ?? 0.6)) / 0.4; g.save(); g.globalAlpha = 1 - u; g.strokeStyle = '#8FA3FF'; g.lineWidth = 4; for (let k = 0; k < 8; k++) { const a = k * 0.785 + 0.3, r1 = 30 + 90 * u; g.beginPath(); g.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1 * 0.5); g.lineTo(cx + Math.cos(a) * (r1 + 14), cy + Math.sin(a) * (r1 + 14) * 0.5); g.stroke(); } g.restore();
+        }
+      };
+      btn('login', X.login, 366, '#3B6CF6', '#FFFFFF', null);
+      btn('daftar', X.register, 440, null, '#3B6CF6', '#3B6CF6');
+      g.textAlign = 'left';
+      const hiddenNow = p.hide && lt >= (p.at ?? 0.6);
+      if (hiddenNow) { const u = cl((lt - (p.at ?? 0.6)) / 0.2); g.fillStyle = `rgba(30,12,18,${0.92 * u})`; g.fillRect(0, 590, 1024, 50); g.fillStyle = `rgba(255,110,120,${u})`; g.font = `600 22px ${FONT}`; g.fillText(`Uncaught ReferenceError: ${p.hide} is not defined`, 24, 622); }
+      if (p.restore && lt > 0.25 && lt < 2.2) { const u = cl((lt - 0.25) / 0.2) * (1 - cl((lt - 1.8) / 0.4)); g.fillStyle = `rgba(32,160,90,${u})`; rr(736, 80, 240, 52, 14); g.fill(); g.fillStyle = `rgba(255,255,255,${u})`; g.font = `700 22px ${FONT}`; g.fillText('✓ ' + X.fixed, 756, 114); }
+    },
+    gitdiff: (g, p, th, t, lt) => {   // git diff --stat: a counter that races up to p.total files, a scrolling file list with +/- and red/green bars
+      const cl = (x) => Math.max(0, Math.min(1, x)), MONO = "'Cascadia Mono', Consolas, 'Courier New', monospace";
+      const FILES = ['src/components/LoginButton.tsx', 'src/components/RegisterForm.tsx', 'src/pages/index.tsx', 'src/utils/auth.ts', 'package-lock.json', 'yarn.lock', 'src/styles/global.css', 'README.md', 'tsconfig.json', 'src/hooks/useSession.ts', 'src/api/users.ts', 'src/api/login.ts', '.env.example', 'jest.config.js', 'src/components/Navbar.tsx', 'src/layout/Footer.tsx', 'public/logo.svg', 'src/store/index.ts', 'src/types/user.d.ts', 'prisma/schema.prisma', 'src/middleware.ts', 'docker-compose.yml', 'src/lib/db.ts', '.github/workflows/ci.yml'];
+      const H = (i, k) => ((Math.imul(i + 7, 2654435761) ^ Math.imul(k + 13, 40503)) >>> 0) % 100;
+      const total = p.total ?? 1056, dur = p.dur ?? 3.0, u = cl(lt / dur), e = 1 - Math.pow(1 - u, 3), count = Math.floor(total * e);
+      g.fillStyle = '#0D1117'; g.fillRect(0, 0, 1024, 640);
+      g.fillStyle = '#161B22'; g.fillRect(0, 0, 1024, 48); g.fillStyle = '#8B949E'; g.font = `600 20px ${MONO}`; g.fillText(p.texts?.path ?? '~/project/login-app  (main)', 24, 31);
+      g.fillStyle = '#8B949E'; g.font = `24px ${MONO}`; g.fillText('$ git diff --stat', 40, 92);
+      g.fillStyle = u < 1 ? '#FF7B72' : '#FF5555'; g.font = `700 108px ${MONO}`; g.fillText(String(count), 40, 196);
+      g.fillStyle = '#C9D1D9'; g.font = `600 34px ${MONO}`; g.fillText(p.texts?.label ?? 'files changed', 40 + String(count).length * 65 + 14, 190);
+      const ins = Math.floor(count * 46.4), del = Math.floor(count * 48.9);
+      g.font = `700 26px ${MONO}`; g.fillStyle = '#3FB950'; g.fillText('+' + ins.toLocaleString('en-US'), 44, 240); g.fillStyle = '#FF7B72'; g.fillText('-' + del.toLocaleString('en-US'), 44 + 190, 240);
+      const speed = 420 + 900 * (1 - u), sc = lt * speed, rowH = 34, i0 = Math.floor(sc / rowH), off = sc % rowH;
+      g.save(); g.beginPath(); g.rect(0, 262, 1024, 378); g.clip();
+      for (let r = 0; r < 13; r++) {
+        const i = i0 + r, y = 276 + r * rowH - off, name = FILES[(i * 5) % FILES.length], a = H(i, 1) + 1, d = H(i, 2) % 80;
+        g.fillStyle = r % 2 ? 'rgba(255,255,255,0.025)' : 'rgba(255,255,255,0)'; g.fillRect(0, y - 24, 1024, rowH);
+        g.fillStyle = '#C9D1D9'; g.font = `22px ${MONO}`; g.fillText(name, 40, y);
+        g.fillStyle = '#3FB950'; g.fillText('+' + a, 640, y); g.fillStyle = '#FF7B72'; g.fillText('-' + d, 740, y);
+        const n = 10, gn = Math.round(n * a / Math.max(1, a + d)); for (let k = 0; k < n; k++) { g.fillStyle = k < gn ? '#3FB950' : '#FF7B72'; g.fillRect(840 + k * 16, y - 16, 12, 16); }
+      }
+      g.restore();
+      g.fillStyle = 'rgba(13,17,23,0.9)'; g.fillRect(0, 262, 1024, 4);
+    },
     text: (g, p, th, t, lt) => {  // a title and a few lines
       g.fillStyle = th.bg; g.fillRect(0, 0, 1024, 640); tabsOf(g, p, th);
       g.fillStyle = th.num; g.font = `700 64px ${FONT}`; wrapText(g, p.title || '', 60, 150, 900, 76);
@@ -136,13 +209,13 @@ export async function createStudio(scene, cfg = {}) {
   updaters.push((t) => {
     const p = specs[page], th = themeOf(p);
     DRAW[p.type](scr.g, p, th, t, t - pageT0, page);
-    sm.color.setScalar(p.brightness ?? (p.type === 'image' ? 0.5 : th.bright));
+    sm.color.setScalar(p.brightness ?? (p.type === 'image' || p.type === 'video' ? 0.5 : th.bright));
     scr.t.needsUpdate = true;
   });
   const screen = {
     setPage: (name, t) => { if (specs[name] && name !== page) { page = name; pageT0 = t; } },
     get page() { return page; },
-    glow: () => ({ ...themeOf(specs[page]).glow, ...(specs[page].type === 'image' ? { c: '#EAF2FF', i: 12 } : {}), ...(specs[page].glow || {}) }),
+    glow: () => ({ ...themeOf(specs[page]).glow, ...(specs[page].type === 'image' || specs[page].type === 'video' ? { c: '#EAF2FF', i: 12 } : {}), ...(specs[page].glow || {}) }),
     has: (name) => !!specs[name],
   };
 
@@ -299,6 +372,32 @@ export async function createStudio(scene, cfg = {}) {
   const ufoLight = new THREE.PointLight('#8CFFC8', 0, 40, 2); group.add(ufoLight);
 
 
+  // ---------------------------------------------------------------- a neon sign on a building outside: always there, dark, and it flickers on when the episode says so (built ONLY when cfg.neon is set)
+  let neon = null;
+  if (cfg.neon) {
+    const nc = cfg.neon, txt = nc.text || 'NEON', col = nc.color || '#7CFFB4', colRgb = nc.rgb || '124,255,180';
+    const g = new THREE.Group(); g.position.set(nc.x ?? 0.2, nc.y ?? 0, nc.z ?? -22); OUT.add(g);
+    const bh = nc.height ?? 20, bw = nc.width ?? 11;
+    const body = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 3), blackM()); body.position.set(0, bh / 2 - 6, 0); g.add(body);
+    const top = new THREE.Mesh(new THREE.BoxGeometry(bw * 0.7, 1.2, 2.6), blackM()); top.position.set(0, bh - 6 + 0.6, 0); g.add(top);
+    const sy = nc.signY ?? 10.5, sw = bw * 0.9, sh = sw * 0.25;
+    const draw = (on) => canvasTex(1024, 256, (c, w, h) => {
+      c.clearRect(0, 0, w, h); c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = "bold 150px 'Arial Rounded MT Bold', 'Trebuchet MS', Arial, sans-serif"; c.lineJoin = 'round';
+      if (on) { c.shadowColor = col; c.shadowBlur = 22; c.strokeStyle = col; c.lineWidth = 15; c.strokeText(txt, w / 2, h / 2 + 6); c.shadowBlur = 0; c.strokeStyle = '#C9FFE2'; c.lineWidth = 3; c.strokeText(txt, w / 2, h / 2 + 6); }
+      else { c.strokeStyle = '#26324A'; c.lineWidth = 9; c.strokeText(txt, w / 2, h / 2 + 6); c.strokeStyle = '#141B2E'; c.lineWidth = 3; c.strokeText(txt, w / 2, h / 2 + 6); }
+    }).t;
+    const bmat = new THREE.MeshBasicMaterial({ color: '#0A0F26' });
+    const board = new THREE.Mesh(new THREE.PlaneGeometry(sw * 1.05, sh * 1.2), bmat); board.position.set(0, sy, 1.53); g.add(board);
+    const offM = new THREE.Mesh(new THREE.PlaneGeometry(sw, sh), new THREE.MeshBasicMaterial({ map: draw(false), transparent: true, toneMapped: false })); offM.position.set(0, sy, 1.56); g.add(offM);
+    const onMat = new THREE.MeshBasicMaterial({ map: draw(true), transparent: true, toneMapped: false, opacity: 0 }); onMat.color.multiplyScalar(0.8);
+    const onM = new THREE.Mesh(new THREE.PlaneGeometry(sw, sh), onMat); onM.position.set(0, sy, 1.6); g.add(onM);
+    // the "pret-pret" start: [from, to, level] seconds after the switch-on; after the last one it stays on
+    const seq = nc.flicker || [[0.0, 0.1, 0.55], [0.1, 0.28, 0], [0.28, 0.38, 0.8], [0.38, 0.7, 0], [0.7, 0.8, 0.6], [0.8, 0.92, 0], [0.92, 1.08, 1], [1.08, 1.2, 0.15], [1.2, 1.28, 1], [1.28, 1.4, 0.3]];
+    const lvl = (s) => { if (s < 0) return 0; for (const [a, b, l] of seq) if (s >= a && s < b) return l; return s >= seq[seq.length - 1][1] ? 1 : 0; };
+    neon = { show(s) { const l = lvl(s) * (s > 2 ? 1 + 0.02 * Math.sin(s * 40) : 1); onMat.opacity = Math.min(1, l);  } };
+    neon.show(-1);
+  }
+
   // ---------------------------------------------------------------- extra moments outside the window, built ONLY when the episode asks for them (so older episodes stay identical)
   // each one: { group, update(u, e) }  u: 0..1 progress, e: a smooth 0..1..0 bell of u. Colours are black silhouettes or soft glows, tiny and far, no logos.
   const ox = cfg.outside || {};
@@ -422,7 +521,7 @@ export async function createStudio(scene, cfg = {}) {
     phoneScreen.material.map = tex; phoneScreen.material.needsUpdate = true; phoneLoaded = true;
   }
   const phoneApi = {
-    show(u) { if (!phoneLoaded) return; const e = smoothstep(u); phone.visible = u > 0.002; phone.position.set(0, perch.y - 1.2 + 2.25 * e, perch.z - 0.35 + 0.55 * e); phone.rotation.set(-0.06 * e, -0.1 * e, 0); phoneLight.position.set(0.55, perch.y + 0.9, perch.z + 1.4); phoneLight.intensity = (cfg.phone.light ?? 6) * e; },
+    show(u) { if (!phoneLoaded) return; const e = smoothstep(u); phone.visible = u > 0.002; phone.scale.setScalar(cfg.phone.scale ?? 1); phone.position.set(cfg.phone.x ?? 0, perch.y - 1.2 + 2.25 * e + (cfg.phone.y ?? 0), perch.z - 0.35 + 0.55 * e + (cfg.phone.z ?? 0)); phone.rotation.set(-0.06 * e, -0.1 * e, 0); phoneLight.position.set(0.55, perch.y + 0.9, perch.z + 1.4); phoneLight.intensity = (cfg.phone.light ?? 6) * e; },
     group: phone, light: phoneLight,
   };
 
@@ -483,7 +582,7 @@ export async function createStudio(scene, cfg = {}) {
     const pa = PRESETS[a], pb = PRESETS[b]; hemi.intensity = lerp(pa.hemi, pb.hemi, k) * (factors.hemi ?? 1);
     const key = roles.get('key');
     deskLamp.visible = !!key;
-    deskLamp.visible = !!key && key.light.position.y < 8.5;
+    deskLamp.visible = !!key && key.light.position.y < 8.5 && key.light.position.z < face.z + 2.5;   // a key light in FRONT of the characters (preset 'screen') would put the lamp head and its glow in front of the lens
     if (key) { poseLamp(key.light.position, face); const kf = factors.key ?? 1; headMat.emissiveIntensity = 1.6 * Math.min(1.6, kf); lampGlow.material.opacity = 0.75 * Math.min(1.4, kf); }
   }
   const lighting = {
@@ -494,7 +593,7 @@ export async function createStudio(scene, cfg = {}) {
   lighting.use(cfg.light ?? 'rembrandt');
 
   return {
-    group, perch, face, lighting, screen, phone: phoneApi, outside, lamp: { head: headMat, glow: lampGlow }, window: WIN,
+    group, perch, face, lighting, screen, phone: phoneApi, outside, neon, lamp: { head: headMat, glow: lampGlow }, window: WIN,
     update: (t) => updaters.forEach((u) => u(t)),
   };
 }

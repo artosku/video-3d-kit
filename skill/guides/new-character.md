@@ -25,9 +25,15 @@ Two paths. Default to EASY. Tell the user once, before ADVANCED: "A fully custom
 5. Look at it: `python tools/setup.py preview-character <id>` (one picture of all the faces, saved in `out/previews/`; add `--with <other-id>` to pick the partner).
    - Show that picture. Ask "Happy with it?". Change colors/shape in `character.json` and repeat until yes.
 
-## Adding or renaming expressions
-- Template expressions are defined at the top of `characters/<id>/rig.js` (`EXPRESSIONS`). Each is numbers: `lid` (eye closes 0..1), `brow` (raise), `tilt` (+ sad, - angry), `mouth` (open), `wide`, `eye` (size).
-- Add one there, then add its name to `expressions` in `character.json`. The validator only accepts names listed there.
+## Faces and acts: add them per scene (no code needed)
+The agent MAY invent a face, a gesture or a part per scene when the story needs one (shock, a tired sigh, a wing flap). The shipped list is a start, not a limit.
+- **A face** is a row of numbers. Put it in `character.json` -> `expressionParams` (kept for every video) or in `episode.json` -> `expressions: { "left": { "name": {...} }, "right": {...} }` (this video only), then use the name in `directions`. A name from `expressionParams` must also be listed in `character.json` -> `expressions`; a name defined only in the episode `expressions` is fine for that episode.
+  - Template rig (`rig.js`): `lid` (eye closes 0..1), `brow` (raise), `tilt` (+ sad, - angry), `mouth` (open), `wide` (mouth width), `eye` (eye size). Missing numbers copy `neutral`.
+  - `claude` rig (the pixel mascot): `eyeH` (eye height 0.3..1.75), `eyeW` (eye WIDTH: wide = squint or glee, narrow = sad), `eyeAsym` (one eye taller than the other: a raised eyebrow), `eyeGap`, `tilt`, `lean` (+ forward), `arm` (arm angle), `squash` (body height). Missing numbers copy `deadpan`.
+  - `ayam` rig (the chicken): `lidLow`, `lidTop` (eyelids), `browY`, `browTilt`, `mouth`, `beak`, `cheek`, `eyeS` (eye size), `pupil`, `lookX`, `lookY`. Missing numbers copy `neutral`.
+  - Big values read from far away; a face that does not change between shots looks dead. Test with `preview-character` (all listed faces).
+- **A gesture** that moves the whole body is a JSON act (`assets/acts.json`, or `actDefs` in `episode.json`): see `direction.md`. A gesture that needs a part of the rig (wings, tail, arms) is a rig act: in `rig.js` add the name to `actNames` and the `act(name, dur)` code, and list it in `character.json` -> `acts`. Without that listing `validate` only knows the JSON acts.
+- Every rig returns `defineExpression(name, params)` (this is how `expressionParams` and episode `expressions` work) and `actNames` (the acts it handles itself). A new rig should do the same.
 - `defaultExpression` is what the character wears when nothing is directed.
 
 ## ADVANCED path (slower, more tokens)
@@ -43,7 +49,9 @@ export function create(renderer, { rand, W, H, config }) -> {
   setTalkLevel(v),              // 0..1, mouth openness, set every frame from the voice
   look(x, y),                   // -1..1, where the eyes look
   update(dt),                   // every frame: blink, breathing
-  freeze?()                     // optional: stop random motion (stills)
+  freeze?(),                    // optional: stop random motion (stills)
+  defineExpression?(name, params),  // recommended: lets character.json / episodes add faces
+  actNames?: [...], act?(name, dur) // optional: acts that need your own parts (wings, tail, arms)
 }
 ```
 - `config` is the whole `character.json`; read `config.look` for your own settings.

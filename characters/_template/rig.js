@@ -21,6 +21,11 @@ export const EXPRESSIONS = {
   happy: { lid: 0.25, brow: 0.12, tilt: 0.0, mouth: 0.35, wide: 1.4, eye: 1.0 },
   sad: { lid: 0.3, brow: 0.05, tilt: 0.5, mouth: 0.0, wide: 0.7, eye: 1.1 },
   angry: { lid: 0.35, brow: -0.05, tilt: -0.55, mouth: 0.0, wide: 1.1, eye: 0.95 },
+  shocked: { lid: 0.0, brow: 0.3, tilt: 0.1, mouth: 0.8, wide: 0.7, eye: 1.45 },
+  smug: { lid: 0.45, brow: 0.0, tilt: -0.2, mouth: 0.15, wide: 1.5, eye: 0.95 },
+  embarrassed: { lid: 0.2, brow: 0.08, tilt: 0.45, mouth: 0.1, wide: 0.8, eye: 1.05 },
+  laugh: { lid: 0.5, brow: 0.2, tilt: 0.0, mouth: 1.0, wide: 1.8, eye: 0.9 },
+  deadpan: { lid: 0.4, brow: 0.0, tilt: 0.0, mouth: 0.0, wide: 1.0, eye: 0.95 },
   surprised: { lid: 0.0, brow: 0.22, tilt: 0.0, mouth: 0.55, wide: 0.8, eye: 1.25 },
   sleepy: { lid: 0.65, brow: -0.02, tilt: 0.15, mouth: 0.0, wide: 0.9, eye: 1.0 },
 };
@@ -79,8 +84,10 @@ export function create(renderer, { rand = Math.random, config = {} } = {}) {
     torso.scale.y = L.height * (1 + Math.sin(t * 1.6) * (frozen ? 0 : 0.006));
     root.rotation.y = lerp(root.rotation.y, gx * 0.12, 1 - Math.exp(-6 * dt));
   }
+  for (const [n, p] of Object.entries(config.expressionParams || {})) EXPRESSIONS[n] = { ...EXPRESSIONS.neutral, ...p };   // faces defined in character.json (expressionParams) need no code
   return {
-    group, EXPRESSIONS, update, setExpression,
+    group, EXPRESSIONS, update, setExpression, actNames: [],   // actNames: acts that need your own parts (wings, tail...); any other act comes from assets/acts.json
+    defineExpression: (name, params) => { EXPRESSIONS[name] = { ...EXPRESSIONS.neutral, ...params }; },
     setTalkLevel: (v) => { talk = clamp(v ?? 0); },
     look: (x, y) => { gx = clamp(x, -1, 1); gy = clamp(y, -1, 1); },
     freeze: (on = true) => { frozen = on; blink = 0; },

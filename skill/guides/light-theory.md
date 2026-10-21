@@ -48,6 +48,12 @@ Lights are placed by angle around the lead character's face: `az` (0 front, +90 
 - **Text worlds** (`"text"`, simple worlds like the outdoor template): only the written `cause` is required, so write a real one the viewer can see (a cloud covers the moon, a campfire flares, a character turns).
 - Cause list by world: bedroom = screen page change, lamp flicker, phone, moment outside, turn. Simple worlds = turn, moment outside if the world has one, plus whatever the world draws (name it in `cause`).
 
+## 5b. How to play with light (for a lively video)
+- **Prefer `level` events over presets that move the key light.** A `level` dip on the `key` role (`"to": 0.5`) darkens a sad moment without moving the lamp; recover it with another `level` to `1.0`. `preset` events move the key, and a key in FRONT of the characters (preset `screen`) hides the lamp head (it would sit in front of the lens), so use that preset only for short, deliberate moments.
+- **Visible causes you can always use:** a character turns (`turn` in `directions`), the screen changes page, the bulb flickers (`flicker`), the phone rises, the moment outside, the `neon` sign switching on. Put the event within about 1 s of the cause.
+- **A light needs a visible source.** A glow with no source looks fake. A neon sign glows only in its letters, not in a round halo; a screen glows because a screen is there.
+- Two to four changes per video is lively (the `review` check asks for at least 2). Every change follows the feeling of the line: dip on the painful line, warm up on relief.
+
 ## 6. Speaker light
 The speaker needs no extra light; the camera angle (`cam`) gives focus. If the partner needs to be brighter, use a real cause (screen turns on, phone).
 

@@ -139,151 +139,284 @@
  ],
  "directions": [
   {
-   "cam": "left",
-   "cut": 1.0,
+   "cam": "left_high",
+   "left": "sad",
+   "right": "worried",
+   "move": {
+    "push": 0.16
+   },
    "look": [
-    0.2,
-    -0.45
-   ],
-   "left": "sad",
-   "right": "deadpan"
-  },
-  {
-   "cam": "right",
-   "left": "sad",
-   "right": "deadpan"
-  },
-  {
-   "cam": "left",
-   "hop": true,
-   "left": "happy",
-   "right": "deadpan"
-  },
-  {
-   "cam": "right",
-   "left": "happy",
-   "right": "deadpan"
-  },
-  {
-   "cam": "left",
-   "hop": true,
-   "left": "happy",
-   "right": "deadpan"
-  },
-  {
-   "cam": "right",
-   "left": "neutral",
-   "right": "deadpan"
-  },
-  {
-   "cam": "right",
-   "left": "neutral",
-   "right": "smug"
-  },
-  {
-   "cam": "left",
-   "look": [
-    0,
-    -0.7
-   ],
-   "left": "sad",
-   "right": "deadpan"
-  },
-  {
-   "cam": "wide",
-   "left": "sad",
-   "right": "deadpan"
-  },
-  {
-   "cam": "left",
-   "left": "surprised",
-   "right": "deadpan"
-  },
-  {
-   "cam": "right",
-   "left": "surprised",
-   "right": "smug"
-  },
-  {
-   "cam": "left",
-   "look": [
-    0.1,
-    -0.5
-   ],
-   "turn": 1.95,
-   "left": "sad",
-   "right": "deadpan"
-  },
-  {
-   "cam": "right",
-   "turn": 1.95,
-   "left": "sad",
-   "right": "worried"
-  },
-  {
-   "cam": "left",
-   "left": "determined",
-   "right": "deadpan"
-  },
-  {
-   "cam": "right34",
-   "left": "determined",
-   "right": "smug"
-  },
-  {
-   "cam": "left",
-   "look": [
-    0,
-    -0.4
-   ],
-   "left": "sad",
-   "right": "deadpan"
-  },
-  {
-   "cam": "right",
-   "left": "sad",
-   "right": "wow"
-  },
-  {
-   "cam": "right",
-   "left": "neutral",
-   "right": "smug"
-  },
-  {
-   "cam": "left",
-   "look": [
-    0.6,
+    0.0,
     -0.6
    ],
-   "left": "sad",
-   "right": "smug"
+   "act": {
+    "left": "slump",
+    "right": "lean_in"
+   },
+   "turn": 0.95
   },
   {
    "cam": "right",
-   "left": "sad",
-   "right": "wow"
+   "right": "deadpan",
+   "left": "neutral",
+   "act": {
+    "right": "nod_small"
+   }
   },
   {
-   "cam": "right34",
+   "cam": "left_ecu",
+   "left": "shocked",
+   "right": "smug",
+   "move": {
+    "push": 0.1
+   },
+   "roll": 0.1,
+   "act": {
+    "left": "jolt",
+    "right": "recoil"
+   },
+   "turn": 0.35
+  },
+  {
+   "cam": "over_left",
+   "right": "skeptical",
+   "left": "neutral",
+   "move": {
+    "push": 0.08
+   },
+   "act": {
+    "right": "tilt_curious",
+    "left": "nod_small"
+   }
+  },
+  {
+   "cam": "left_high",
    "left": "sad",
-   "right": "smug"
+   "right": "worried",
+   "move": {
+    "push": 0.16
+   },
+   "look": [
+    0.0,
+    -0.6
+   ],
+   "act": {
+    "left": "slump",
+    "right": "lean_in"
+   },
+   "turn": 0.95
+  },
+  {
+   "cam": "two",
+   "right": "deadpan",
+   "left": "neutral",
+   "move": {
+    "push": 0.0,
+    "orbit": 6
+   },
+   "act": {
+    "right": "nod_small"
+   }
+  },
+  {
+   "cam": "over_left",
+   "right": "skeptical",
+   "left": "neutral",
+   "move": {
+    "push": 0.08
+   },
+   "act": {
+    "right": "tilt_curious",
+    "left": "nod_small"
+   }
+  },
+  {
+   "cam": "left_high",
+   "left": "sad",
+   "right": "worried",
+   "move": {
+    "push": 0.16
+   },
+   "look": [
+    0.0,
+    -0.6
+   ],
+   "act": {
+    "left": "slump",
+    "right": "lean_in"
+   }
+  },
+  {
+   "cam": "two",
+   "right": "deadpan",
+   "left": "neutral",
+   "move": {
+    "push": 0.0,
+    "orbit": -6
+   }
+  },
+  {
+   "cam": "left_low",
+   "left": "surprised",
+   "right": "deadpan",
+   "move": {
+    "push": 0.08
+   },
+   "act": {
+    "left": "tilt_curious",
+    "right": "nod_small"
+   },
+   "turn": 0.35
+  },
+  {
+   "cam": "right_high",
+   "right": "deadpan",
+   "left": "neutral"
   },
   {
    "cam": "left",
-   "look": [
-    0,
-    -0.4
-   ],
-   "left": "sad",
-   "right": "deadpan"
+   "left": "neutral",
+   "right": "deadpan",
+   "act": {
+    "left": "nod_small"
+   }
   },
   {
-   "cam": null,
+   "cam": "over_left",
+   "right": "deadpan",
+   "left": "neutral"
+  },
+  {
+   "cam": "wide_high",
+   "left": "neutral",
+   "right": "deadpan",
+   "move": {
+    "push": 0.0,
+    "orbit": 6
+   },
+   "act": {
+    "left": "nod_small"
+   }
+  },
+  {
+   "cam": "right_high",
+   "right": "deadpan",
+   "left": "neutral"
+  },
+  {
+   "cam": "left_low",
    "left": "surprised",
-   "right": "wow"
+   "right": "deadpan",
+   "move": {
+    "push": 0.08
+   },
+   "act": {
+    "left": "tilt_curious",
+    "right": "nod_small"
+   }
+  },
+  {
+   "cam": "right_ecu",
+   "right": "shocked",
+   "left": "neutral",
+   "move": {
+    "push": 0.1
+   },
+   "roll": -0.09,
+   "act": {
+    "right": "jolt",
+    "left": "recoil"
+   }
+  },
+  {
+   "cam": "right",
+   "right": "skeptical",
+   "left": "neutral",
+   "move": {
+    "push": 0.08
+   },
+   "act": {
+    "right": "tilt_curious",
+    "left": "nod_small"
+   }
+  },
+  {
+   "cam": "left_ecu",
+   "left": "sheepish",
+   "right": "smug",
+   "move": {
+    "push": 0.2
+   },
+   "dof": 1.6,
+   "focus": "left",
+   "look": [
+    0.0,
+    -0.6
+   ],
+   "act": {
+    "left": "slump",
+    "right": "lean_in"
+   }
+  },
+  {
+   "cam": "right_ecu",
+   "right": "shocked",
+   "left": "neutral",
+   "move": {
+    "push": 0.1
+   },
+   "act": {
+    "right": "jolt",
+    "left": "recoil"
+   }
+  },
+  {
+   "cam": "wide_high",
+   "right": "deadpan",
+   "left": "neutral",
+   "move": {
+    "push": 0.0,
+    "orbit": -6
+   }
+  },
+  {
+   "cam": "left_high",
+   "left": "sad",
+   "right": "worried",
+   "move": {
+    "push": 0.16
+   },
+   "look": [
+    0.0,
+    -0.6
+   ],
+   "act": {
+    "left": "slump",
+    "right": "lean_in"
+   }
+  },
+  {
+   "cam": "over_left",
+   "right": "deadpan",
+   "left": "neutral"
   }
  ],
  "camExtra": [
+  {
+   "at": "L2.start",
+   "cam": "left_ecu",
+   "blend": 0.08
+  },
+  {
+   "at": "L16.start",
+   "cam": "right_ecu",
+   "blend": 0.08
+  },
+  {
+   "at": "L19.start",
+   "cam": "right_ecu",
+   "blend": 0.08
+  },
   {
    "at": "L22.start-0.55",
    "cam": "phone",
@@ -301,6 +434,48 @@
   }
  ],
  "lightEvents": [
+  {
+   "type": "level",
+   "role": "key",
+   "at": "L0.start",
+   "over": 0.7,
+   "to": 0.5,
+   "cause": "the lead turns away, the face leaves the lamp's light"
+  },
+  {
+   "type": "level",
+   "role": "key",
+   "at": "L2.start",
+   "over": 0.9,
+   "to": 1.0,
+   "cause": "the lead turns back to the lamp"
+  },
+  {
+   "type": "level",
+   "role": "key",
+   "at": "L4.start",
+   "over": 0.7,
+   "to": 0.5,
+   "cause": "the lead turns away, the face leaves the lamp's light"
+  },
+  {
+   "type": "level",
+   "role": "key",
+   "at": "L9.start",
+   "over": 0.9,
+   "to": 1.0,
+   "cause": "the lead turns back to the lamp"
+  },
+  {
+   "type": "flicker",
+   "at": "L0.start-0.2",
+   "dur": 1.7,
+   "floor": 0.12,
+   "amp": 0.55,
+   "to": 0.45,
+   "recover": 9,
+   "cause": "the bulb of the desk lamp flickers on the painful line; the lamp is visible on the right"
+  },
   {
    "type": "flicker",
    "at": "L7.start-0.2",
@@ -349,5 +524,15 @@
    "name": "done_ping"
   }
  ],
- "legacyOpening": true
+ "legacyOpening": true,
+ "acts": [],
+ "camFx": [
+  {
+   "type": "punch",
+   "at": "L2.start",
+   "dur": 0.35,
+   "amount": 0.1
+  }
+ ],
+ "alive": 1.0
 }

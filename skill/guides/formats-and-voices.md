@@ -8,6 +8,7 @@
 | `square` | 1080x1080 | 720x720 | feeds |
 - The video is drawn small with software WebGL (no GPU needed) and scaled up when encoded. That is normal and looks fine.
 - Subtitles: portrait = white, top third, no speaker names; landscape and square = bottom center, bigger relative font, longer lines (about 52 characters, portrait 31).
+- Subtitle position: `episode.json` -> `subtitles: { "pos": "top" | "bottom" | "auto" }` and per line `directions[i].subs`. Default `auto`: top third, but bottom for shots where the heads are in the top third (`wide`, `two`, `wide_low`, `wide_high`, every `*_high`). Landscape and square are always at the bottom.
 - Camera: the shots are framed for portrait. For landscape the lens is narrowed (x0.55) and for square (x0.82) automatically. No change needed in `episode.json`.
 - Change it for one video: ask the user, then set `format` in `project.json` (or `python tools/setup.py remember --format ...`) before `stills`. Stills and render both follow it.
 - Size limit: `encode` keeps the MP4 at 30 MB or less for social media.

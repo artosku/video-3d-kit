@@ -22,7 +22,7 @@ Two characters talk in turn. Lines are short (3-8 words), spoken, and the humor 
 | `tense` | 1.1 | something heavy is coming |
 | `before_punchline` | 1.9 | the pause that sells the joke |
 
-## 2. Story formula (3 acts, 18-26 lines, about 45-65 s)
+## 2. Story formula (3 acts; the length follows the story)
 1. **Setup + hope (lines 0-6).** The lead opens with a feeling (sad, proud, curious). The partner answers plainly. Give ONE piece of good news so the fall hurts.
 2. **The fall (lines 7-15).** One painful keyword (a number, a name, a word) said slowly after a pause. The partner repeats the fact honestly and calmly. The lead defends or blames themself; the partner answers with cold logic.
 3. **Punchline + closing (lines 16-22).** The partner asks ONE simple question that exposes the real, easy-to-fix cause. Long pause (`before_punchline`), then the lead's weak answer. The partner solves it in one word. Silence, then the standard ending (lead turns to the window and looks up, see `direction.md` → `ending`).
@@ -46,7 +46,7 @@ Two characters talk in turn. Lines are short (3-8 words), spoken, and the humor 
 
 ## 5. Estimating length before any voice is made
 - About **2.6 s per line** including pauses. 22 lines ≈ 57 s of dialogue, plus `tail` (default 4 s) = video length.
-- Over 65 s? Cut repetition from act 2 (only if the story still works). `rules.durationHint` (optional) only warns, it never blocks.
+- The story decides the length, not a fixed 60 s: 18-26 lines is typical, a short gag can be 8. Too long for the platform? Cut repetition from act 2 (only if the story still works). `rules.durationHint` (optional) only warns, it never blocks.
 
 ## 6. What to show the user for approval (always, before spending voice credits)
 - A compact table: `#`, who, line, tone, gap.
@@ -78,3 +78,7 @@ Gap: huge effort (200k views) vs tiny result (5 downloads); painful keyword "...
 - It only works with the voice the clip was made in (`opening.voice`); if the project switches voices, `build` stops with a clear message: remove the opening line.
 - `rules.requireOpening` in `project.json` makes `validate` insist on it (off by default).
 - To give your own character an opening: put a short wav in `characters/<id>/locked/`, then add an `opening` block to its `character.json` (copy the one in `characters/ayam/character.json`: `text`, `voice` as "provider:voice-id", `default`, `wordSeconds`, `files`).
+
+## 7. Screens and silence
+- No dialogue is needed while a screen simulation plays (a login page losing its buttons, a git diff counter, a screen recording). Let it run with its own small sounds and the music: a few seconds of silence plus a clear picture beat talking over it. Write the line before it and the reaction after it.
+- Say what the screen shows only once, at its start; the picture does the rest.

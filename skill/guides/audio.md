@@ -12,12 +12,13 @@
 ## 2. Tones, speed, level, gap
 - `tones` in `character.json`: `"name": { "speed", "volume", "level", "use" }`. Pick by name in `script.json` (`"tone": "soft"`); explicit `speed`/`volume`/`level` on a line win. `speed` 0.6-1.5 (ElevenLabs is clamped to 0.7-1.2), `volume` 0.5-2.0.
 - Gap (silence before a line): number or a name from `assets/gaps.json` (`tight` 0.3, `normal` 0.5, `breath` 0.9, `tense` 1.1, `before_punchline` 1.9).
-- Fixing a line the user says is "too high", "robotic" or "cut off": make 3 options of that line only (different speed, a comma, a period at the end), save them in `out/<slug>/options/`, tell the user the paths, apply the choice. Never regenerate everything.
+- **A line that came out wrong** (too high, robotic, cut off, or an extra sound at the end: a short line with `!` sometimes gets one): `python tools/episode.py variants <slug> <line> [--n 3]` makes up to 4 takes of THAT line only (as written, with a full stop, a full stop and a little faster, slower) in `out/<slug>/variants/` and prints their full paths and lengths. Give the user the paths; they listen and choose. Then `python tools/episode.py lock <slug> <line> <file>` pins the chosen file. Never regenerate everything.
 
 ## 3. Locked takes (a voice take the user likes, reused as is)
 1. Save the chosen WAV (mono, 44.1 kHz, 16-bit) as `characters/<id>/locked/<name>.wav`. Trim silence gently: keep about 0.14 s after the last sound and fade 30 ms; never cut a soft ending.
 2. Add to `character.json` → `locked_takes`: `{ "text": "Exactly the line", "file": "locked/<name>.wav", "voice": "cartesia:<voice id>", "note": "why" }`.
 3. Whenever a line has the same `text` for that character AND the voice `provider:id` matches the current one, the file is used and the voice service is not called. Change the voice and locked takes are skipped automatically.
+4. `lock` does steps 1-2 for you (the file goes to `characters/<id>/locked/<slug>_L<line>.wav`). **A locked take ignores the line's tone and speed**; `validate` warns when a locked line also has a `tone`. Remove its entry in `locked_takes` to act that line again.
 
 ## 4. Sound effects (`assets/sfx/library.json`)
 Every visible cause has a sound; the engine adds them automatically:
@@ -27,12 +28,13 @@ Every visible cause has a sound; the engine adds them automatically:
 | phone rises | `phone_rise` |
 | moment outside | per type, from `world.json` → `outsideSfx` (`star` → `shooting_star`, `car` → `rocket_car_far`, `ufo` → `ufo_pass`, `santa` → `santa_bells`, `ketupat` → `ketupat_launch`, `firework` → `fireworks`, `lantern` → `lantern_rise`, `sprite` → `whoosh`), 0.3 s before it appears |
 | screen page change | `soft_click` (`screen[].sfx` to change, `false` = silent) |
-Others to add by hand in `sfx` when visible: `keyboard_typing`, `done_ping`, `sparkle`, `bell`, `whoosh`, `soft_pop`.
+Others to add by hand in `sfx` when visible: `keyboard_typing` (low `gain`, about 0.4, under a character's "work" lines), `done_ping`, `sparkle`, `bell`, `whoosh`, `soft_pop`, `neon_flicker` (the sign switching on: add it at the `neon.at` time).
 - Library entries: `"source": "kit"` (a bundled file in `assets/sfx/kit/`) or `"source": "elevenlabs"` (generated once from `prompt` + `duration`, kept in `assets/sfx/generated/`).
 - **No ElevenLabs key?** Everything already generated ships in the kit and works. A sound that is not generated yet falls back to the bundled `whoosh` with a notice. Nothing blocks.
 - **New effect**: add an entry `{"source":"elevenlabs","duration":2.0,"rms":900,"prompt":"English description: the sound, distance (\"very far away\"), the place (\"quiet room\")"}`, run `python tools/audio.py <slug> --sfx`, keep the mp3. Needs the ElevenLabs key; this key is for effects only when the project's voices use Cartesia.
 - `rms` = target loudness when mixed (dialogue about 2600, effects 800-1900, ambience 260-420, music 330).
 - **Ambience**: `episode.json` → `ambience` (see `direction.md`); the bedroom has `amb_quiet`, `amb_street`, `amb_moon`, `amb_rain`, looped softly. Worlds without ambience stay silent under the dialogue, unless `ambience` names a library sound.
+- A `video` screen page plays NO sound by itself. If the recording has sound, extract it (`ffmpeg -i rec.mp4 episodes/<slug>/audio/rec.mp3`) and add `{ "at": "<the time the page starts>", "file": "episodes/<slug>/audio/rec.mp3", "rms": 1100 }` to `sfx`.
 - Room tone (fan, hum) is only added when the world says `roomTone: true` (the bedroom).
 
 ## 5. Music

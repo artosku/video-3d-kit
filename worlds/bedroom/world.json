@@ -46,7 +46,10 @@
   "number",
   "profile",
   "image",
-  "text"
+  "text",
+  "video",
+  "loginapp",
+  "gitdiff"
  ],
  "themes": [
   "dark",
@@ -67,7 +70,18 @@
   "right",
   "right34",
   "phone",
-  "window"
+  "window",
+  "two",
+  "left_low",
+  "right_low",
+  "left_high",
+  "right_high",
+  "left_ecu",
+  "right_ecu",
+  "over_left",
+  "over_right",
+  "wide_low",
+  "wide_high"
  ],
  "ambience": {
   "quiet": "amb_quiet",
