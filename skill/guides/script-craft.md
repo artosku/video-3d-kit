@@ -70,3 +70,11 @@ Two characters talk in turn. Lines are short (3-8 words), spoken, and the humor 
 | 18 | ayam | ...Bio-nya kosong. | weak_whisper | **1.9** |
 | 22 | claude | Beres. | flat | 0.3 |
 Gap: huge effort (200k views) vs tiny result (5 downloads); painful keyword "...Lima."; simple cause (empty bio link); one-word fix "Beres.". The existing demo script uses explicit `speed`/`volume`/`level` values instead of `tone` names.
+
+## Opening clip (optional, only some characters have one)
+- A character can own a locked opening clip (`character.json` → `opening`): a word plus a pause, in its own voice, never made by the voice service. The chicken (`ayam`) has one: it calls "Claude..." and waits.
+- `python tools/episode.py new` adds it automatically as the first script line when the lead character has one in the voice the project uses: `{ "who": "ayam", "opening": true, "pause": 0.6 }`. Keep it. `pause` is `0.6` (relaxed, default) or `0.3` (tight: the next line follows right away).
+- The pause is inside the clip, so the next line needs no `gap`. Do not repeat the called name at the start of the next line.
+- It only works with the voice the clip was made in (`opening.voice`); if the project switches voices, `build` stops with a clear message: remove the opening line.
+- `rules.requireOpening` in `project.json` makes `validate` insist on it (off by default).
+- To give your own character an opening: put a short wav in `characters/<id>/locked/`, then add an `opening` block to its `character.json` (copy the one in `characters/ayam/character.json`: `text`, `voice` as "provider:voice-id", `default`, `wordSeconds`, `files`).

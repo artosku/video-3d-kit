@@ -109,7 +109,10 @@ def new(title):
     d = EPISODES / slug
     d.mkdir()
     a, b = chars[0]["id"], (chars[1]["id"] if len(chars) > 1 else chars[0]["id"])
-    save_json(d / "script.json", [{"who": a, "text": "FIRST LINE", "gap": 0.3}, {"who": b, "text": "SECOND LINE", "gap": "normal"}])
+    op = chars[0].get("opening")
+    use_op = bool(op) and op.get("voice") == f"{proj['tts']['provider']}:{(chars[0]['voice'].get(proj['tts']['provider']) or {}).get('id')}"   # the lead has a locked opening clip in the voice this project uses
+    first = [{"who": a, "opening": True, "pause": float(op["default"])}, {"who": a, "text": "FIRST LINE"}] if use_op else [{"who": a, "text": "FIRST LINE", "gap": 0.3}]
+    save_json(d / "script.json", first + [{"who": b, "text": "SECOND LINE", "gap": "normal"}])
     ep = {"title": title, "scene": {"light": proj["defaults"].get("light", "rembrandt")}, "tail": 4.0, "fadeOut": 1.3, "music": {"mood": proj["defaults"].get("music", "sad")},
           "screen": [], "directions": [], "lightEvents": [], "ending": {"turnAt": "end+0.5", "lookUpAt": "end+1.1", "yaw": 3.0, "pitch": -0.32, "expression": chars[0]["defaultExpression"]}, "facts": []}
     if W.get("backgrounds"):
@@ -131,6 +134,8 @@ def init_directions(slug):
     idl = chars[0]["id"]
     dl, dr = chars[0]["defaultExpression"], (chars[1]["defaultExpression"] if len(chars) > 1 else None)
     ep["directions"] = [{"cam": "left" if ln["who"] == idl else "right", "left": dl, **({"right": dr} if dr else {})} for ln in script]
+    if script and script[0].get("opening"):
+        ep["directions"][0]["cut"] = 1.0   # the camera settles on the lead during the opening call
     save_json(d / "episode.json", ep)
     print(f"directions: a default for each of the {len(script)} lines (edit expressions, shots, looks, hops, turns by judgement)")
 
@@ -187,6 +192,12 @@ def validate(slug, quiet=False, pre=False):   # pre: before the voices exist, so
         if who not in chars:
             errs.append(f"line {i}: who must be one of {ids}")
             continue
+        if ln.get("opening"):
+            if i != 0:
+                errs.append(f"line {i}: 'opening' may only be the first line")
+            if not chars[who].get("opening"):
+                errs.append(f"line {i}: '{who}' has no opening clip (character.json 'opening')")
+            continue
         if not str(ln.get("text", "")).strip() or re.search(r"FIRST LINE|SECOND LINE|PLACEHOLDER", str(ln.get("text", ""))):
             errs.append(f"line {i}: the text is empty or still a placeholder")
         if ln.get("tone") and ln["tone"] not in chars[who]["tones"]:
@@ -195,6 +206,8 @@ def validate(slug, quiet=False, pre=False):   # pre: before the voices exist, so
             errs.append(f"line {i}: unknown gap '{ln['gap']}' ({', '.join(G)})")
         if len(ln.get("text", "")) > 70:
             warns.append(f"line {i} is long ({len(ln['text'])} chars): short lines work better (3-8 words)")
+    if R.get("requireOpening") and not (script and script[0].get("opening")):
+        errs.append("rules.requireOpening is on: the script must start with the opening line, for example {\"who\":\"" + ids[0] + "\",\"opening\":true,\"pause\":0.6}")
     # --- project rules (all optional, off by default)
     for w in R.get("forbidWords", []):
         if any(re.search(re.escape(w), s, re.I) for s in list(strings_of(script)) + list(strings_of(ep))):

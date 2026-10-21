@@ -55,10 +55,29 @@ def build(slug, prune=False):
     takes = d / "takes"
     parts, timings, t, used = [], [], 0.0, set()
     new = 0
+    after_opening = False
     for i, ln in enumerate(script):
         ch = chars.get(ln["who"])
         if ch is None:
             sys.exit(f"line {i}: who='{ln['who']}' is not one of this project's characters ({', '.join(chars)})")
+        if ln.get("opening"):   # the locked call (a word + its pause, one file): never made by the TTS
+            op = ch.get("opening")
+            if not op:
+                sys.exit(f"line {i}: '{ch['id']}' has no opening clip (character.json 'opening')")
+            if op.get("voice") != f"{provider}:{(ch['voice'].get(provider) or {}).get('id')}":
+                sys.exit(f"line {i}: the opening clip of '{ch['id']}' belongs to {op.get('voice')}; this project uses {provider}. Remove the opening line.")
+            pause = str(ln.get("pause", op["default"]))
+            if pause not in op["files"]:
+                sys.exit(f"opening pause must be one of {sorted(op['files'])}")
+            x = read_audio(ROOT / "characters" / ch["id"] / op["files"][pause])
+            gap = gap_of(ln, G) if "gap" in ln else 0.3
+            if gap > 0:
+                parts.append(np.zeros(int(round(gap * SR)), dtype=np.float32)); t += gap
+            parts.append(x)
+            timings.append({"who": ln["who"], "text": ln.get("text", op["text"]), "start": round(t, 3), "end": round(t + op["wordSeconds"], 3), "opening": True})
+            t += len(x) / SR
+            after_opening = True
+            continue
         p = params(ln, ch, provider)
         vid = f"{provider}:{(ch['voice'].get(provider) or {}).get('id')}"
         lk = next((ROOT / "characters" / ch["id"] / e["file"] for e in ch.get("locked_takes", []) if e["text"] == ln["text"] and e.get("voice") == vid), None)   # a take the author locked: used as it is, never made again
@@ -74,7 +93,8 @@ def build(slug, prune=False):
                 new += 1
             used.add(src.name)
         x = leveled(read_audio(src), 2600 * p["level"], 0.4, 8.0)   # every line to the same loudness, `level` keeps the acting softer or louder
-        gap = gap_of(ln, G)
+        gap = 0.0 if after_opening else gap_of(ln, G)   # the opening clip already holds its pause
+        after_opening = False
         if gap > 0:
             parts.append(np.zeros(int(round(gap * SR)), dtype=np.float32)); t += gap
         parts.append(x)

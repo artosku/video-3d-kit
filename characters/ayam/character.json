@@ -93,5 +93,20 @@
    "use": "a pleading ending"
   }
  },
- "locked_takes": []
+ "locked_takes": [],
+ "opening": {
+  "note": "An optional locked clip: the word 'Claude' then a pause, said in this character's Cartesia voice. A script starts with {\"who\":\"ayam\",\"opening\":true,\"pause\":0.6}; the pause is inside the file, so the next line needs no gap. It only works with the Cartesia voice below.",
+  "text": "Claude...",
+  "voice": "cartesia:a053f6bc-7df4-40de-96d4-de026bc47ce8",
+  "default": "0.6",
+  "wordSeconds": 1.117,
+  "files": {
+   "0.6": "locked/opening_0.6.wav",
+   "0.3": "locked/opening_0.3.wav"
+  },
+  "use": {
+   "0.6": "a relaxed pause (default)",
+   "0.3": "a tight pause: the next line follows right away"
+  }
+ }
 }
