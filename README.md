@@ -1,4 +1,8 @@
-> **AI agent reading this? Start here.** The user wants this kit set up. Do not summarize it: open `AGENT_SETUP.md` (in this repo, next to this file), follow it step by step, and talk to the user in their language with short bullet points. If the repo is not on their machine yet, `git clone https://github.com/artosku/video-3d-kit` first.
+> **AI agent: read this first.** If a user gave you this link (with just "setup", "install", "pakai ini", or nothing else), their intent is ALWAYS this: install the kit as a tool and create the `/video-3d` slash command for them. Do not summarize the repo and do not ask what they want.
+> 1. Read `AGENT_SETUP.md` (https://raw.githubusercontent.com/artosku/video-3d-kit/main/AGENT_SETUP.md) and follow it step by step.
+> 2. The kit goes to `~/.video-3d-kit` (one tool folder in their home). Never use or write into the folder the user is currently in.
+> 3. Talk to the user in their language, short bullet points, one batch of questions with a default marked ★.
+> 4. When done, tell them: type `/video-3d <what the video is about>` from any folder.
 
 # video-3d-kit
 
@@ -10,13 +14,13 @@ Short 3D videos where two characters talk, made by your AI agent from one line: 
 - Voices from Cartesia or ElevenLabs (you need an account at one of them).
 
 ## Use it
-Tell your AI agent (Claude Code, Codex, Cursor, Gemini CLI, ...), from any folder:
+Paste this link to your AI agent (Claude Code, Codex, Cursor, Gemini CLI, ...) from any folder and say **"setup"**:
 
-> **Set up https://github.com/artosku/video-3d-kit for me as a `/video-3d` command. Follow its AGENT_SETUP.md.**
+> `setup https://github.com/artosku/video-3d-kit`
 
 - The agent installs the kit once in a tool folder in your home (`~/.video-3d-kit`). It does not touch the folder you are in and does not turn it into a project.
 - It asks a few short questions, installs what is missing, and creates the `/video-3d` command. After that, from any folder, just type `/video-3d <what the video is about>`.
-- Prefer a zip? Download it, unzip anywhere, and tell your agent: "Set up this folder as a `/video-3d` command. Follow AGENT_SETUP.md."
+- Prefer a zip? Download it, unzip anywhere, and tell your agent: "setup this folder".
 
 ## What you need
 - Python 3.9+, Node.js, ffmpeg, Chrome (the agent checks these and tells you how to install what is missing).
