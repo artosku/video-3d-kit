@@ -6,14 +6,18 @@ import os
 import shutil
 import subprocess
 import sys
+import socket
 import tempfile
+import threading
 import time
 import urllib.request
 from pathlib import Path
 
 from common import IS_WINDOWS, OUT, ROOT
 
-PORT = int(os.environ.get("VIDEO3D_PORT", "5173"))
+BASE_PORT = int(os.environ.get("VIDEO3D_PORT", "5173"))
+PORT = BASE_PORT   # the port in use: ensure_server() settles it (another kit or program may already hold 5173)
+_LOCK = threading.Lock()
 
 
 def find_chrome():
@@ -30,27 +34,48 @@ def find_chrome():
     return None
 
 
-def server_up():
+def _root_of(port):
     try:
-        return urllib.request.urlopen(f"http://localhost:{PORT}/web/episode.html", timeout=2).status == 200
+        return urllib.request.urlopen(f"http://localhost:{port}/__root", timeout=2).read().decode().strip()
     except Exception:
-        return False
+        return None
+
+
+def _in_use(port):
+    with socket.socket() as s:
+        s.settimeout(0.5)
+        return s.connect_ex(("127.0.0.1", port)) == 0
+
+
+def _same(a, b):
+    return os.path.normcase(os.path.normpath(a)) == os.path.normcase(os.path.normpath(b))
 
 
 def ensure_server():
-    if server_up():
-        return
-    if not shutil.which("node"):
-        sys.exit("node is not installed (python tools/episode.py doctor tells how to install it)")
-    OUT.mkdir(exist_ok=True)
-    log = open(OUT / "serve.log", "ab")
-    kw = {"creationflags": 0x00000008 | 0x00000200} if IS_WINDOWS else {"start_new_session": True}   # detached: it keeps running after this script ends
-    subprocess.Popen(["node", "serve.mjs", str(PORT)], cwd=ROOT, stdout=log, stderr=log, stdin=subprocess.DEVNULL, **kw)
-    for _ in range(40):
-        if server_up():
+    """Finds (or starts) the little web server of THIS kit. If 5173 belongs to something else (another kit, another project), the next free port is used."""
+    global PORT
+    with _LOCK:
+        if _root_of(PORT) is not None and _same(_root_of(PORT), str(ROOT)):
             return
-        time.sleep(0.5)
-    sys.exit("the web server did not start (see out/serve.log)")
+        if not shutil.which("node"):
+            sys.exit("node is not installed (python tools/episode.py doctor tells how to install it)")
+        for port in range(BASE_PORT, BASE_PORT + 30):
+            r = _root_of(port)
+            if r is not None and _same(r, str(ROOT)):
+                PORT = port
+                return
+            if r is None and not _in_use(port):
+                OUT.mkdir(exist_ok=True)
+                log = open(OUT / "serve.log", "ab")
+                kw = {"creationflags": 0x00000008 | 0x00000200} if IS_WINDOWS else {"start_new_session": True}   # detached: it keeps running after this script ends
+                subprocess.Popen(["node", "serve.mjs", str(port)], cwd=ROOT, stdout=log, stderr=log, stdin=subprocess.DEVNULL, **kw)
+                for _ in range(40):
+                    if _root_of(port) is not None:
+                        PORT = port
+                        return
+                    time.sleep(0.5)
+                sys.exit(f"the web server did not start on port {port} (see out/serve.log)")
+        sys.exit("no free port between %d and %d for the little web server" % (BASE_PORT, BASE_PORT + 29))
 
 
 def _kill_tree(p):

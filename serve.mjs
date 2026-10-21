@@ -32,6 +32,7 @@ http.createServer((req, res) => {
     });
     return;
   }
+  if (u.pathname === '/__root') { res.writeHead(200, { 'Content-Type': 'text/plain' }); return res.end(root); }   // lets the tools check this server really serves THIS kit
   if (u.pathname === '/') { res.writeHead(302, { Location: '/web/episode.html' }); return res.end(); }
   const file = path.join(root, decodeURIComponent(u.pathname));
   const inOut = file.includes(path.sep + 'out' + path.sep);
