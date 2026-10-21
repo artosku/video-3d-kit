@@ -1,0 +1,36 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Sub,Segoe UI Semibold,55,&H00FFFFFF,&H00FFFFFF,&H99000000,&H66000000,0,0,0,0,100,100,0,0,1,3.1,2.3,8,76,76,490,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.30,0:00:03.28,Sub,,0,0,0,,Claude... ... Aku udah\Nbikin aplikasinya.
+Dialogue: 0,0:00:03.65,0:00:06.39,Sub,,0,0,0,,Aku tahu. Aku yang\Nnulis kodenya.
+Dialogue: 0,0:00:06.66,0:00:08.20,Sub,,0,0,0,,Postinganku viral!
+Dialogue: 0,0:00:08.37,0:00:09.91,Sub,,0,0,0,,Berapa views?
+Dialogue: 0,0:00:10.03,0:00:12.69,Sub,,0,0,0,,Dua ratus... ribu.
+Dialogue: 0,0:00:13.01,0:00:14.23,Sub,,0,0,0,,Wow.
+Dialogue: 0,0:00:15.15,0:00:17.65,Sub,,0,0,0,,Terus. Berapa yang download?
+Dialogue: 0,0:00:18.47,0:00:19.53,Sub,,0,0,0,,...Lima.
+Dialogue: 0,0:00:20.25,0:00:22.91,Sub,,0,0,0,,Lima dari dua ratus ribu.
+Dialogue: 0,0:00:23.08,0:00:24.06,Sub,,0,0,0,,Kamu ngitung?
+Dialogue: 0,0:00:24.33,0:00:25.63,Sub,,0,0,0,,Kamu yang nanya.
+Dialogue: 0,0:00:26.35,0:00:28.53,Sub,,0,0,0,,Mungkin aplikasinya jelek.
+Dialogue: 0,0:00:28.85,0:00:30.71,Sub,,0,0,0,,Aplikasinya bagus.
+Dialogue: 0,0:00:30.98,0:00:33.72,Sub,,0,0,0,,Kamu bilang gitu karena\Nkamu yang bikin.
+Dialogue: 0,0:00:34.04,0:00:37.42,Sub,,0,0,0,,Aku bilang gitu, karena\Naku baca kodenya.
+Dialogue: 0,0:00:38.14,0:00:40.16,Sub,,0,0,0,,Jadi aku harus gimana?
+Dialogue: 0,0:00:40.48,0:00:42.66,Sub,,0,0,0,,Pertanyaan bagus!
+Dialogue: 0,0:00:43.38,0:00:46.60,Sub,,0,0,0,,Link Play Store-nya...\Nada di bio?
+Dialogue: 0,0:00:48.32,0:00:50.18,Sub,,0,0,0,,...Bio-nya kosong.
+Dialogue: 0,0:00:50.60,0:00:52.20,Sub,,0,0,0,,Kamu bener banget!
+Dialogue: 0,0:00:52.73,0:00:55.78,Sub,,0,0,0,,Aku udah bilang.\NTiga hari lalu.
+Dialogue: 0,0:00:56.80,0:00:58.83,Sub,,0,0,0,,...Tolong bantu aku isi.
+Dialogue: 0,0:00:58.95,0:01:00.16,Sub,,0,0,0,,Beres.

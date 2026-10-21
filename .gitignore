@@ -1,0 +1,8 @@
+out/
+dist/
+node_modules/
+*.mp4
+__pycache__/
+episodes/*/dialog.wav
+.env
+project.json

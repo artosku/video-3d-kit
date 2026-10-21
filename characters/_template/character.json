@@ -1,0 +1,32 @@
+{
+ "id": "my-character",
+ "name": "My character",
+ "role": "One or two sentences: who this character is and how it talks. The agent reads this when it writes the script.",
+ "rig": "rig.js",
+ "look": {
+  "bodyColor": "#F2C9A0",
+  "bellyColor": "#FFE9CF",
+  "accentColor": "#E8645A",
+  "eyeColor": "#1B1B26",
+  "width": 0.85,
+  "height": 0.85,
+  "ears": "round",
+  "tail": true,
+  "cheeks": true
+ },
+ "expressions": ["neutral", "happy", "sad", "angry", "surprised", "sleepy"],
+ "defaultExpression": "neutral",
+ "voice": {
+  "level": 1.0,
+  "cartesia": { "id": null, "name": null, "emotion": "neutral", "speed": 1.0, "volume": 1.0 },
+  "elevenlabs": { "id": null, "name": null, "stability": 0.45, "similarity": 0.75, "style": 0.3, "speed": 1.0 },
+  "note": "Pick the id with: python tools/episode.py voices --provider <cartesia|elevenlabs> --language <code>"
+ },
+ "tones": {
+  "calm": { "speed": 1.0, "volume": 1.0, "level": 1.0, "use": "a normal line (the default)" },
+  "soft": { "speed": 0.85, "volume": 1.2, "level": 0.9, "use": "sad, shy or whispered" },
+  "excited": { "speed": 1.12, "volume": 1.3, "level": 1.1, "use": "happy or surprised" },
+  "slow": { "speed": 0.75, "volume": 1.2, "level": 0.85, "use": "a heavy, dramatic line" }
+ },
+ "locked_takes": []
+}

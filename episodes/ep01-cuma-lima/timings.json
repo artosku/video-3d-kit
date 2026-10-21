@@ -1,0 +1,140 @@
+[
+ {
+  "who": "ayam",
+  "text": "Claude... ... Aku udah bikin aplikasinya.",
+  "start": 0.3,
+  "end": 3.1
+ },
+ {
+  "who": "claude",
+  "text": "Aku tahu. Aku yang nulis kodenya.",
+  "start": 3.65,
+  "end": 6.21
+ },
+ {
+  "who": "ayam",
+  "text": "Postinganku viral!",
+  "start": 6.66,
+  "end": 8.02
+ },
+ {
+  "who": "claude",
+  "text": "Berapa views?",
+  "start": 8.37,
+  "end": 9.73
+ },
+ {
+  "who": "ayam",
+  "text": "Dua ratus... ribu.",
+  "start": 10.03,
+  "end": 12.51
+ },
+ {
+  "who": "claude",
+  "text": "Wow.",
+  "start": 13.01,
+  "end": 14.05
+ },
+ {
+  "who": "claude",
+  "text": "Terus. Berapa yang download?",
+  "start": 15.15,
+  "end": 17.47
+ },
+ {
+  "who": "ayam",
+  "text": "...Lima.",
+  "start": 18.47,
+  "end": 19.35
+ },
+ {
+  "who": "claude",
+  "text": "Lima dari dua ratus ribu.",
+  "start": 20.25,
+  "end": 22.73
+ },
+ {
+  "who": "ayam",
+  "text": "Kamu ngitung?",
+  "start": 23.08,
+  "end": 23.88
+ },
+ {
+  "who": "claude",
+  "text": "Kamu yang nanya.",
+  "start": 24.33,
+  "end": 25.45
+ },
+ {
+  "who": "ayam",
+  "text": "Mungkin aplikasinya jelek.",
+  "start": 26.35,
+  "end": 28.35
+ },
+ {
+  "who": "claude",
+  "text": "Aplikasinya bagus.",
+  "start": 28.85,
+  "end": 30.53
+ },
+ {
+  "who": "ayam",
+  "text": "Kamu bilang gitu karena kamu yang bikin.",
+  "start": 30.98,
+  "end": 33.54
+ },
+ {
+  "who": "claude",
+  "text": "Aku bilang gitu, karena aku baca kodenya.",
+  "start": 34.04,
+  "end": 37.24
+ },
+ {
+  "who": "ayam",
+  "text": "Jadi aku harus gimana?",
+  "start": 38.14,
+  "end": 39.98
+ },
+ {
+  "who": "claude",
+  "text": "Pertanyaan bagus!",
+  "start": 40.48,
+  "end": 42.48
+ },
+ {
+  "who": "claude",
+  "text": "Link Play Store-nya... ada di bio?",
+  "start": 43.38,
+  "end": 46.42
+ },
+ {
+  "who": "ayam",
+  "text": "...Bio-nya kosong.",
+  "start": 48.32,
+  "end": 50.0
+ },
+ {
+  "who": "claude",
+  "text": "Kamu bener banget!",
+  "start": 50.6,
+  "end": 52.025
+ },
+ {
+  "who": "claude",
+  "text": "Aku udah bilang. Tiga hari lalu.",
+  "start": 52.725,
+  "end": 55.605
+ },
+ {
+  "who": "ayam",
+  "text": "...Tolong bantu aku isi.",
+  "start": 56.805,
+  "end": 58.645
+ },
+ {
+  "who": "claude",
+  "text": "Beres.",
+  "start": 58.945,
+  "end": 59.985
+ }
+]

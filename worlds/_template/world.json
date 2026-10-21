@@ -1,0 +1,52 @@
+{
+ "id": "my-world",
+ "name": "My world",
+ "description": "A simple outdoor night scene: a log to sit on, trees, bushes, rocks, stars. Edit the numbers in look, or replace world.js for something different.",
+ "features": {
+  "outside": true
+ },
+ "look": {
+  "groundColor": "#2E4A3A",
+  "skyTop": "#0A1238",
+  "skyBottom": "#4A5C9C",
+  "fog": "#10182E",
+  "fogDensity": 0.012,
+  "trees": 14,
+  "treeColor": "#14281E",
+  "bushes": 10,
+  "rocks": 6,
+  "stars": 160,
+  "sun": {
+   "color": "#F4F0E0",
+   "size": 5,
+   "x": 22,
+   "y": 24
+  },
+  "seatColor": "#5A3E2B"
+ },
+ "backgrounds": {},
+ "outsideTypes": [
+  "star"
+ ],
+ "propTypes": [],
+ "pageTypes": [],
+ "themes": [],
+ "lightRoles": [
+  "key",
+  "rim",
+  "fill",
+  "hemi"
+ ],
+ "builtinShots": [
+  "wide",
+  "left",
+  "right",
+  "right34"
+ ],
+ "ambience": {},
+ "roomTone": false,
+ "lightCauseCheck": "text",
+ "outsideSfx": {
+  "star": "shooting_star"
+ }
+}

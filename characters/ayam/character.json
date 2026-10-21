@@ -1,0 +1,97 @@
+{
+ "id": "ayam",
+ "name": "Ayam (the chicken)",
+ "role": "A round cream chicken with a red comb and a gold coin on its belly. Young, naive, easily swept up by feelings, big expressions.",
+ "rig": "rig.js",
+ "expressions": [
+  "neutral",
+  "happy",
+  "sad",
+  "determined",
+  "surprised",
+  "sleepy"
+ ],
+ "defaultExpression": "neutral",
+ "voice": {
+  "level": 1.0,
+  "cartesia": {
+   "id": "a053f6bc-7df4-40de-96d4-de026bc47ce8",
+   "name": "Andi",
+   "emotion": "content",
+   "speed": 0.97,
+   "volume": 1.0
+  },
+  "elevenlabs": {
+   "id": null,
+   "name": null,
+   "stability": 0.45,
+   "similarity": 0.75,
+   "style": 0.3,
+   "speed": 0.97
+  },
+  "note": "Male, young, a little naive."
+ },
+ "tones": {
+  "sad_soft": {
+   "speed": 0.82,
+   "volume": 1.6,
+   "level": 1.0,
+   "use": "opening a confession, soft and low"
+  },
+  "proud": {
+   "speed": 1.12,
+   "volume": 1.3,
+   "level": 1.15,
+   "use": "sudden joy"
+  },
+  "proud_slow": {
+   "speed": 0.95,
+   "volume": 1.2,
+   "level": 1.2,
+   "use": "showing off a number, slowly"
+  },
+  "shocked": {
+   "speed": 1.1,
+   "volume": 1.3,
+   "level": 1.1,
+   "use": "startled or offended"
+  },
+  "gloomy": {
+   "speed": 0.8,
+   "volume": 1.4,
+   "level": 0.9,
+   "use": "blaming oneself"
+  },
+  "insisting": {
+   "speed": 1.0,
+   "volume": 1.3,
+   "level": 1.05,
+   "use": "arguing back"
+  },
+  "tired_question": {
+   "speed": 0.85,
+   "volume": 1.35,
+   "level": 0.95,
+   "use": "asking in despair"
+  },
+  "weak": {
+   "speed": 0.7,
+   "volume": 1.4,
+   "level": 0.8,
+   "use": "a painful keyword, very slow"
+  },
+  "weak_whisper": {
+   "speed": 0.75,
+   "volume": 1.4,
+   "level": 0.85,
+   "use": "an embarrassing punchline"
+  },
+  "pleading": {
+   "speed": 0.78,
+   "volume": 1.4,
+   "level": 0.9,
+   "use": "a pleading ending"
+  }
+ },
+ "locked_takes": []
+}

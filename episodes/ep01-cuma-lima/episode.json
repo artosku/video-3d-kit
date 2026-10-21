@@ -1,0 +1,353 @@
+{
+ "title": "Cuma Lima",
+ "_note": "Episode acuan. Si ayam curhat: aplikasinya jadi, postingannya viral (200 ribu), tapi yang download cuma lima, dan link Play Store di bio belum diisi. Claude datar dan jujur. Frasa AI: 'Pertanyaan bagus!', 'Kamu bener banget!', 'Beres.'",
+ "scene": {
+  "bg": "quiet",
+  "light": "rembrandt"
+ },
+ "total": 64,
+ "fadeOut": 1.3,
+ "ambience": false,
+ "music": {
+  "mood": "sad"
+ },
+ "facts": [
+  {
+   "claim": "200 ribu tayangan, 5 download, 330 pengikut di profil",
+   "source": "fiksi komedi (angka diambil dari kondisi nyata akun, dipakai sebagai bahan cerita)"
+  }
+ ],
+ "pages": {
+  "log": {
+   "type": "code",
+   "theme": "dark",
+   "lines": [
+    {
+     "t": "> bikin aplikasi pencatat keuangan",
+     "c": "#9CC4FF"
+    },
+    {
+     "t": "Membaca struktur proyek ... selesai",
+     "c": "#9AA3B8"
+    },
+    {
+     "t": "Menulis lib/main.dart",
+     "c": "#9AA3B8"
+    },
+    {
+     "t": "Menambah fitur: catat pakai suara",
+     "c": "#9AA3B8"
+    },
+    {
+     "t": "Menyimpan data hanya di HP",
+     "c": "#9AA3B8"
+    },
+    {
+     "t": "flutter analyze ... 0 masalah",
+     "c": "#7BE0A0"
+    }
+   ]
+  },
+  "viral": {
+   "type": "number",
+   "theme": "warm",
+   "value": 199,
+   "unit": "K",
+   "caption": "tayangan",
+   "count": true,
+   "hearts": true,
+   "sub": [
+    "ini aplikasi pencatat keuangan gratis",
+    "tinggal ngomong, langsung tercatat"
+   ]
+  },
+  "unduhan": {
+   "type": "number",
+   "theme": "dim",
+   "value": 5,
+   "caption": "unduhan",
+   "layout": "right",
+   "bars": true
+  },
+  "profil": {
+   "type": "profile",
+   "theme": "bright",
+   "name": "myapp",
+   "followers": "330 pengikut",
+   "bio": "",
+   "link": "link: (kosong)"
+  },
+  "kerja": {
+   "type": "code",
+   "theme": "dark",
+   "full": true,
+   "glow": {
+    "i": 11
+   },
+   "request": "> isi link Play Store di bio",
+   "spinner": true,
+   "lines": [
+    {
+     "t": "> bikin aplikasi pencatat keuangan",
+     "c": "#9CC4FF"
+    },
+    {
+     "t": "Membaca struktur proyek ... selesai",
+     "c": "#9AA3B8"
+    },
+    {
+     "t": "Menulis lib/main.dart",
+     "c": "#9AA3B8"
+    },
+    {
+     "t": "Menambah fitur: catat pakai suara",
+     "c": "#9AA3B8"
+    },
+    {
+     "t": "Menyimpan data hanya di HP",
+     "c": "#9AA3B8"
+    },
+    {
+     "t": "flutter analyze ... 0 masalah",
+     "c": "#7BE0A0"
+    }
+   ]
+  }
+ },
+ "screen": [
+  {
+   "at": "L2.start-0.25",
+   "page": "viral",
+   "sfx": "soft_pop"
+  },
+  {
+   "at": "L6.start-0.1",
+   "page": "unduhan"
+  },
+  {
+   "at": "L15.start-0.1",
+   "page": "log"
+  },
+  {
+   "at": "L17.start-0.2",
+   "page": "profil"
+  },
+  {
+   "at": "L21.start-0.2",
+   "page": "kerja"
+  }
+ ],
+ "directions": [
+  {
+   "cam": "left",
+   "cut": 1.0,
+   "look": [
+    0.2,
+    -0.45
+   ],
+   "left": "sad",
+   "right": "deadpan"
+  },
+  {
+   "cam": "right",
+   "left": "sad",
+   "right": "deadpan"
+  },
+  {
+   "cam": "left",
+   "hop": true,
+   "left": "happy",
+   "right": "deadpan"
+  },
+  {
+   "cam": "right",
+   "left": "happy",
+   "right": "deadpan"
+  },
+  {
+   "cam": "left",
+   "hop": true,
+   "left": "happy",
+   "right": "deadpan"
+  },
+  {
+   "cam": "right",
+   "left": "neutral",
+   "right": "deadpan"
+  },
+  {
+   "cam": "right",
+   "left": "neutral",
+   "right": "smug"
+  },
+  {
+   "cam": "left",
+   "look": [
+    0,
+    -0.7
+   ],
+   "left": "sad",
+   "right": "deadpan"
+  },
+  {
+   "cam": "wide",
+   "left": "sad",
+   "right": "deadpan"
+  },
+  {
+   "cam": "left",
+   "left": "surprised",
+   "right": "deadpan"
+  },
+  {
+   "cam": "right",
+   "left": "surprised",
+   "right": "smug"
+  },
+  {
+   "cam": "left",
+   "look": [
+    0.1,
+    -0.5
+   ],
+   "turn": 1.95,
+   "left": "sad",
+   "right": "deadpan"
+  },
+  {
+   "cam": "right",
+   "turn": 1.95,
+   "left": "sad",
+   "right": "worried"
+  },
+  {
+   "cam": "left",
+   "left": "determined",
+   "right": "deadpan"
+  },
+  {
+   "cam": "right34",
+   "left": "determined",
+   "right": "smug"
+  },
+  {
+   "cam": "left",
+   "look": [
+    0,
+    -0.4
+   ],
+   "left": "sad",
+   "right": "deadpan"
+  },
+  {
+   "cam": "right",
+   "left": "sad",
+   "right": "wow"
+  },
+  {
+   "cam": "right",
+   "left": "neutral",
+   "right": "smug"
+  },
+  {
+   "cam": "left",
+   "look": [
+    0.6,
+    -0.6
+   ],
+   "left": "sad",
+   "right": "smug"
+  },
+  {
+   "cam": "right",
+   "left": "sad",
+   "right": "wow"
+  },
+  {
+   "cam": "right34",
+   "left": "sad",
+   "right": "smug"
+  },
+  {
+   "cam": "left",
+   "look": [
+    0,
+    -0.4
+   ],
+   "left": "sad",
+   "right": "deadpan"
+  },
+  {
+   "cam": null,
+   "left": "surprised",
+   "right": "wow"
+  }
+ ],
+ "camExtra": [
+  {
+   "at": "L22.start-0.55",
+   "cam": "phone",
+   "blend": 0.08
+  },
+  {
+   "at": "L22.start+0.4",
+   "cam": "right",
+   "blend": 0.08
+  },
+  {
+   "at": "L22.end+0.1",
+   "cam": "wide",
+   "blend": 1.2
+  }
+ ],
+ "lightEvents": [
+  {
+   "type": "flicker",
+   "at": "L7.start-0.2",
+   "dur": 1.7,
+   "floor": 0.12,
+   "amp": 0.55,
+   "to": 0.42,
+   "recover": 9,
+   "cause": "bohlam lampu meja berkedip lalu redup tepat saat si ayam bilang '...Lima.'; lampunya kelihatan di sisi kanan"
+  }
+ ],
+ "props": [
+  {
+   "type": "plant",
+   "x": -7.4,
+   "on": "sill"
+  }
+ ],
+ "phone": {
+  "image": "assets/images/phone_profile_demo.png",
+  "at": "L22.start-0.55",
+  "rise": 0.65,
+  "light": 1.5
+ },
+ "outside": {
+  "type": "car",
+  "at": "L22.end+1.4",
+  "dur": 3.0,
+  "label": "car (mobil roket)",
+  "confirmed": true
+ },
+ "ending": {
+  "turnAt": "L22.end+0.5",
+  "lookUpAt": "L22.end+1.1",
+  "yaw": 3.0,
+  "pitch": -0.32,
+  "expression": "neutral"
+ },
+ "sfx": [
+  {
+   "at": "L21.start-0.1",
+   "name": "keyboard_typing"
+  },
+  {
+   "at": "L22.end-0.15",
+   "name": "done_ping"
+  }
+ ],
+ "legacyOpening": true
+}

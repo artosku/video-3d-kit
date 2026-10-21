@@ -1,0 +1,10 @@
+{
+ "_note": "Pause (seconds) BEFORE a line. Write \"gap\": \"breath\" or a number in script.json.",
+ "gaps": {
+  "tight": 0.3,
+  "normal": 0.5,
+  "breath": 0.9,
+  "tense": 1.1,
+  "before_punchline": 1.9
+ }
+}

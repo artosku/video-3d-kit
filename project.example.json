@@ -1,0 +1,44 @@
+{
+ "_note": "Copy of the project settings. tools/setup.py writes project.json (which is yours and not committed). Everything here can be edited by hand.",
+ "name": "My 3D dialogue videos",
+ "language": "id",
+ "format": "portrait",
+ "characters": [
+  "ayam",
+  "claude"
+ ],
+ "world": "bedroom",
+ "tts": {
+  "provider": "cartesia",
+  "cartesia": {
+   "model": "sonic-3.6",
+   "api_version": "2026-08-14"
+  },
+  "elevenlabs": {
+   "model": "eleven_multilingual_v2"
+  }
+ },
+ "sfx": {
+  "generate_missing": "elevenlabs-if-key"
+ },
+ "rules": {
+  "requirePhrases": [],
+  "forbidWords": [],
+  "confirmOutside": false,
+  "noRepeatOutside": false,
+  "numbersNeedFacts": false,
+  "durationHint": []
+ },
+ "defaults": {
+  "music": "sad",
+  "light": "rembrandt",
+  "bg": "quiet",
+  "ask_each_time": [
+   "format",
+   "length"
+  ]
+ },
+ "delivery": {
+  "folder": ""
+ }
+}

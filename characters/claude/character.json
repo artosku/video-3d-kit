@@ -1,0 +1,85 @@
+{
+ "id": "claude",
+ "name": "Clawd (the Claude mascot)",
+ "role": "A flat-faced orange pixel-art creature with four legs in a row. Deadpan, honest, cold but caring. Unofficial fan model of the Claude Code mascot (the character belongs to Anthropic).",
+ "rig": "rig.js",
+ "expressions": [
+  "deadpan",
+  "smug",
+  "worried",
+  "wow",
+  "sleepy"
+ ],
+ "defaultExpression": "deadpan",
+ "voice": {
+  "level": 0.95,
+  "cartesia": {
+   "id": "f3b7c445-d015-40f7-a665-9595e0bc0c90",
+   "name": "Intan",
+   "emotion": "calm",
+   "speed": 0.95,
+   "volume": 1.0
+  },
+  "elevenlabs": {
+   "id": null,
+   "name": null,
+   "stability": 0.45,
+   "similarity": 0.75,
+   "style": 0.3,
+   "speed": 0.95
+  },
+  "note": "Female, flat, honest, cold but caring."
+ },
+ "tones": {
+  "flat": {
+   "speed": 1.0,
+   "volume": 1.0,
+   "level": 0.95,
+   "use": "a plain statement (the default)"
+  },
+  "flat_slow": {
+   "speed": 0.92,
+   "volume": 1.0,
+   "level": 0.95,
+   "use": "a sarcastic line"
+  },
+  "flat_soft": {
+   "speed": 0.9,
+   "volume": 1.0,
+   "level": 0.95,
+   "use": "a piercing question"
+  },
+  "dramatic": {
+   "speed": 0.85,
+   "volume": 1.0,
+   "level": 0.95,
+   "use": "the beat before a punchline"
+  },
+  "deadpan_wow": {
+   "speed": 0.85,
+   "volume": 1.0,
+   "level": 0.9,
+   "use": "insincere admiration"
+  }
+ },
+ "locked_takes": [
+  {
+   "text": "Pertanyaan bagus!",
+   "file": "locked/pertanyaan_bagus.wav",
+   "voice": "cartesia:f3b7c445-d015-40f7-a665-9595e0bc0c90",
+   "note": "datar, kecepatan 0,9"
+  },
+  {
+   "text": "Kamu bener banget!",
+   "file": "locked/kamu_bener_banget.wav",
+   "voice": "cartesia:f3b7c445-d015-40f7-a665-9595e0bc0c90",
+   "note": "cepat dan pendek, kecepatan 1,5, ada titik di ujung teks supaya huruf akhir tidak terpotong"
+  },
+  {
+   "text": "Beres.",
+   "file": "locked/beres.wav",
+   "voice": "cartesia:f3b7c445-d015-40f7-a665-9595e0bc0c90",
+   "note": "berlebihan: cepat dan keras, kecepatan 1,2"
+  }
+ ]
+}

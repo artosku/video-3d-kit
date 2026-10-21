@@ -1,0 +1,95 @@
+{
+ "id": "bedroom",
+ "name": "Night bedroom",
+ "description": "A night room: the two characters sit on the top edge of an open laptop, a real window behind them, a desk lamp, a phone that can rise, a screen that changes pages, and one small moment outside the window.",
+ "features": {
+  "screen": true,
+  "phone": true,
+  "outside": true,
+  "props": true,
+  "wall": true,
+  "lamp": true
+ },
+ "backgrounds": {
+  "quiet": "quiet city (a red blinking tower, a neighbour's roof, the moon)",
+  "street": "a street lamp, trees, a far car",
+  "moon": "a big moon, stars, clouds, a roof",
+  "rain": "wet glass, bokeh lights"
+ },
+ "defaultBackground": "quiet",
+ "outsideTypes": [
+  "car",
+  "star",
+  "ufo",
+  "santa",
+  "ketupat",
+  "firework",
+  "lantern",
+  "sprite",
+  "constellation"
+ ],
+ "propTypes": [
+  "mug",
+  "plant",
+  "cactus",
+  "trophy",
+  "books",
+  "notebook",
+  "duck",
+  "ketupat",
+  "tree",
+  "lantern",
+  "gift"
+ ],
+ "pageTypes": [
+  "code",
+  "number",
+  "profile",
+  "image",
+  "text"
+ ],
+ "themes": [
+  "dark",
+  "dim",
+  "warm",
+  "bright"
+ ],
+ "lightRoles": [
+  "key",
+  "rim",
+  "fill",
+  "screen",
+  "hemi"
+ ],
+ "builtinShots": [
+  "wide",
+  "left",
+  "right",
+  "right34",
+  "phone",
+  "window"
+ ],
+ "ambience": {
+  "quiet": "amb_quiet",
+  "street": "amb_street",
+  "moon": "amb_moon",
+  "rain": "amb_rain"
+ },
+ "outsideSfx": {
+  "car": "rocket_car_far",
+  "star": "shooting_star",
+  "ufo": "ufo_pass",
+  "santa": "santa_bells",
+  "ketupat": "ketupat_launch",
+  "firework": "fireworks",
+  "lantern": "lantern_rise",
+  "sprite": "whoosh"
+ },
+ "autoSfx": {
+  "lampFlicker": "lamp_flicker",
+  "phone": "phone_rise",
+  "screenChange": "soft_click"
+ },
+ "roomTone": true,
+ "lightCauseCheck": "strict"
+}

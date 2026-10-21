@@ -1,0 +1,176 @@
+[
+ {
+  "who": "ayam",
+  "text": "Claude... ... Aku udah bikin aplikasinya.",
+  "gap": 0.3,
+  "speed": 0.82,
+  "volume": 1.6,
+  "level": 1.0
+ },
+ {
+  "who": "claude",
+  "text": "Aku tahu. Aku yang nulis kodenya.",
+  "gap": 0.55,
+  "speed": 1.0,
+  "level": 0.95
+ },
+ {
+  "who": "ayam",
+  "text": "Postinganku viral!",
+  "gap": 0.45,
+  "speed": 1.12,
+  "volume": 1.3,
+  "level": 1.15
+ },
+ {
+  "who": "claude",
+  "text": "Berapa views?",
+  "gap": 0.35,
+  "speed": 1.0,
+  "level": 0.95
+ },
+ {
+  "who": "ayam",
+  "text": "Dua ratus... ribu.",
+  "gap": 0.3,
+  "speed": 0.95,
+  "volume": 1.2,
+  "level": 1.2
+ },
+ {
+  "who": "claude",
+  "text": "Wow.",
+  "gap": 0.5,
+  "speed": 0.85,
+  "level": 0.9
+ },
+ {
+  "who": "claude",
+  "text": "Terus. Berapa yang download?",
+  "gap": 1.1,
+  "speed": 0.9,
+  "level": 0.95
+ },
+ {
+  "who": "ayam",
+  "text": "...Lima.",
+  "gap": 1.0,
+  "speed": 0.7,
+  "volume": 1.4,
+  "level": 0.8
+ },
+ {
+  "who": "claude",
+  "text": "Lima dari dua ratus ribu.",
+  "gap": 0.9,
+  "speed": 0.92,
+  "level": 0.95
+ },
+ {
+  "who": "ayam",
+  "text": "Kamu ngitung?",
+  "gap": 0.35,
+  "speed": 1.1,
+  "volume": 1.3,
+  "level": 1.1
+ },
+ {
+  "who": "claude",
+  "text": "Kamu yang nanya.",
+  "gap": 0.45,
+  "speed": 0.95,
+  "level": 0.95
+ },
+ {
+  "who": "ayam",
+  "text": "Mungkin aplikasinya jelek.",
+  "gap": 0.9,
+  "speed": 0.8,
+  "volume": 1.4,
+  "level": 0.9
+ },
+ {
+  "who": "claude",
+  "text": "Aplikasinya bagus.",
+  "gap": 0.5,
+  "speed": 0.95,
+  "level": 0.95
+ },
+ {
+  "who": "ayam",
+  "text": "Kamu bilang gitu karena kamu yang bikin.",
+  "gap": 0.45,
+  "speed": 1.0,
+  "volume": 1.3,
+  "level": 1.05
+ },
+ {
+  "who": "claude",
+  "text": "Aku bilang gitu, karena aku baca kodenya.",
+  "gap": 0.5,
+  "speed": 0.9,
+  "level": 0.95
+ },
+ {
+  "who": "ayam",
+  "text": "Jadi aku harus gimana?",
+  "gap": 0.9,
+  "speed": 0.85,
+  "volume": 1.35,
+  "level": 0.95
+ },
+ {
+  "who": "claude",
+  "text": "Pertanyaan bagus!",
+  "gap": 0.5,
+  "speed": 0.9,
+  "volume": 1.0,
+  "level": 0.95
+ },
+ {
+  "who": "claude",
+  "text": "Link Play Store-nya... ada di bio?",
+  "gap": 0.9,
+  "speed": 0.9,
+  "level": 0.95
+ },
+ {
+  "who": "ayam",
+  "text": "...Bio-nya kosong.",
+  "gap": 1.9,
+  "speed": 0.75,
+  "volume": 1.4,
+  "level": 0.85
+ },
+ {
+  "who": "claude",
+  "text": "Kamu bener banget!",
+  "gap": 0.6,
+  "speed": 1.5,
+  "volume": 1.5,
+  "level": 1.15
+ },
+ {
+  "who": "claude",
+  "text": "Aku udah bilang. Tiga hari lalu.",
+  "gap": 0.7,
+  "speed": 0.92,
+  "level": 0.95
+ },
+ {
+  "who": "ayam",
+  "text": "...Tolong bantu aku isi.",
+  "gap": 1.2,
+  "speed": 0.78,
+  "volume": 1.4,
+  "level": 0.9
+ },
+ {
+  "who": "claude",
+  "text": "Beres.",
+  "gap": 0.3,
+  "speed": 1.2,
+  "volume": 1.5,
+  "level": 1.1
+ }
+]

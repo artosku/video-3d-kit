@@ -1,0 +1,124 @@
+{
+ "_note": "The sound library. source \"kit\" = a file in assets/sfx/kit, source \"generated\" = made once through ElevenLabs sound generation (prompt + duration) and kept in assets/sfx/generated. Add your own entries.",
+ "items": {
+  "lamp_flicker": {
+   "source": "elevenlabs",
+   "duration": 2.2,
+   "rms": 1500,
+   "prompt": "An old desk lamp bulb flickering and buzzing, electric hum with a few short flickers, then settling into a low steady glow, quiet room"
+  },
+  "keyboard_typing": {
+   "source": "elevenlabs",
+   "duration": 1.6,
+   "rms": 1300,
+   "prompt": "Soft laptop keyboard typing at night, a quick burst of gentle keystrokes, quiet room"
+  },
+  "phone_rise": {
+   "source": "elevenlabs",
+   "duration": 1.6,
+   "rms": 1900,
+   "prompt": "A smartphone sliding up from behind a laptop with a soft whoosh, then a gentle clean electronic chime, quiet cozy night room"
+  },
+  "done_ping": {
+   "source": "elevenlabs",
+   "duration": 1.0,
+   "rms": 1400,
+   "prompt": "A cheerful short positive task completed notification ding, clean digital, bright"
+  },
+  "rocket_car_far": {
+   "source": "elevenlabs",
+   "duration": 3.0,
+   "rms": 900,
+   "prompt": "A tiny distant flying car with a rocket booster passing far away outside a window at night, faint rocket whoosh and soft engine, very far, subtle"
+  },
+  "shooting_star": {
+   "source": "elevenlabs",
+   "duration": 2.0,
+   "rms": 800,
+   "prompt": "A shooting star streaking across the night sky, a soft airy whoosh with a faint high shimmering tail, very far away and gentle"
+  },
+  "ufo_pass": {
+   "source": "elevenlabs",
+   "duration": 3.5,
+   "rms": 800,
+   "prompt": "A small distant flying saucer gliding past at night, soft eerie hum with a gentle warbling sci-fi tone, very far away and subtle"
+  },
+  "amb_quiet": {
+   "source": "elevenlabs",
+   "duration": 12,
+   "rms": 260,
+   "loop": true,
+   "prompt": "Very quiet night in a city apartment, faint far-away city hum, a distant dog barking once, calm and still"
+  },
+  "amb_street": {
+   "source": "elevenlabs",
+   "duration": 12,
+   "rms": 300,
+   "loop": true,
+   "prompt": "Quiet street at night heard through a window, occasional distant car passing, soft wind in trees"
+  },
+  "amb_moon": {
+   "source": "elevenlabs",
+   "duration": 12,
+   "rms": 300,
+   "loop": true,
+   "prompt": "Calm night with crickets chirping softly and a light breeze, peaceful and quiet"
+  },
+  "amb_rain": {
+   "source": "elevenlabs",
+   "duration": 12,
+   "rms": 420,
+   "loop": true,
+   "prompt": "Steady rain falling on a window glass at night, cozy and calm, soft distant thunder rumble once"
+  },
+  "soft_click": {
+   "source": "kit",
+   "file": "kit/app_sfx_click.flac",
+   "rms": 800
+  },
+  "soft_pop": {
+   "source": "kit",
+   "file": "kit/app_sfx_pop.flac",
+   "rms": 900
+  },
+  "sparkle": {
+   "source": "kit",
+   "file": "kit/app_sfx_sparkle.flac",
+   "rms": 900
+  },
+  "bell": {
+   "source": "kit",
+   "file": "kit/app_sfx_bell.flac",
+   "rms": 800
+  },
+  "whoosh": {
+   "source": "kit",
+   "file": "kit/app_sfx_whoosh.flac",
+   "rms": 900
+  },
+  "santa_bells": {
+   "source": "elevenlabs",
+   "duration": 3.5,
+   "rms": 800,
+   "prompt": "Distant sleigh bells jingling softly as a sleigh glides across the night sky, very far away, gentle and magical"
+  },
+  "ketupat_launch": {
+   "source": "elevenlabs",
+   "duration": 2.2,
+   "rms": 800,
+   "prompt": "A soft airy whoosh of a glowing object streaking across the night sky with a gentle high shimmering tail, very far away"
+  },
+  "fireworks": {
+   "source": "elevenlabs",
+   "duration": 3.5,
+   "rms": 900,
+   "prompt": "Fireworks far away over a city at night, a few soft whistles rising then dull distant booms and crackles, quiet and far"
+  },
+  "lantern_rise": {
+   "source": "elevenlabs",
+   "duration": 3.0,
+   "rms": 600,
+   "prompt": "Sky lanterns rising into the night, a very soft warm breeze and a faint gentle shimmer, peaceful and far away"
+  }
+ }
+}

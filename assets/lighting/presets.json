@@ -1,0 +1,248 @@
+{
+  "note": "Light positions are relative to the chicken's face. az: 0 = from the camera side (front), +90 = from the right, -90 = from the left, 180 = from behind. el: degrees above (+) or below (-) the face. d: distance in units. i: intensity.",
+  "presets": {
+    "rembrandt": {
+      "label": "Rembrandt",
+      "mood": "sedih tapi tenang: cahaya hangat dari samping-atas 45 derajat, sisi wajah yang jauh dari lampu gelap dengan segitiga cahaya kecil di pipi, tepi dingin dari belakang",
+      "hemi": 0.3,
+      "lamp": 70,
+      "lights": [
+        {
+          "role": "key",
+          "type": "spot",
+          "az": 48,
+          "el": 38,
+          "d": 11,
+          "color": "#FFB070",
+          "i": 420,
+          "angle": 0.42,
+          "shadow": true
+        },
+        {
+          "role": "fill",
+          "type": "point",
+          "az": -65,
+          "el": 8,
+          "d": 9,
+          "color": "#7F9CE0",
+          "i": 4
+        },
+        {
+          "role": "rim",
+          "type": "spot",
+          "az": 165,
+          "el": 25,
+          "d": 12,
+          "color": "#6A9BFF",
+          "i": 520,
+          "angle": 0.5
+        },
+        {
+          "role": "screen",
+          "type": "point",
+          "az": 0,
+          "el": -30,
+          "d": 5,
+          "color": "#8FB8FF",
+          "i": 4
+        }
+      ]
+    },
+    "split": {
+      "label": "Split (belah dua)",
+      "mood": "tertekan, terbelah: satu lampu tepat dari samping, separuh wajah terang dan separuh gelap total, hampir tanpa pengisi",
+      "hemi": 0.16,
+      "lamp": 40,
+      "lights": [
+        {
+          "role": "key",
+          "type": "spot",
+          "az": 92,
+          "el": 12,
+          "d": 10,
+          "color": "#FFAA60",
+          "i": 520,
+          "angle": 0.4,
+          "shadow": true
+        },
+        {
+          "role": "rim",
+          "type": "spot",
+          "az": -140,
+          "el": 20,
+          "d": 12,
+          "color": "#6A9BFF",
+          "i": 200,
+          "angle": 0.5
+        },
+        {
+          "role": "screen",
+          "type": "point",
+          "az": 0,
+          "el": -30,
+          "d": 5,
+          "color": "#8FB8FF",
+          "i": 1.5
+        }
+      ]
+    },
+    "top": {
+      "label": "Lampu atas (top light)",
+      "mood": "putus asa, terpojok: satu lampu tepat dari atas, bayangan gelap di rongga mata dan bawah paruh, sisa ruangan hampir gelap",
+      "hemi": 0.14,
+      "lamp": 30,
+      "lights": [
+        {
+          "role": "key",
+          "type": "spot",
+          "az": 8,
+          "el": 78,
+          "d": 9,
+          "color": "#FFD9A8",
+          "i": 190,
+          "angle": 0.34,
+          "shadow": true
+        },
+        {
+          "role": "rim",
+          "type": "spot",
+          "az": 170,
+          "el": 30,
+          "d": 12,
+          "color": "#6A9BFF",
+          "i": 150,
+          "angle": 0.5
+        },
+        {
+          "role": "screen",
+          "type": "point",
+          "az": 0,
+          "el": -30,
+          "d": 5,
+          "color": "#8FB8FF",
+          "i": 2.5
+        }
+      ]
+    },
+    "screen": {
+      "label": "Cahaya layar dari bawah",
+      "mood": "kesepian larut malam: wajah hanya diterangi cahaya dingin layar dari bawah-depan, tepi hangat tipis dari lampu tidur di belakang",
+      "hemi": 0.18,
+      "lamp": 60,
+      "lights": [
+        {
+          "role": "key",
+          "type": "point",
+          "az": 0,
+          "el": -32,
+          "d": 4.5,
+          "color": "#7FB0FF",
+          "i": 30
+        },
+        {
+          "role": "rim",
+          "type": "spot",
+          "az": 150,
+          "el": 25,
+          "d": 11,
+          "color": "#FFB070",
+          "i": 380,
+          "angle": 0.5
+        },
+        {
+          "role": "fill",
+          "type": "point",
+          "az": -60,
+          "el": 10,
+          "d": 9,
+          "color": "#5F7CC0",
+          "i": 2
+        }
+      ]
+    },
+    "silhouette": {
+      "label": "Cahaya belakang (siluet, melamun)",
+      "mood": "melamun, menjauh: jendela menyinari dari belakang sehingga wajah nyaris siluet, hanya sedikit pengisi hangat dari samping",
+      "hemi": 0.14,
+      "lamp": 25,
+      "lights": [
+        {
+          "role": "rim",
+          "type": "spot",
+          "az": 180,
+          "el": 18,
+          "d": 12,
+          "color": "#7AA2FF",
+          "i": 900,
+          "angle": 0.55
+        },
+        {
+          "role": "key",
+          "type": "spot",
+          "az": 35,
+          "el": 10,
+          "d": 10,
+          "color": "#FFB070",
+          "i": 90,
+          "angle": 0.5
+        },
+        {
+          "role": "screen",
+          "type": "point",
+          "az": 0,
+          "el": -30,
+          "d": 5,
+          "color": "#8FB8FF",
+          "i": 3
+        }
+      ]
+    },
+    "warm": {
+      "label": "Hangat (untuk adegan senang)",
+      "mood": "bangga, lega: cahaya hangat lembut dari depan-samping, pengisi dingin tipis, kontras rendah",
+      "hemi": 0.5,
+      "lamp": 130,
+      "lights": [
+        {
+          "role": "key",
+          "type": "spot",
+          "az": 28,
+          "el": 22,
+          "d": 10,
+          "color": "#FFC48A",
+          "i": 380,
+          "angle": 0.6,
+          "shadow": true
+        },
+        {
+          "role": "fill",
+          "type": "point",
+          "az": -40,
+          "el": 10,
+          "d": 9,
+          "color": "#A9BEF0",
+          "i": 12
+        },
+        {
+          "role": "rim",
+          "type": "spot",
+          "az": 160,
+          "el": 25,
+          "d": 12,
+          "color": "#6A9BFF",
+          "i": 300,
+          "angle": 0.5
+        },
+        {
+          "role": "screen",
+          "type": "point",
+          "az": 0,
+          "el": -30,
+          "d": 5,
+          "color": "#8FB8FF",
+          "i": 6
+        }
+      ]
+    }
+  }
+}
