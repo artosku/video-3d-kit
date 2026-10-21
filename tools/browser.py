@@ -121,17 +121,18 @@ def _wait(path, timeout):
 
 
 def shot(name, query="bg=quiet", size="540,960"):
-    ensure_server()
     f = OUT / "shots" / name
-    f.parent.mkdir(parents=True, exist_ok=True)
-    f.unlink(missing_ok=True)
-    p, prof = _chrome(f"http://localhost:{PORT}/web/episode.html?shot=1&name={name}&{query}", size)
-    ok = _wait(f, 180)
-    _kill_tree(p)
-    shutil.rmtree(prof, ignore_errors=True)
-    if not ok:
-        sys.exit(f"no screenshot for {name} (query: {query})")
-    return f
+    for attempt in range(2):   # a busy machine (a build running next to it) can make Chrome miss the deadline once: try again
+        ensure_server()
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.unlink(missing_ok=True)
+        p, prof = _chrome(f"http://localhost:{PORT}/web/episode.html?shot=1&name={name}&{query}", size)
+        ok = _wait(f, 150)
+        _kill_tree(p)
+        shutil.rmtree(prof, ignore_errors=True)
+        if ok:
+            return f
+    sys.exit(f"no screenshot for {name} (query: {query})")
 
 
 def capture(slug, a, b, size="720,1280"):

@@ -77,8 +77,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         x = dirs[i] if i < len(dirs) else {}
         pos = x.get("subs") or mode
         if pos == "auto":
-            cam = x.get("cam") or ""
-            pos = "bottom" if (cam in ("wide", "two", "wide_low", "wide_high") or cam.endswith("_high")) else "top"
+            from direct import shot_kind
+            pos = "bottom" if shot_kind(x.get("cam"), ep) in ("wide", "two", "high") else "top"   # where the heads are, the top third is not free
         ev.append(f"Dialogue: 0,{ts(ln['start'])},{ts(end)},{'SubBottom' if pos == 'bottom' else 'Sub'},,0,0,0,,{wrap(ln['text'], 31 if portrait else 52)}")
     (d / "subs.ass").write_text(head + "\n".join(ev) + "\n", encoding="utf-8")
     print(f"subtitles: {len(ev)} lines ({font})")

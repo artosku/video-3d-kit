@@ -80,3 +80,6 @@ A number of seconds, or text: `"L7.start-0.2"` (line 7 starts, minus 0.2 s), `"L
 
 ## 10. Check the result
 `validate <slug>` (also runs the cinematic check when `rules.cinematic` is on, which it is by default: a flat plan fails), `review <slug>` (prints the numbers and what to fix), then `stills <slug>` (one contact sheet). Fix `episode.json` and repeat. Never render the full video before the stills are right. A new episode: `python tools/episode.py new "<title>" [--number 3] [--slug my-name]` (default: next free number).
+
+## Your own shots can say what they are (`kind`)
+`shots: { "laptop": { "pos": [..], "look": [..], "fov": 40, "kind": "wide" } }`. `kind` is one of `wide`, `two`, `low`, `high`, `ecu`, `over`, `close`. The flat-video check counts angles and wide shots by kind, and `subtitles.pos: "auto"` puts the subtitle at the bottom for `wide`, `two` and `high` shots (the top third is where the heads are). Built-in shots already have a kind. The stills now show the subtitle at the moment of each still, so you can check its place.

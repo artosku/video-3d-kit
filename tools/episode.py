@@ -420,6 +420,26 @@ def sheet(files, dst, cols=8, width=240):
     ffmpeg(*inputs, "-filter_complex", fc, "-frames:v", 1, dst)
 
 
+def burn_sub(png, t, ass):
+    tmp = OUT / "_sub"
+    shutil.rmtree(tmp, ignore_errors=True)
+    tmp.mkdir(parents=True)
+    shutil.copy(ass, tmp / "subs.ass")
+    vf = f"setpts=PTS+{t}/TB,ass=subs.ass"
+    if IS_WINDOWS:
+        (tmp / "fonts").mkdir()
+        for f in ("seguisb.ttf", "segoeui.ttf"):
+            src = os.path.join(os.environ.get("WINDIR", r"C:\Windows"), "Fonts", f)
+            if os.path.exists(src):
+                shutil.copy(src, tmp / "fonts" / f)
+        vf += ":fontsdir=fonts"
+    out = tmp / "out.png"
+    r = subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-framerate", "30", "-loop", "1", "-t", "0.1", "-i", str(png), "-vf", vf, "-frames:v", "1", str(out)], capture_output=True, text=True, cwd=tmp)
+    if r.returncode == 0 and out.exists():
+        shutil.move(str(out), str(png))
+    shutil.rmtree(tmp, ignore_errors=True)
+
+
 def stills(slug, at=None):
     from browser import shot
     d = ep_dir(slug)
@@ -445,6 +465,10 @@ def stills(slug, at=None):
         list(ex.map(lambda a: shot(a[0], f"ep={slug}&t={a[1]}", size), zip(names, times)))
     for n in names:
         shutil.move(str(OUT / "shots" / n), sd / n)
+    ass = d / "subs.ass"
+    if ass.exists():   # burn the subtitle that is on screen at that moment, so its place can be judged (the real video burns them at encode)
+        for n, t in zip(names, times):
+            burn_sub(sd / n, t, ass)
     sheet([sd / n for n in names], sd / "contact.png", cols=8 if project()["format"] == "portrait" else 4)
     print(f"stills: {len(names)} -> {sd / 'contact.png'}")
     return sd / "contact.png"

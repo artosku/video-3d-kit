@@ -21,6 +21,22 @@ BOTTOM_SUBS = ("wide", "two", "wide_low", "wide_high")   # shots where the top t
 NEW_SHOTS = ("left_low", "right_low", "left_high", "right_high", "left_ecu", "right_ecu", "over_left", "over_right", "wide_low", "wide_high", "two")
 
 
+def shot_kind(name, ep=None):
+    """What a shot IS: 'wide', 'two', 'low', 'high', 'ecu', 'over' or 'close'. A shot you invent can say it: episode.json shots: { "screen": { ..., "kind": "wide" } }."""
+    k = ((ep or {}).get("shots", {}).get(name) or {}).get("kind")
+    if k:
+        return k
+    if not name:
+        return None
+    if name.endswith("_ecu"): return "ecu"
+    if name.startswith("over_"): return "over"
+    if name == "two": return "two"
+    if name.startswith("wide"): return "high" if name == "wide_high" else ("low" if name == "wide_low" else "wide")
+    if name.endswith("_low"): return "low"
+    if name.endswith("_high"): return "high"
+    return "close"
+
+
 def pick(names, have, default=None):
     return next((n for n in names if n in have), default if default in have else None)
 
@@ -206,7 +222,7 @@ def metrics(ep, script, W):
     moves = sum(1 for x in dirs if x.get("move") or x.get("roll")) + sum(1 for c in ep.get("camExtra", []) if c.get("move") or c.get("roll")) + len(ep.get("camFx", []))
     return {
         "lines": n, "distinct_shots": len(set(cams)), "longest_same_shot_run": best,
-        "angle_shots": sum(1 for c in set(cams) if c and (c.endswith(LOW_HIGH) or c.startswith("over_"))), "wide_or_two": sum(1 for c in set(cams) if c in ("wide", "two", "wide_low", "wide_high")),
+        "angle_shots": sum(1 for c in set(cams) if shot_kind(c, ep) in ("low", "high", "ecu", "over")), "wide_or_two": sum(1 for c in set(cams) if shot_kind(c, ep) in ("wide", "two") or (c or "").startswith("wide")),
         "face_changes_pct": round(100 * changes / slots), "distinct_faces": len({f for v in faces.values() for f in v}),
         "lines_with_an_act_pct": round(100 * min(n, explicit) / n), "camera_moves": moves, "light_changes": len(ep.get("lightEvents", [])),
     }
