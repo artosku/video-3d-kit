@@ -510,10 +510,12 @@ def deliver(slug):
     if not dest:
         print(f"deliver: no delivery folder set (project.json delivery.folder, or VIDEO3D_DRIVE); the MP4 stays at {f}")
         return
-    if not os.path.isdir(os.path.dirname(dest.rstrip("\\/")) or "."):
+    try:
+        os.makedirs(os.path.expanduser(dest), exist_ok=True)
+    except OSError:
         print(f"deliver: the folder {dest} is not available here; the MP4 stays at {f}")
         return
-    os.makedirs(dest, exist_ok=True)
+    dest = os.path.expanduser(dest)
     shutil.copy2(f, os.path.join(dest, f.name))
     print(f"deliver: copied to {os.path.join(dest, f.name)}")
 

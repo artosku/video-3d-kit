@@ -72,8 +72,8 @@ def init(a):
     p.update({"format": fmt, "language": arg(a, "--language", "id"), "characters": chars, "world": world})
     p["tts"]["provider"] = prov
     p["defaults"]["music"] = arg(a, "--music", p["defaults"].get("music", "sad"))
-    if arg(a, "--delivery"):
-        p["delivery"]["folder"] = arg(a, "--delivery")
+    vids = Path.home() / "Videos"
+    p["delivery"]["folder"] = arg(a, "--delivery") or str((vids if vids.exists() else Path.home()) / "video-3d")   # where finished videos are copied
     save_json(ROOT / "project.json", p)
     print(f"project.json written: {fmt}, {p['language']}, voices from {prov}, characters {', '.join(chars)}, world {world}")
     key = {"cartesia": "CARTESIA_API_KEY", "elevenlabs": "ELEVENLABS_API_KEY"}[prov]

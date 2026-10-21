@@ -1,6 +1,6 @@
 # AGENT_SETUP.md: read this once, then set everything up for the user
 
-You are an AI coding agent (Claude Code, Codex, Cursor, Gemini CLI, or similar). The user wants to make short 3D videos where two characters talk, using the kit in this folder. Your job now: get it working on their machine and create a `/video-3d` command for them. After this, they only type `/video-3d <topic>`.
+You are an AI coding agent (Claude Code, Codex, Cursor, Gemini CLI, or similar). The user wants to make short 3D videos where two characters talk, using this kit. Your job now: install the kit as a tool on their machine and create a `/video-3d` command for them. After this, they only type `/video-3d <topic>` from any folder.
 
 ## Talk to the user like this (strict)
 - Reply in the user's own language. Bullet points only, short, plain words. No jargon (no "rig", "TTS", "frames", file names) unless asked.
@@ -9,9 +9,13 @@ You are an AI coding agent (Claude Code, Codex, Cursor, Gemini CLI, or similar).
 - NEVER ask the user to paste an API key in the chat. They paste it into the `.env` file themselves.
 - Ask before installing software on their machine. Never commit or upload anything.
 
-## Step 1. Find the kit and check the machine
-- The kit is the folder that contains this file. If the user gave a GitHub link instead, `git clone` it first (ask nothing; use `~/video-3d-kit`).
-- Run, from the kit folder: `pip install -r requirements.txt`, then `python tools/episode.py doctor --smoke`.
+## Step 1. Install the kit as a tool, then check the machine
+- This kit is a TOOL, not the user's project. Install it once in a fixed folder in their home: `~/.video-3d-kit` (Windows: `%USERPROFILE%\.video-3d-kit`). Never use or write into the folder the user is currently in, and never turn it into a project.
+  - Not installed yet (you were just given the link): `git clone https://github.com/artosku/video-3d-kit ~/.video-3d-kit`. Tell the user in one bullet where it goes and why ("one tool folder, your current folder stays untouched").
+  - You were given a zip or a copy somewhere else: move or copy it to `~/.video-3d-kit` (ask OK first).
+  - Already there: `git -C ~/.video-3d-kit pull` (if it is a git clone) and continue.
+- From now on, run every command from `~/.video-3d-kit`. Everything the user makes (characters, places, videos) is saved there too.
+- Run `pip install -r requirements.txt`, then `python tools/episode.py doctor --smoke`.
 - If something is marked ✗, the doctor prints the fix command. Tell the user in one bullet what is missing and ask OK before running it. Repeat until it prints READY.
 
 ## Step 2. Ask the setup questions (one batch)
@@ -36,7 +40,7 @@ You are an AI coding agent (Claude Code, Codex, Cursor, Gemini CLI, or similar).
 - If they have made their own character, that one is the default from now on, not the chicken.
 
 ## Step 5. Save the choices and make the command
-- `python tools/setup.py init --format <portrait|landscape|square> --language <code> --provider <cartesia|elevenlabs> --characters <idLeft>,<idRight> --world <id>`
+- `python tools/setup.py init --format <portrait|landscape|square> --language <code> --provider <cartesia|elevenlabs> --characters <idLeft>,<idRight> --world <id>` (finished videos are copied to `~/Videos/video-3d` by default; add `--delivery <folder>` if the user names another one, and say in one bullet where they will find their videos)
 - Install the slash command for the agent you are: `python tools/setup.py install-skill --agent <claude|codex|cursor|gemini|generic> --scope user`. (`generic` writes a file the user can hand to any agent.)
 - If you are not sure how your agent loads custom commands, check its current documentation and place the generated file there; the content is the same.
 
@@ -47,7 +51,7 @@ You are an AI coding agent (Claude Code, Codex, Cursor, Gemini CLI, or similar).
 ## Step 7. Final message to the user (bullets)
 - It is ready. To make a video: type `/video-3d <what the video is about>` (restart the agent or open a new session if the command is not listed yet).
 - What they set: characters, place, shape, voices from, dialogue language.
-- Where videos are saved: `<kit>/out/<episode>/` (the `.mp4`); a delivery folder can be set in `project.json` (`delivery.folder`).
+- Where videos are saved: the delivery folder (default `~/Videos/video-3d`; change it in `project.json` → `delivery.folder`); the working files stay in the tool folder.
 - A video takes about half a minute of waiting per second of video; the first questions are asked once, later runs remember them.
 
 ## If something fails

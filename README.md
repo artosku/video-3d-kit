@@ -9,13 +9,14 @@ Short 3D videos where two characters talk, made by your AI agent from one line: 
 - Two ready characters (a round chicken and a pixel mascot) and a ready night bedroom. Make your own character or place if you want.
 - Voices from Cartesia or ElevenLabs (you need an account at one of them).
 
-## Use it (2 steps)
-The shortest way: paste this link into your AI agent and say **"set this up"**: `https://github.com/artosku/video-3d-kit`
+## Use it
+Tell your AI agent (Claude Code, Codex, Cursor, Gemini CLI, ...), from any folder:
 
-1. Get the kit: `git clone https://github.com/artosku/video-3d-kit`, or download the zip and unzip it.
-2. Tell your AI agent (Claude Code, Codex, Cursor, Gemini CLI, ...): **"Read AGENT_SETUP.md in this folder and set it up for me."** Or, without cloning first: **"Clone https://github.com/artosku/video-3d-kit, read its AGENT_SETUP.md and set it up for me."**
+> **Set up https://github.com/artosku/video-3d-kit for me as a `/video-3d` command. Follow its AGENT_SETUP.md.**
 
-The agent asks a few short questions, installs what is missing, and creates the `/video-3d` command. After that, just type `/video-3d <what the video is about>`.
+- The agent installs the kit once in a tool folder in your home (`~/.video-3d-kit`). It does not touch the folder you are in and does not turn it into a project.
+- It asks a few short questions, installs what is missing, and creates the `/video-3d` command. After that, from any folder, just type `/video-3d <what the video is about>`.
+- Prefer a zip? Download it, unzip anywhere, and tell your agent: "Set up this folder as a `/video-3d` command. Follow AGENT_SETUP.md."
 
 ## What you need
 - Python 3.9+, Node.js, ffmpeg, Chrome (the agent checks these and tells you how to install what is missing).
