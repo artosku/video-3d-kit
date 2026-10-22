@@ -88,8 +88,9 @@ def doctor(smoke=False):
         fc = shutil.which("fc-list")
         print("  - subtitle font: " + ("fontconfig found (uses DejaVu Sans; install fonts-dejavu if subtitles look empty)" if fc else "install fonts-dejavu so the subtitles have a font"))
     if smoke and ok:
-        print("Smoke test: drawing one frame of the world in headless Chrome (software WebGL) ...")
-        from browser import shot
+        from browser import shot, use_gpu, gpu_name
+        g = use_gpu()
+        print("Smoke test: drawing one frame of the world in headless Chrome (" + ("graphics card" + (f": {gpu_name()}" if gpu_name() else "") if g else "software WebGL, no usable graphics card found") + ") ...")
         f = shot("doctor.png", "cam=wide", shot_size())
         line(f.exists() and f.stat().st_size > 20000, f"a frame was drawn: {f}", "Chrome could not draw WebGL; try CHROME_BIN=<another chrome> or a newer Chrome")
     print("READY" if ok else "NOT READY: fix the lines marked ✗")
@@ -475,7 +476,7 @@ def stills(slug, at=None):
 
 
 def render(slug):
-    from browser import capture
+    from browser import capture, use_gpu
     d = ep_dir(slug)
     ep = load_json(d / "episode.json")
     lines = load_json(d / "timings.json")
@@ -485,14 +486,15 @@ def render(slug):
     missing = [i for i in range(n) if not (fd / f"f_{i:04d}.png").exists()]
     if not missing:
         print(f"render: all {n} frames already exist"); return
-    workers = int(os.environ.get("VIDEO3D_WORKERS", max(1, min(4, (os.cpu_count() or 4) // 2))))
+    gpu = use_gpu()
+    workers = int(os.environ.get("VIDEO3D_WORKERS", 2 if gpu else max(1, min(4, (os.cpu_count() or 4) // 2))))   # a GPU is shared: 2 is enough
     rw, rh = fmt_sizes()[0]
     size = os.environ.get("VIDEO3D_SIZE", f"{rw},{rh}")
     # chunks of contiguous missing frames, split among the workers
     first, last = missing[0], missing[-1]
     step = math.ceil((last - first + 1) / workers)
     chunks = [(first + i * step, min(last, first + (i + 1) * step - 1)) for i in range(workers) if first + i * step <= last]
-    print(f"render: {len(missing)} of {n} frames missing, {len(chunks)} workers at {size} (software WebGL, about 2 frames/s per worker)")
+    print(f"render: {len(missing)} of {n} frames missing, {len(chunks)} workers at {size} (" + ("graphics card, much faster" if gpu else "software WebGL, about 2 frames/s per worker; a graphics card would be far faster") + ")")
     with cf.ThreadPoolExecutor(max_workers=len(chunks)) as ex:
         for res in ex.map(lambda c: capture(slug, c[0], c[1], size), chunks):
             print("  chunk done:", res)

@@ -40,5 +40,5 @@ Paste this link to your AI agent (Claude Code, Codex, Cursor, Gemini CLI, ...) f
 
 ## Notes
 - A new character or a new place takes longer and uses more tokens than the ready ones.
-- Rendering takes about half a minute of waiting per second of video on a normal laptop.
+- Rendering uses the graphics card automatically when there is one (a whole video in a few minutes); without one it takes about half a minute of waiting per second of video. `VIDEO3D_GPU=off` forces the processor.
 - Sound effects, music and the 3D engine are included; see `ASSETS_NOTICE.md` for licenses and credits.

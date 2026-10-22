@@ -52,7 +52,7 @@ You are an AI coding agent (Claude Code, Codex, Cursor, Gemini CLI, or similar).
 - It is ready. To make a video: type `/video-3d <what the video is about>` (restart the agent or open a new session if the command is not listed yet).
 - What they set: characters, place, shape, voices from, dialogue language.
 - Where videos are saved: the delivery folder (default `~/Videos/video-3d`; change it in `project.json` → `delivery.folder`); the working files stay in the tool folder.
-- A video takes about half a minute of waiting per second of video; the first questions are asked once, later runs remember them.
+- A video takes a few minutes with a graphics card (used automatically) or about half a minute of waiting per second of video without one; the first questions are asked once, later runs remember them.
 
 ## If something fails
 - `skill/guides/build-qa-deliver.md` has a troubleshooting table.

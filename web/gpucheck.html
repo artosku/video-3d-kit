@@ -1,0 +1,15 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>gpucheck</title>
+<body>
+<script>
+// Reports which WebGL renderer Chrome got (used by tools/browser.py to see if a real GPU is there).
+let r = "none";
+try {
+  const gl = document.createElement("canvas").getContext("webgl");
+  const e = gl && gl.getExtension("WEBGL_debug_renderer_info");
+  r = gl ? (e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)) : "none";
+} catch (x) {}
+document.body.setAttribute("data-renderer", "[[" + r + "]]");
+document.body.textContent = "[[" + r + "]]";
+</script>

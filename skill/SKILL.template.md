@@ -40,7 +40,7 @@ Run from `{{KIT}}`. Never skip a step; a flat video is a failed video.
 3. `python tools/episode.py review <slug>` must print `cinematic check: OK`. Then `python tools/episode.py validate <slug>` until it says OK.
 4. `python tools/episode.py build <slug>` (voices, mouth, subtitles, sound). If a line's voice came out wrong (an extra sound at the end), offer takes: `python tools/episode.py variants <slug> <line>`, let the user pick, then `python tools/episode.py lock <slug> <line> <file>`.
 5. `python tools/episode.py stills <slug>`, then LOOK at `out/<slug>/stills/contact.png` (one picture) and go through the visual checklist at the end of the playbook. Fix `episode.json`, repeat. Never render the full video before the stills are right.
-6. Tell the user once: "Rendering takes about half a minute per second of video (a 60 s video is about 30 min)". Then run `python tools/episode.py video <slug>` in the background and wait for it to finish; do not poll.
+6. The render uses the graphics card by itself when the laptop has one (a minute or two for a whole video), otherwise the processor. Tell the user once which: with a graphics card "a few minutes"; without, "about half a minute per second of video (a 60 s video is about 30 min)". `python tools/episode.py doctor --smoke` shows which one it found; `VIDEO3D_GPU=off` forces the processor. Then run `python tools/episode.py video <slug>` in the background and wait for it to finish; do not poll.
 7. `python tools/episode.py deliver <slug>`.
 
 ## 4. Final message (bullets, nothing else)
