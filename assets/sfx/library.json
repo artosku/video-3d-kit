@@ -125,6 +125,72 @@
    "duration": 3.0,
    "rms": 1100,
    "prompt": "A neon sign far away outside a window at night switching on: a few quick electric buzzing flickers and tiny zaps, off and on, then settling into a steady soft neon hum, quiet room, subtle"
+  },
+  "wood_build": {
+   "source": "elevenlabs",
+   "duration": 3.0,
+   "rms": 1000,
+   "prompt": "Wooden planks and building materials flying together and snapping into place, soft wooden knocks and a swooshing whirl, then a small wooden thud as the structure settles, a quiet street at night"
+  },
+  "steam_puff": {
+   "source": "elevenlabs",
+   "duration": 2.0,
+   "rms": 700,
+   "prompt": "A soft hiss of steam rising from a hot griddle pan, gentle sizzling bubbles, close and quiet"
+  },
+  "sizzle_takoyaki": {
+   "source": "elevenlabs",
+   "duration": 2.5,
+   "rms": 800,
+   "prompt": "Batter sizzling on a hot takoyaki griddle, small bubbling pops and quiet frying sounds, close and warm"
+  },
+  "broom_sweep": {
+   "source": "elevenlabs",
+   "duration": 2.0,
+   "rms": 700,
+   "prompt": "A broom sweeping a tile floor back and forth, soft brush scratching, a faint dust whisper, close and quiet"
+  },
+  "sink_water": {
+   "source": "elevenlabs",
+   "duration": 2.5,
+   "rms": 800,
+   "prompt": "Water running from a tap into a steel sink, a steady gentle stream and light splashing bubbles, close"
+  },
+  "cash_register": {
+   "source": "elevenlabs",
+   "duration": 1.6,
+   "rms": 900,
+   "prompt": "A small cash register drawer opening with a ding and a metal clack, close and clear"
+  },
+  "shutter_roll": {
+   "source": "elevenlabs",
+   "duration": 2.2,
+   "rms": 1000,
+   "prompt": "A metal rolling shutter door rising, rattling slats clicking up one after another, a metallic rumble, then stops with a soft clunk"
+  },
+  "record_scratch": {
+   "source": "elevenlabs",
+   "duration": 1.6,
+   "rms": 1100,
+   "prompt": "A dramatic record scratch with a heavy low thud hit, stopping the mood abruptly, short and punchy"
+  },
+  "notif_flood": {
+   "source": "elevenlabs",
+   "duration": 5.0,
+   "rms": 1000,
+   "prompt": "A rapid chaotic flood of many notification pings, message pops and phone buzzes piling up faster and faster, tense and overwhelming, digital"
+  },
+  "file_pop": {
+   "source": "elevenlabs",
+   "duration": 0.5,
+   "rms": 800,
+   "prompt": "A single small soft bubble pop, cute and short, close"
+  },
+  "delete_whoosh": {
+   "source": "elevenlabs",
+   "duration": 1.6,
+   "rms": 900,
+   "prompt": "A soft sad downward whoosh of a file being deleted, a gentle fading sweep then silence"
   }
  }
 }

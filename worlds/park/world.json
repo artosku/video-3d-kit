@@ -1,0 +1,67 @@
+{
+ "id": "park",
+ "name": "Taman kota",
+ "description": "A city park in the daytime: grass, a path, a bench, trees, a far city skyline with a tall monument, and a closed takoyaki shop with a rolling shutter.",
+ "features": {
+  "outside": true
+ },
+ "look": {
+  "groundColor": "#7CB55A",
+  "skyTop": "#6FBDEB",
+  "skyBottom": "#EAF8FF",
+  "fog": "#CFE9F7",
+  "fogDensity": 0.006,
+  "trees": 10,
+  "treeColor": "#3E8A46",
+  "bushes": 8,
+  "stars": 0,
+  "seatColor": "#7A5230",
+  "shopWall": "#E9DCC3",
+  "awning": "#D0342C",
+  "openAt": 36.0,
+  "sun": {
+   "color": "#FFF2C4",
+   "size": 6,
+   "x": 20,
+   "y": 26
+  },
+  "roofOff": false,
+  "buildAt": 18.2
+ },
+ "backgrounds": {},
+ "outsideTypes": [
+  "star"
+ ],
+ "propTypes": [],
+ "pageTypes": [],
+ "themes": [],
+ "lightRoles": [
+  "key",
+  "rim",
+  "fill",
+  "hemi"
+ ],
+ "builtinShots": [
+  "wide",
+  "left",
+  "right",
+  "right34",
+  "two",
+  "left_low",
+  "right_low",
+  "left_high",
+  "right_high",
+  "left_ecu",
+  "right_ecu",
+  "over_left",
+  "over_right",
+  "wide_low",
+  "wide_high"
+ ],
+ "ambience": {},
+ "roomTone": false,
+ "lightCauseCheck": "text",
+ "outsideSfx": {
+  "star": "shooting_star"
+ }
+}

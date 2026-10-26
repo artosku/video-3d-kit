@@ -174,6 +174,146 @@ export async function createStudio(scene, cfg = {}) {
       if (hiddenNow) { const u = cl((lt - (p.at ?? 0.6)) / 0.2); g.fillStyle = `rgba(30,12,18,${0.92 * u})`; g.fillRect(0, 590, 1024, 50); g.fillStyle = `rgba(255,110,120,${u})`; g.font = `600 22px ${FONT}`; g.fillText(`Uncaught ReferenceError: ${p.hide} is not defined`, 24, 622); }
       if (p.restore && lt > 0.25 && lt < 2.2) { const u = cl((lt - 0.25) / 0.2) * (1 - cl((lt - 1.8) / 0.4)); g.fillStyle = `rgba(32,160,90,${u})`; rr(736, 80, 240, 52, 14); g.fill(); g.fillStyle = `rgba(255,255,255,${u})`; g.font = `700 22px ${FONT}`; g.fillText('✓ ' + X.fixed, 756, 114); }
     },
+    installchart: (g, p, th, t, lt) => {   // an install chart: a green line grows from 0 to p.value (the y axis goes up to p.target, so it looks small), then a faint grey dashed projection climbs to a target flag
+      const cl = (x) => Math.max(0, Math.min(1, x)), ease = (x) => 1 - Math.pow(1 - x, 3);
+      const T = { title: 'Install aplikasi', target: 'Target 10.000 install', xlabel: '30 hari terakhir', ...(p.texts || {}) };
+      const val = p.value ?? 450, tgt = p.target ?? 10000, dur = p.dur ?? 2.2, X0 = 130, X1 = 930, Y0 = 520, Y1 = 150, tipX = X0 + (X1 - X0) * 0.36;
+      const yOf = (v) => Y0 - (Y0 - Y1) * v / tgt, fmt = (n) => Math.round(n).toLocaleString('id-ID');
+      g.fillStyle = '#0A0E19'; g.fillRect(0, 0, 1024, 640);
+      g.textAlign = 'left'; g.fillStyle = '#C9D3F2'; g.font = `700 34px ${FONT}`; g.fillText(T.title, 70, 84);
+      g.font = `20px ${FONT}`; g.fillStyle = '#6F7A99'; for (let k = 0; k <= 4; k++) { const y = Y0 - (Y0 - Y1) * k / 4; g.fillStyle = 'rgba(255,255,255,0.07)'; g.fillRect(X0, y, X1 - X0, 1.5); g.fillStyle = '#6F7A99'; g.textAlign = 'right'; g.fillText(fmt(tgt * k / 4), X0 - 14, y + 7); }
+      g.textAlign = 'center'; g.fillText(T.xlabel, (X0 + X1) / 2, 575);
+      const u = ease(cl(lt / dur)), N = 48, last = Math.floor(N * u), pts = [];
+      for (let i = 0; i <= last; i++) { const f = i / N, v = val * Math.pow(f, 1.5) * (1 + 0.06 * Math.sin(i * 1.9)) * (i === N ? 1 / (1 + 0.06 * Math.sin(N * 1.9)) : 1); pts.push([X0 + (tipX - X0) * f, yOf(Math.min(val, v))]); }
+      if (pts.length > 1) {
+        const gr = g.createLinearGradient(0, Y1, 0, Y0); gr.addColorStop(0, 'rgba(77,219,145,0.35)'); gr.addColorStop(1, 'rgba(77,219,145,0)');
+        g.beginPath(); g.moveTo(pts[0][0], Y0); pts.forEach(([x, y]) => g.lineTo(x, y)); g.lineTo(pts[pts.length - 1][0], Y0); g.closePath(); g.fillStyle = gr; g.fill();
+        g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.strokeStyle = '#4DDB91'; g.lineWidth = 7; g.lineJoin = 'round'; g.shadowColor = '#4DDB91'; g.shadowBlur = 18; g.stroke(); g.shadowBlur = 0;
+        const [tx, ty] = pts[pts.length - 1]; g.fillStyle = '#4DDB91'; g.beginPath(); g.arc(tx, ty, 11, 0, 6.28); g.fill();
+        g.textAlign = 'left'; g.fillStyle = '#EAFBF2'; g.font = `800 76px ${FONT}`; g.fillText(fmt(val * u), Math.min(tx + 22, 700), Math.max(ty - 24, 200));
+      }
+      const q = cl((lt - dur - 0.25) / 1.6);   // the faint projection, drawn after the green line stops
+      if (q > 0) {
+        const yTip = yOf(val); g.save(); g.setLineDash([14, 12]); g.strokeStyle = 'rgba(170,182,205,0.5)'; g.lineWidth = 5; g.beginPath(); g.moveTo(tipX, yTip);
+        for (let k = 1; k <= 40; k++) { const sf = (k / 40) * q; g.lineTo(tipX + (X1 - tipX) * sf, yTip - (yTip - Y1) * Math.pow(sf, 2.3)); } g.stroke(); g.restore();
+        if (q >= 1) { g.strokeStyle = 'rgba(190,200,222,0.55)'; g.lineWidth = 4; g.beginPath(); g.moveTo(X1, Y1 - 38); g.lineTo(X1, Y1 + 8); g.stroke(); g.fillStyle = 'rgba(190,200,222,0.5)'; g.beginPath(); g.moveTo(X1, Y1 - 38); g.lineTo(X1 - 26, Y1 - 28); g.lineTo(X1, Y1 - 18); g.closePath(); g.fill(); g.textAlign = 'right'; g.font = `600 22px ${FONT}`; g.fillStyle = 'rgba(190,200,222,0.65)'; g.fillText(T.target, X1 - 36, Y1 - 24); }
+      }
+      g.textAlign = 'left';
+    },
+    pipeline: (g, p, th, t, lt) => {   // a terminal: a command typed at p.typeAt (p.cmd, wraps), output lines appearing at p.out[i].at, and a progress bar p.bar { at, dur, label, done, restartAt, restartDur, restartLabel }
+      const cl = (x) => Math.max(0, Math.min(1, x)), MONO = "'Cascadia Mono', Consolas, 'Courier New', monospace";
+      const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      g.fillStyle = '#0D1117'; g.fillRect(0, 0, 1024, 640);
+      g.fillStyle = '#161B22'; g.fillRect(0, 0, 1024, 60); ['#FF5F56', '#FFBD2E', '#27C93F'].forEach((c, i) => { g.fillStyle = c; g.beginPath(); g.arc(34 + i * 30, 30, 9, 0, 6.28); g.fill(); });
+      g.textAlign = 'left'; g.fillStyle = '#8B949E'; g.font = `600 22px ${MONO}`; g.fillText(p.title || 'terminal', 150, 38);
+      const cmd = p.cmd || '', size = p.cmdSize ?? 30, ta = p.typeAt ?? 0.3, td = p.typeDur ?? Math.max(0.6, cmd.length * 0.05);
+      const n = Math.floor(cl((lt - ta) / td) * cmd.length), shown = cmd.slice(0, n);
+      g.font = `700 ${size}px ${MONO}`; const maxW = 940 - g.measureText('$ ').width, words = shown.split(' '), lines = []; let cur = '';
+      for (const w of words) { const t2 = cur ? cur + ' ' + w : w; if (g.measureText(t2).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t2; } lines.push(cur);
+      lines.forEach((ln, i) => { g.fillStyle = '#7EE787'; if (i === 0) g.fillText('$', 40, 130); g.fillStyle = '#F0F6FC'; g.fillText(ln, 40 + g.measureText('$ ').width, 130 + i * (size + 10)); });
+      const caretOn = lt < ta + td + 0.4 || Math.floor(lt * 2) % 2 === 0;
+      if (caretOn && !(p.noCaret)) { const last = lines[lines.length - 1]; g.fillStyle = '#F0F6FC'; g.fillRect(40 + g.measureText('$ ').width + g.measureText(last).width + 4, 130 + (lines.length - 1) * (size + 10) - size + 6, 14, size); }
+      const y0 = 130 + lines.length * (size + 10) + 40;
+      (p.out || []).forEach((o, i) => { if (lt >= o.at) { const u = cl((lt - o.at) / 0.25); g.globalAlpha = u; g.fillStyle = o.c || '#7EE787'; g.font = `700 ${p.outSize ?? 34}px ${MONO}`; g.fillText(o.t, 40, y0 + i * 58 + (1 - u) * 10); g.globalAlpha = 1; } });
+      if (p.bar) {
+        const b = p.bar; let u = lt < b.at ? 0 : cl((lt - b.at) / b.dur), label = b.label || 'Render';
+        if (b.restartAt !== undefined && lt >= b.restartAt) { u = cl((lt - b.restartAt) / (b.restartDur || b.dur)); label = b.restartLabel || 'Render ulang'; }
+        const by = 540, bx = 40, bw = 944;
+        g.fillStyle = '#C9D1D9'; g.font = `700 40px ${MONO}`; g.fillText(`${label}  ${Math.round(u * 100)}%`, bx, by - 20);
+        g.fillStyle = '#21262D'; rr(bx, by, bw, 34, 17); g.fill();
+        if (u > 0.01) { const gr = g.createLinearGradient(bx, 0, bx + bw, 0); gr.addColorStop(0, '#2EA043'); gr.addColorStop(1, '#7EE787'); g.fillStyle = gr; rr(bx, by, Math.max(34, bw * u), 34, 17); g.fill(); }
+        if (u >= 1) { g.textAlign = 'right'; g.fillStyle = '#7EE787'; g.font = `700 34px ${MONO}`; g.fillText(b.done || '\u2713 selesai', bx + bw, by - 18); g.textAlign = 'left'; }
+      }
+    },
+    commentfeed: (g, p, th, t, lt0) => {   // a comment thread: praise cards slide in one by one (p.items [{at,name,text,c}]), then a red maintainer card (p.author {at,name,text}) hits, then p.chaosAt: tiny angry or confused cards flood the whole screen (p.chaos [texts]); p.shift continues the clock from an earlier page
+      const lt = lt0 + (p.shift || 0), cl = (x) => Math.max(0, Math.min(1, x)), ez = (u) => u * u * (3 - 2 * u), MONO = "'Cascadia Mono', Consolas, 'Courier New', monospace";
+      const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      g.fillStyle = '#0D1117'; g.fillRect(0, 0, 1024, 640);
+      g.fillStyle = '#161B22'; g.fillRect(0, 0, 1024, 64); g.fillStyle = '#F0F6FC'; g.font = `700 28px ${FONT}`; g.textAlign = 'left'; g.fillText(p.title || 'ZapPlay  ·  Komentar', 28, 42);
+      const items = (p.items || []).filter((it) => lt >= it.at), n = items.length;
+      const fade = p.author && lt >= p.author.at ? 0.35 : 1;
+      items.forEach((it, i) => {
+        const u = ez(cl((lt - it.at) / 0.35)), slot = n - 1 - i; if (slot > 3) return;
+        const yy = 456 - slot * 112 + (1 - u) * 50;
+        g.globalAlpha = u * fade; g.fillStyle = '#161B22'; rr(28, yy, 968, 98, 18); g.fill();
+        g.fillStyle = it.c || '#4C8DFF'; g.beginPath(); g.arc(80, yy + 49, 30, 0, 6.283); g.fill();
+        g.fillStyle = '#C9D1D9'; g.font = `700 24px ${FONT}`; g.fillText(it.name, 130, yy + 38); g.fillStyle = '#F0F6FC'; g.font = `600 30px ${FONT}`; g.fillText(it.text, 130, yy + 78);
+        g.fillStyle = '#FF5A7A'; g.font = `700 30px ${FONT}`; g.textAlign = 'right'; g.fillText('♥', 970, yy + 62); g.textAlign = 'left'; g.globalAlpha = 1;
+      });
+      if (p.author && lt >= p.author.at) {   // the maintainer card: it drops in with a hit and shakes
+        const a = p.author, u = cl((lt - a.at) / 0.22), pop = 0.7 + 0.3 * ez(u) + 0.06 * Math.sin(Math.PI * Math.min(1, u * 1.6)), sh = lt - a.at < 0.5 ? Math.sin(lt * 90) * 6 * (1 - (lt - a.at) / 0.5) : 0;
+        g.save(); g.translate(512 + sh, 290); g.scale(pop, pop);
+        g.fillStyle = '#2A0F12'; rr(-470, -105, 940, 210, 22); g.fill(); g.strokeStyle = '#FF4B3E'; g.lineWidth = 6; rr(-470, -105, 940, 210, 22); g.stroke();
+        g.fillStyle = '#FF6A5E'; g.font = `700 26px ${FONT}`; g.fillText(a.name + '  ·  ' + (a.role || 'pemelihara proyek asli'), -430, -52);
+        g.fillStyle = '#FFFFFF'; g.font = `800 52px ${FONT}`; g.fillText(a.text, -430, 30); g.restore();
+      }
+      if (p.chaosAt !== undefined && lt >= p.chaosAt) {   // the flood
+        const ct = lt - p.chaosAt, cnt = Math.min(90, Math.floor(ct * 14)), texts = p.chaos || ['???', '!!!'], cols = ['#FF4B3E', '#FFB020', '#4C8DFF', '#B06CFF', '#2BB673'];
+        let sd = 31; const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
+        for (let i = 0; i < cnt; i++) {
+          const x = 30 + rnd() * 720, y = 80 + rnd() * 500, w = 190 + rnd() * 150, rot = (rnd() - 0.5) * 0.35, c = cols[(rnd() * 5) | 0], tx = texts[(rnd() * texts.length) | 0], born = i / 14, u = ez(cl((ct - born) / 0.18));
+          g.save(); g.translate(x + w / 2, y + 30); g.rotate(rot); g.scale(u, u); g.globalAlpha = 0.97; g.fillStyle = '#1B1F27'; rr(-w / 2, -30, w, 60, 14); g.fill(); g.strokeStyle = c; g.lineWidth = 3; rr(-w / 2, -30, w, 60, 14); g.stroke();
+          g.fillStyle = c; g.beginPath(); g.arc(-w / 2 + 24, 0, 11, 0, 6.283); g.fill(); g.fillStyle = '#F0F6FC'; g.font = `700 24px ${FONT}`; g.textAlign = 'left'; g.fillText(tx, -w / 2 + 44, 9); g.restore();
+        }
+        g.fillStyle = `rgba(255,60,50,${0.12 + 0.05 * Math.sin(lt * 14)})`; g.fillRect(0, 0, 1024, 640);
+        g.fillStyle = '#FF6A5E'; g.font = `800 34px ${MONO}`; g.textAlign = 'right'; g.fillText(`${Math.min(999, Math.floor(ct * 37))} komentar baru`, 996, 44); g.textAlign = 'left';
+      }
+      g.textAlign = 'left';
+    },
+    filevanish: (g, p, th, t, lt0) => {   // a terminal command (p.cmd) deletes an app: p.files tiles pop out one by one from p.vanishAt (every p.interval s) until the folder is empty
+      const cl = (x) => Math.max(0, Math.min(1, x)), MONO = "'Cascadia Mono', Consolas, 'Courier New', monospace";
+      const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      g.fillStyle = '#0D1117'; g.fillRect(0, 0, 1024, 640);
+      g.fillStyle = '#161B22'; g.fillRect(0, 0, 1024, 60); ['#FF5F56', '#FFBD2E', '#27C93F'].forEach((c, i) => { g.fillStyle = c; g.beginPath(); g.arc(34 + i * 30, 30, 9, 0, 6.28); g.fill(); });
+      g.textAlign = 'left'; g.fillStyle = '#8B949E'; g.font = `600 22px ${MONO}`; g.fillText(p.title || '~/ZapPlay', 150, 38);
+      const lt = lt0 + (p.shift || 0), cmd = p.cmd || '', ta = p.typeAt ?? 0.3, td = p.typeDur ?? Math.max(0.6, cmd.length * 0.07), nch = Math.floor(cl((lt - ta) / td) * cmd.length);
+      g.font = `700 32px ${MONO}`; g.fillStyle = '#7EE787'; g.fillText('$', 40, 120); g.fillStyle = '#F0F6FC'; g.fillText(cmd.slice(0, nch), 40 + g.measureText('$ ').width, 120);
+      const files = p.files || [], iv = p.interval ?? 0.15, va = p.vanishAt ?? 2.0, cols = 4, tw = 215, th2 = 120;
+      let left = 0;
+      files.forEach((f, i) => {
+        const order = (i * 5) % files.length, gone = va + order * iv, k = cl((lt - gone) / 0.28);
+        if (k >= 1) return; left++;
+        const x = 40 + (i % cols) * (tw + 14), y = 170 + Math.floor(i / cols) * (th2 + 14), s = (1 + 0.25 * Math.sin(Math.PI * Math.min(1, k * 1.5)) * (1 - k)) * (1 - k * 0.8);
+        g.save(); g.translate(x + tw / 2, y + th2 / 2); g.scale(s, s); g.globalAlpha = 1 - k; g.fillStyle = f.dir ? '#1F3A5F' : '#1B222C'; rr(-tw / 2, -th2 / 2, tw, th2, 14); g.fill(); g.strokeStyle = f.dir ? '#58A6FF' : '#30363D'; g.lineWidth = 3; rr(-tw / 2, -th2 / 2, tw, th2, 14); g.stroke();
+        g.fillStyle = f.dir ? '#58A6FF' : '#8B949E'; g.font = `700 40px ${FONT}`; g.textAlign = 'center'; g.fillText(f.dir ? '▣' : '▤', 0, -6); g.fillStyle = '#F0F6FC'; g.font = `600 22px ${MONO}`; g.fillText(f.name, 0, 36); g.restore();
+        if (k > 0 && k < 0.3) { g.fillStyle = `rgba(255,255,255,${0.5 * (1 - k / 0.3)})`; g.beginPath(); g.arc(x + tw / 2, y + th2 / 2, 40 + k * 120, 0, 6.283); g.fill(); }
+      });
+      g.textAlign = 'left'; g.fillStyle = left > 0 ? '#FF7B72' : '#6E7681'; g.font = `700 32px ${MONO}`;
+      if (lt >= va) g.fillText(left > 0 ? `Menghapus ... ${left} file tersisa` : 'Folder kosong.', 40, 600);
+      if (left === 0 && lt >= va) { g.textAlign = 'center'; g.fillStyle = 'rgba(139,148,158,0.55)'; g.font = `700 54px ${FONT}`; g.fillText('kosong', 512, 340); g.textAlign = 'left'; }
+    },
+    limitboard: (g, p, th, t, lt) => {   // a usage dashboard: a big counter p.value (blocks light up, a pop when it changes from p.from), a stuck task bar, a lock + "limit reached" and a reopening time typed in at p.revealAt
+      const cl = (x) => Math.max(0, Math.min(1, x)), rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      const T = { label: 'Sisa pesan', limit: 'Batas tercapai', reopen: 'Dibuka lagi pukul 03.00', task: 'Tugas', deadline: 'Deadline: besok pagi', ...(p.texts || {}) };
+      const v = p.value ?? 3, max = p.max ?? 3, COL = { 3: '#5B8CFF', 2: '#FFC14D', 1: '#FF5A5A', 0: '#6B7280' }, col = COL[v] ?? '#5B8CFF';
+      g.fillStyle = '#0A0E19'; g.fillRect(0, 0, 1024, 640);
+      g.fillStyle = 'rgba(255,255,255,0.04)'; rr(40, 40, 944, 560, 28); g.fill();
+      // the stuck task bar (top left)
+      g.textAlign = 'left'; g.fillStyle = '#8D97B3'; g.font = `600 22px ${FONT}`; g.fillText(`${T.task}  ${p.progress ?? 5}%`, 80, 96);
+      g.fillStyle = '#1B2236'; rr(80, 112, 360, 16, 8); g.fill(); g.fillStyle = '#4DDB91'; rr(80, 112, Math.max(10, 360 * (p.progress ?? 5) / 100), 16, 8); g.fill();
+      if (T.deadline) { g.fillStyle = 'rgba(255,90,90,0.16)'; rr(80, 144, 260, 36, 18); g.fill(); g.fillStyle = '#FF7A7A'; g.font = `600 20px ${FONT}`; g.fillText(T.deadline, 98, 169); }
+      // label + the big number
+      g.textAlign = 'center'; g.fillStyle = '#8D97B3'; g.font = `600 30px ${FONT}`; g.fillText(T.label, 512, 262);
+      let pop = 1, flash = 0; if (p.from !== undefined && p.from !== v) { const u = cl(lt / 0.3); pop = 1 + 0.45 * Math.sin(Math.PI * Math.min(1, u * 1.2)) * (1 - u * 0.4); flash = 1 - u; }
+      const beat = v === 1 && p.pulse !== false ? 1 + 0.07 * Math.sin(lt * 7) : 1;
+      g.save(); g.translate(512, 400); g.scale(pop * beat, pop * beat);
+      g.shadowColor = col; g.shadowBlur = v === 0 ? 0 : 36 + 30 * flash; g.fillStyle = col; g.font = `800 230px ${FONT}`; g.fillText(String(v), 0, 80); g.restore();
+      // blocks
+      for (let i = 0; i < max; i++) { const on = i < v, x = 512 + (i - (max - 1) / 2) * 88 - 34; g.fillStyle = on ? col : '#1B2236'; if (on && v === 1) g.globalAlpha = 0.6 + 0.4 * Math.sin(lt * 7 + i); rr(x, 500, 68, 22, 8); g.fill(); g.globalAlpha = 1; }
+      // locked: a padlock, "limit reached", and the reopening time typed in
+      if (p.locked || (v === 0 && lt > 0.35)) {
+        const u = cl((lt - 0.35) / 0.3); g.save(); g.globalAlpha = p.locked ? 1 : u; g.fillStyle = 'rgba(10,14,25,0.55)'; g.fillRect(40, 220, 944, 380);
+        g.strokeStyle = '#9AA3BD'; g.lineWidth = 12; g.beginPath(); g.arc(512, 338, 44, Math.PI, 0); g.stroke(); g.fillStyle = '#9AA3BD'; rr(452, 336, 120, 92, 14); g.fill(); g.fillStyle = '#0A0E19'; g.beginPath(); g.arc(512, 376, 11, 0, 6.28); g.fill(); g.fillRect(508, 380, 8, 28);
+        g.fillStyle = '#E4E9F7'; g.font = `800 52px ${FONT}`; g.fillText(T.limit, 512, 496);
+        const ra = p.revealAt ?? 99, n = p.revealed ? T.reopen.length : Math.floor(Math.max(0, lt - ra) * 28), shown = T.reopen.slice(0, n);
+        if (shown) { g.fillStyle = '#FFC14D'; g.font = `700 34px ${FONT}`; g.fillText(shown + (n < T.reopen.length && Math.floor(lt * 4) % 2 ? '|' : ''), 512, 552); }
+        g.restore();
+      }
+      // fade to near black at the end, only the clock stays
+      if (p.dim) { g.fillStyle = `rgba(4,6,12,${0.82 * cl(lt / (p.dim === true ? 2.5 : p.dim))})`; g.fillRect(0, 0, 1024, 640); }
+      if (p.clock) { g.textAlign = 'right'; g.fillStyle = '#C9D3F2'; g.font = `700 44px ${FONT}`; const c = Math.floor(lt * 1.2) % 2 ? p.clock.replace(':', ' ').replace('.', ' ') : p.clock; g.fillText(c, 960, 590); }
+      g.textAlign = 'left';
+    },
     gitdiff: (g, p, th, t, lt) => {   // git diff --stat: a counter that races up to p.total files, a scrolling file list with +/- and red/green bars
       const cl = (x) => Math.max(0, Math.min(1, x)), MONO = "'Cascadia Mono', Consolas, 'Courier New', monospace";
       const FILES = ['src/components/LoginButton.tsx', 'src/components/RegisterForm.tsx', 'src/pages/index.tsx', 'src/utils/auth.ts', 'package-lock.json', 'yarn.lock', 'src/styles/global.css', 'README.md', 'tsconfig.json', 'src/hooks/useSession.ts', 'src/api/users.ts', 'src/api/login.ts', '.env.example', 'jest.config.js', 'src/components/Navbar.tsx', 'src/layout/Footer.tsx', 'public/logo.svg', 'src/store/index.ts', 'src/types/user.d.ts', 'prisma/schema.prisma', 'src/middleware.ts', 'docker-compose.yml', 'src/lib/db.ts', '.github/workflows/ci.yml'];
@@ -293,6 +433,37 @@ export async function createStudio(scene, cfg = {}) {
     group.add(g);
   }
 
+  if (cfg.counter) {   // a sheet of paper taped to the wall above the window, written by hand in marker: a title, "value / target" (the previous value crossed out), a hand-drawn progress bar and a note. An ordinary thing to find in a bedroom
+    const cc = cfg.counter, PW = cc.w ?? 4.4, PH = cc.h ?? 3.1, sy = cc.y ?? WIN.y0 + WIN.h + 2.5, sx = cc.x ?? 0.2, zf = WIN.z + WALL_T / 2;
+    const fmt = (n) => Number(n).toLocaleString('id-ID');
+    const HAND = "'Segoe Print', 'Ink Free', 'Bradley Hand', 'Comic Sans MS', cursive";
+    let sd = 7; const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };   // one fixed hand: the same scribble in every frame
+    const tex = canvasTex(880, Math.round(880 * PH / PW), (c, w, h) => {
+      c.fillStyle = '#EEE8D6'; c.fillRect(0, 0, w, h);
+      for (let i = 0; i < 1400; i++) { c.fillStyle = `rgba(120,100,60,${0.02 + rnd() * 0.04})`; c.fillRect(rnd() * w, rnd() * h, 2 + rnd() * 3, 2 + rnd() * 3); }   // paper grain
+      c.fillStyle = 'rgba(90,80,50,0.10)'; c.fillRect(0, h * 0.5 - 2, w, 4); c.fillStyle = 'rgba(255,255,255,0.25)'; c.fillRect(0, h * 0.5 + 2, w, 3);   // a fold
+      const line = (x1, y1, x2, y2, col, lw) => { c.strokeStyle = col; c.lineWidth = lw; c.lineCap = 'round'; c.beginPath(); c.moveTo(x1, y1); c.quadraticCurveTo((x1 + x2) / 2 + (rnd() - 0.5) * 6, (y1 + y2) / 2 + (rnd() - 0.5) * 6, x2 + (rnd() - 0.5) * 3, y2 + (rnd() - 0.5) * 3); c.stroke(); };
+      const ink = '#1B2A6E', red = '#C0281F', blk = '#16181F';
+      c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+      c.fillStyle = ink; c.font = `700 ${h * 0.12}px ${HAND}`; c.save(); c.translate(w * 0.07, h * 0.2); c.rotate(-0.025); c.fillText(cc.label || 'install', 0, 0); c.restore();
+      line(w * 0.07, h * 0.235, w * 0.6, h * 0.225, ink, 4);
+      c.fillStyle = blk; c.font = `800 ${h * 0.22}px ${HAND}`; c.save(); c.translate(w * 0.06, h * 0.58); c.rotate(-0.02);
+      const vs = fmt(cc.value); c.fillText(vs, 0, 0); const vw = c.measureText(vs).width; c.font = `700 ${h * 0.125}px ${HAND}`; c.fillText(' / ' + fmt(cc.target), vw, 0); c.restore();
+      if (cc.prev) { c.fillStyle = 'rgba(40,40,60,0.8)'; c.font = `600 ${h * 0.09}px ${HAND}`; c.fillText(fmt(cc.prev), w * 0.72, h * 0.2); line(w * 0.7, h * 0.165, w * 0.88, h * 0.205, red, 4); }
+      const bx = w * 0.07, by = h * 0.72, bw2 = w * 0.84, bh2 = h * 0.1;
+      line(bx, by, bx + bw2, by, ink, 4); line(bx + bw2, by, bx + bw2, by + bh2, ink, 4); line(bx + bw2, by + bh2, bx, by + bh2, ink, 4); line(bx, by + bh2, bx, by, ink, 4);
+      const fillW = Math.max(14, bw2 * cc.value / cc.target); c.strokeStyle = red; c.lineWidth = 3;
+      for (let x = bx + 5; x < bx + fillW; x += 9) { c.beginPath(); c.moveTo(x, by + bh2 - 3); c.lineTo(x + 8, by + 4); c.stroke(); }
+      c.fillStyle = red; c.font = `700 ${h * 0.085}px ${HAND}`; c.save(); c.translate(w * 0.42, h * 0.95); c.rotate(-0.03); c.fillText(cc.note || 'target!! kapan??', 0, 0); c.restore();
+      line(w * 0.42, h * 0.965, w * 0.88, h * 0.955, red, 3);
+    }).t;
+    const grp = new THREE.Group(); grp.position.set(sx, sy, zf + 0.02); grp.rotation.z = cc.rot ?? -0.035; group.add(grp);
+    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(PW * 1.02, PH * 1.02), new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: 0.3, depthWrite: false })); shadow.position.set(0.09, -0.1, 0); grp.add(shadow);
+    const mat = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }); mat.color.setScalar(cc.bright ?? 0.7);
+    const sheet = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), mat); sheet.position.z = 0.012; grp.add(sheet);
+    for (const k of [-1, 1]) { const tape = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.3), new THREE.MeshBasicMaterial({ color: '#CDBE92', transparent: true, opacity: 0.78, toneMapped: false })); tape.position.set(k * PW * 0.4, PH / 2 - 0.03, 0.03); tape.rotation.z = -k * 0.55; grp.add(tape); }
+  }
+
   // ---------------------------------------------------------------- what is outside, in layers
   const OUT = new THREE.Group(); group.add(OUT);
   const skyTex = canvasTex(32, 512, (g) => { const gr = g.createLinearGradient(0, 0, 0, 512); gr.addColorStop(0, '#0A1238'); gr.addColorStop(0.55, '#223470'); gr.addColorStop(1, '#4A5C9C'); g.fillStyle = gr; g.fillRect(0, 0, 32, 512); });
@@ -396,6 +567,106 @@ export async function createStudio(scene, cfg = {}) {
     const lvl = (s) => { if (s < 0) return 0; for (const [a, b, l] of seq) if (s >= a && s < b) return l; return s >= seq[seq.length - 1][1] ? 1 : 0; };
     neon = { show(s) { const l = lvl(s) * (s > 2 ? 1 + 0.02 * Math.sin(s * 40) : 1); onMat.opacity = Math.min(1, l);  } };
     neon.show(-1);
+  }
+
+  // ---------------------------------------------------------------- a protest banner hung down the face of a building outside (built ONLY when cfg.banner is set): colours and lettering only, no logo
+  if (cfg.banner && cfg.banner.style !== 'led') {
+    const bc = cfg.banner, lines = bc.lines || ['BENCANA', 'MAKIN PARAH', 'HIDUP', 'MAKIN SUSAH', 'APA KERJA', 'PEMERINTAH?'];
+    const g = new THREE.Group(); g.position.set(bc.x ?? -1.2, 0, bc.z ?? -23); OUT.add(g);
+    const bh = bc.height ?? 22, bw = bc.width ?? 11, roofY = bh - 6;
+    const body = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 3), blackM()); body.position.set(0, bh / 2 - 6, 0); g.add(body);
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(bw * 1.04, 0.5, 3.2), blackM()); cap.position.set(0, roofY + 0.25, 0); g.add(cap);
+    const BW = bc.w ?? 3.9, BH = bc.h ?? 10.4, top = roofY - 0.4;
+    const tex = canvasTex(512, 1352, (c, w, h) => {
+      c.fillStyle = bc.color || '#F4C80F'; c.fillRect(0, 0, w, h);
+      c.fillStyle = 'rgba(0,0,0,0.10)'; c.fillRect(0, 0, 14, h); c.fillRect(w - 14, 0, 14, h);
+      c.fillStyle = '#111'; c.textAlign = 'center'; c.textBaseline = 'alphabetic'; c.font = `900 ${bc.font ?? 78}px Impact, 'Arial Black', 'Arial Narrow', sans-serif`;
+      lines.forEach((ln, i) => { c.fillText(ln, w / 2, 112 + i * (bc.step ?? 92) + Math.floor(i / 2) * 40); });
+      // a black figure holding a paper, hatched ground: the same feeling as the photo, drawn from scratch
+      c.save(); c.translate(0, 820); c.fillStyle = '#111';
+      c.beginPath(); c.ellipse(200, 120, 70, 82, 0, 0, 6.28); c.fill();
+      c.fillRect(150, 190, 100, 40); c.beginPath(); c.moveTo(60, 520); c.quadraticCurveTo(70, 270, 200, 235); c.quadraticCurveTo(330, 270, 340, 520); c.closePath(); c.fill();
+      c.fillStyle = bc.color || '#F4C80F'; c.save(); c.translate(235, 360); c.rotate(-0.28); c.fillRect(-60, -48, 120, 96); c.restore();
+      c.strokeStyle = '#111'; c.lineWidth = 5; for (let i = 0; i < 26; i++) { c.beginPath(); c.moveTo(330 + i * 6, 260 + (i % 5) * 18); c.lineTo(470, 300 + i * 9); c.stroke(); }
+      c.restore();
+    }).t;
+    const mat = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }); mat.color.setScalar(bc.night ?? 0.5);   // night: the yellow is dim
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(BW, BH), mat); plane.position.set(bc.dx ?? 0.9, top - BH / 2, 1.58); g.add(plane);
+    const rope = (x) => { const r = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.9, 0.05), blackM()); r.position.set((bc.dx ?? 0.9) + x, top + 0.4, 1.6); g.add(r); };
+    rope(-BW / 2 + 0.2); rope(BW / 2 - 0.2);
+    const lamps = [];
+    for (const fx of [-3.2, 3.2]) { const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), glow('#FFE6B0', 2.4)); lamp.position.set((bc.dx ?? 0.9) + fx * 0.5, roofY + 0.7, 1.9); g.add(lamp); lamps.push(lamp); }   // two small floodlamps on the roof edge: the visible source of the light on the banner
+    if (bc.alarmAt !== undefined) {   // alarmAt (seconds, resolved by episode.js): the floodlamps switch on, the banner brightens and red roof beacons blink in sync
+      const dark = bc.night ?? 0.5, lit = bc.lit ?? 0.9, beacons = [];
+      for (const [bx, bz, top] of (bc.beacons ?? [[-7, -30, 13], [6, -34, 15], [-1, -40, 18], [11, -44, 17]])) {
+        const mast = new THREE.Mesh(new THREE.BoxGeometry(0.5, 7, 0.5), blackM()); mast.position.set(bx, top - 3.5, bz); OUT.add(mast);
+        const bl = new THREE.Mesh(new THREE.SphereGeometry(0.38, 10, 8), glow('#FF3B30', 3.4)); bl.position.set(bx, top + 0.2, bz + 0.6); OUT.add(bl); beacons.push(bl);
+      }
+      updaters.push((t) => {
+        const u = Math.max(0, Math.min(1, (t - bc.alarmAt) / 0.8)), e = u * u * (3 - 2 * u);
+        mat.color.setScalar(dark + (lit - dark) * e); lamps.forEach((l) => { l.visible = t >= bc.alarmAt; });
+        const on = t >= bc.alarmAt + 0.3 && ((t - bc.alarmAt - 0.3) % 1.0) < 0.5; beacons.forEach((b) => { b.visible = on; });
+      });
+      lamps.forEach((l) => { l.visible = false; }); beacons.forEach((b) => { b.visible = false; });
+    }
+  }
+
+  // ---------------------------------------------------------------- a digital LED board mounted on a building outside (cfg.banner with style 'led'): the building has a facade with windows, turns a little so a side wall shows, the board is a boxed sign on its wall; dark until alarmAt (seconds), then it flickers on and spills light on the wall; red beacons (also on this roof) blink in sync. Lettering only, no logo
+  if (cfg.banner && cfg.banner.style === 'led') {
+    const bc = cfg.banner, lines = bc.lines || ['ALERT'], cols = bc.colors || ['#FFFFFF', '#FF5A4D', '#FFD24D'];
+    const g = new THREE.Group(); g.position.set(bc.x ?? 1.4, 0, bc.z ?? -23); g.rotation.y = bc.yaw ?? 0.5; OUT.add(g);
+    const bh = bc.height ?? 22, bw = bc.width ?? 12, bd = bc.depth ?? 8, roofY = bh - 6, fz = bd / 2;
+    const facade = (cols2, rows, seed) => canvasTex(512, Math.round(512 * bh / (cols2 > 6 ? bw : bd)), (c, w, h) => {
+      c.fillStyle = '#1B2347'; c.fillRect(0, 0, w, h);
+      const cw = w / cols2, rh = h / rows;
+      for (let r = 0; r < rows; r++) for (let k = 0; k < cols2; k++) {
+        const lit = ((r * 7 + k * 13 + seed) % 9) === 0, cool = ((r * 5 + k * 11 + seed) % 17) === 0;
+        c.fillStyle = lit ? '#FFC870' : cool ? '#BFD8FF' : '#0C1226'; c.fillRect(k * cw + cw * 0.2, r * rh + rh * 0.22, cw * 0.6, rh * 0.5);
+      }
+      c.fillStyle = 'rgba(0,0,0,0.25)'; for (let r = 0; r <= rows; r++) c.fillRect(0, r * rh - 2, w, 4);
+    }).t;
+    const mk = (tex, k) => { const m = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false, fog: false }); m.color.setScalar(k); return m; };
+    const front = mk(facade(8, 18, 0), 0.62), side = mk(facade(5, 18, 4), 0.42), roofM = new THREE.MeshBasicMaterial({ color: '#0E1328', toneMapped: false, fog: false });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), [side, side, roofM, roofM, front, roofM]); body.position.set(0, bh / 2 - 6, 0); g.add(body);
+    const ledge = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.6, 0.6, bd + 0.6), roofM); ledge.position.set(0, roofY + 0.3, 0); g.add(ledge);
+    const tank = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 1.8, 14), roofM); tank.position.set(-3.2, roofY + 1.5, -1); g.add(tank);
+    for (const lx of [-3.8, -2.6]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.9, 0.15), roofM); leg.position.set(lx, roofY + 0.7, -1); g.add(leg); }
+    const ant = new THREE.Mesh(new THREE.BoxGeometry(0.14, 4.5, 0.14), roofM); ant.position.set(3.4, roofY + 2.5, 0.5); g.add(ant);
+    const PW = bc.w ?? 9, PH = bc.h ?? 5.2, py = bc.y ?? 9.6, TH = 0.6;
+    // light spilling on the wall around the sign (the sign is the source; a soft rectangle, not a round halo)
+    const spill = new THREE.Mesh(new THREE.PlaneGeometry(PW * 1.5, PH * 1.7), new THREE.MeshBasicMaterial({
+      map: canvasTex(256, 160, (c, w, h) => { c.clearRect(0, 0, w, h); c.shadowColor = '#FF4B3E'; c.shadowBlur = 38; c.fillStyle = '#FF4B3E'; c.fillRect(w * 0.27, h * 0.27, w * 0.46, h * 0.46); }).t,
+      transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, fog: false })); spill.position.set(0, py, fz + 0.04); g.add(spill);
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(PW + 0.5, PH + 0.5, TH), new THREE.MeshBasicMaterial({ color: '#10131F', toneMapped: false, fog: false })); frame.position.set(0, py, fz + TH / 2); g.add(frame);
+    for (const lx of [-PW / 2 + 0.6, PW / 2 - 0.6]) for (const ly of [py - PH / 2 - 0.9, py + PH / 2 + 0.9]) { const br = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.5), roofM); br.position.set(lx, ly, fz + 0.25); g.add(br); const arm = new THREE.Mesh(new THREE.BoxGeometry(0.16, Math.abs(ly - py) - PH / 2 + 0.2, 0.16), roofM); arm.position.set(lx, (ly + py + (ly < py ? -PH / 2 : PH / 2)) / 2, fz + 0.3); g.add(arm); }
+    const tex = canvasTex(1024, Math.round(1024 * PH / PW), (c, w, h) => {
+      c.fillStyle = '#07080C'; c.fillRect(0, 0, w, h);
+      c.strokeStyle = bc.border || '#FF3B30'; c.lineWidth = 10; c.strokeRect(14, 14, w - 28, h - 28);
+      c.textAlign = 'center'; c.textBaseline = 'middle';
+      const step = (h - 80) / lines.length;
+      lines.forEach((ln, i) => {
+        c.font = "900 100px 'Arial Black', Impact, sans-serif"; const f = Math.min(step * 0.8, 100 * (w - 130) / c.measureText(ln).width);
+        c.font = `900 ${f}px 'Arial Black', Impact, sans-serif`; const col = cols[i] || '#FFFFFF';
+        c.shadowColor = col; c.shadowBlur = 14; c.fillStyle = col; c.fillText(ln, w / 2, 40 + step * (i + 0.5));
+      });
+      c.shadowBlur = 0; c.fillStyle = 'rgba(0,0,0,0.36)';
+      for (let y = 3; y < h; y += 8) for (let x = 3; x < w; x += 8) { c.beginPath(); c.arc(x, y, 2.6, 0, 6.28); c.fill(); }
+    }).t;
+    const mat = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false, fog: false }); mat.color.setScalar(bc.night ?? 0.05);
+    const panel = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), mat); panel.position.set(0, py, fz + TH + 0.02); g.add(panel);
+    const beacons = [];
+    const own = new THREE.Mesh(new THREE.SphereGeometry(0.4, 10, 8), glow('#FF3B30', 3.4)); own.position.set(3.4, roofY + 4.9, 0.5); own.visible = false; g.add(own); beacons.push(own);
+    for (const [bx, bz, top] of (bc.beacons ?? [[-7, -30, 13], [6, -34, 15], [-1, -40, 18], [11, -44, 17]])) {
+      const mast = new THREE.Mesh(new THREE.BoxGeometry(0.5, 7, 0.5), blackM()); mast.position.set(bx, top - 3.5, bz); OUT.add(mast);
+      const bl = new THREE.Mesh(new THREE.SphereGeometry(0.38, 10, 8), glow('#FF3B30', 3.4)); bl.position.set(bx, top + 0.2, bz + 0.6); bl.visible = false; OUT.add(bl); beacons.push(bl);
+    }
+    const seq = [[0, 0.1, 0.7], [0.1, 0.25, 0], [0.25, 0.38, 1], [0.38, 0.5, 0.15], [0.5, 0.6, 1], [0.6, 0.72, 0.3]];
+    const lvl = (s2) => { if (s2 < 0) return 0; for (const [a2, b2, l] of seq) if (s2 >= a2 && s2 < b2) return l; return 1; };
+    if (bc.alarmAt !== undefined) updaters.push((t) => {
+      const s2 = t - bc.alarmAt, dark = bc.night ?? 0.05, lit = bc.lit ?? 1.0, L = lvl(s2) * (s2 > 1 ? 1 + 0.05 * Math.sin(s2 * 7) : 1);
+      mat.color.setScalar(dark + (lit - dark) * L); spill.material.opacity = 0.55 * Math.min(1, L);
+      const on = s2 >= 0.4 && ((s2 - 0.4) % 1.0) < 0.5; beacons.forEach((b3) => { b3.visible = on; });
+    });
   }
 
   // ---------------------------------------------------------------- extra moments outside the window, built ONLY when the episode asks for them (so older episodes stay identical)

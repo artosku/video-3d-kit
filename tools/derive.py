@@ -52,7 +52,9 @@ def subs(slug):
     d = ep_dir(slug)
     lines = load_json(d / "timings.json")
     ep = load_json(d / "episode.json")
-    dirs, mode = ep.get("directions", []), (ep.get("subtitles") or {}).get("pos", "auto")   # "top" | "bottom" | "auto": top third, except in shots where the heads are there (wide, two-shot, high angles); per line: directions[i].subs = "top" | "bottom"
+    script = load_json(d / "script.json")   # a line may carry "caption": what is shown, when it differs from what is spoken ("tri di" said, "3D" shown)
+    dfl = proj.get("defaults", {})   # project.json -> defaults: "subtitlePos" ("top" | "bottom" | "auto") and "subtitleTop" (how far down the top subtitle starts, a fraction of the height)
+    dirs, mode = ep.get("directions", []), (ep.get("subtitles") or {}).get("pos") or dfl.get("subtitlePos", "auto")   # "top" | "bottom" | "auto": top third, except in shots where the heads are there (wide, two-shot, high angles); per line: directions[i].subs = "top" | "bottom"
     font = "Segoe UI Semibold" if IS_WINDOWS else "DejaVu Sans"
     head = f"""[Script Info]
 ScriptType: v4.00+
@@ -63,7 +65,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Sub,{font},{round(H * (0.0285 if portrait else 0.05))},&H00FFFFFF,&H00FFFFFF,&H99000000,&H66000000,0,0,0,0,100,100,0,0,1,{round(H * 0.0016, 1)},{round(H * 0.0012, 1)},{8 if portrait else 2},{round(W * 0.07)},{round(W * 0.07)},{round(H * (0.255 if portrait else 0.08))},1
+Style: Sub,{font},{round(H * (0.0285 if portrait else 0.05))},&H00FFFFFF,&H00FFFFFF,&H99000000,&H66000000,0,0,0,0,100,100,0,0,1,{round(H * 0.0016, 1)},{round(H * 0.0012, 1)},{8 if portrait else 2},{round(W * 0.07)},{round(W * 0.07)},{round(H * (dfl.get('subtitleTop', 0.255) if portrait else 0.08))},1
 Style: SubBottom,{font},{round(H * (0.0285 if portrait else 0.05))},&H00FFFFFF,&H00FFFFFF,&H99000000,&H66000000,0,0,0,0,100,100,0,0,1,{round(H * 0.0016, 1)},{round(H * 0.0012, 1)},2,{round(W * 0.07)},{round(W * 0.07)},{round(H * 0.07)},1
 
 [Events]
@@ -79,7 +81,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         if pos == "auto":
             from direct import shot_kind
             pos = "bottom" if shot_kind(x.get("cam"), ep) in ("wide", "two", "high") else "top"   # where the heads are, the top third is not free
-        ev.append(f"Dialogue: 0,{ts(ln['start'])},{ts(end)},{'SubBottom' if pos == 'bottom' else 'Sub'},,0,0,0,,{wrap(ln['text'], 31 if portrait else 52)}")
+        ev.append(f"Dialogue: 0,{ts(ln['start'])},{ts(end)},{'SubBottom' if pos == 'bottom' else 'Sub'},,0,0,0,,{wrap((script[i].get('caption') if i < len(script) else None) or ln['text'], 31 if portrait else 52)}")
     (d / "subs.ass").write_text(head + "\n".join(ev) + "\n", encoding="utf-8")
     print(f"subtitles: {len(ev)} lines ({font})")
 

@@ -72,7 +72,7 @@ const pages = EP.pages || { idle: { type: 'code', theme: 'dark', lines: ['> ...'
 const worldMod = await import(`${BASE}/worlds/${WORLD_ID}/world.js`);
 const NEON = EP.neon || (q.has('neon') ? { text: 'NEON' } : null);   // a neon sign on a building outside (the preview: &neon=<seconds since it switches on, negative = off>)
 const studio = await worldMod.createWorld(scene, {
-  neon: NEON, keys: !!EP.keys,
+  neon: NEON, keys: !!EP.keys, counter: EP.counter || null, banner: EP.banner ? { ...EP.banner, alarmAt: EP.banner.alarmAt !== undefined ? T(EP.banner.alarmAt) : undefined } : null,
   base: BASE, bg: q.get('bg') || sc.bg, light: q.get('light') || sc.light || 'rembrandt',
   pages, phone: EP.phone, wall: EP.wall || [], props: EP.props || [], outside: EP.outside, episode: EP,
 });
@@ -149,7 +149,10 @@ const outAt = EP.outside ? T(EP.outside.at) : 1e9, outDur = EP.outside?.dur ?? 3
 const PLACES = { perch: { y: ST.y, z: ST.z, left: { x: ST.left.x, yaw: ST.left.yaw, pitch: 0 }, right: { x: ST.right?.x ?? 1.4, yaw: ST.right?.yaw ?? -0.18, pitch: 0 } }, ...(EP.places || {}) };
 const STAGE = (EP.stage || []).map((s) => ({ at: T(s.at), to: s.to })).sort((a, b) => a.at - b.at);
 let placeNow = 'perch';
-const end = EP.ending ? { turnAt: T(EP.ending.turnAt), lookUpAt: T(EP.ending.lookUpAt ?? EP.ending.turnAt), yaw: EP.ending.yaw ?? 3.0, pitch: EP.ending.pitch ?? -0.32, expression: EP.ending.expression ?? 'neutral' } : null;
+// errands: each side can jump between its own spots on a timeline, e.g. EP.errands { right: [ { at, x, y, z, yaw } ] }. Every jump is an instant snap (a fast teleport), so put a camera cut or a camFx punch on it.
+const ERRANDS = Object.fromEntries(Object.entries(EP.errands || {}).map(([side, list]) => [side, list.map((w) => ({ ...w, at: T(w.at) })).sort((a, b) => a.at - b.at)]));
+const errandAt = (side, t) => { let w = null; for (const e of ERRANDS[side] || []) if (t >= e.at) w = e; return w; };
+const end = EP.ending ? { turnAt: T(EP.ending.turnAt), lookUpAt: T(EP.ending.lookUpAt ?? EP.ending.turnAt), yaw: EP.ending.yaw ?? 3.0, pitch: EP.ending.pitch ?? -0.32, expression: EP.ending.expression ?? 'neutral', rate: EP.ending.rate ?? 1 } : null;
 
 function poseOf(i, t) {   // a shot with a slow push-in while it lasts
   const sg = SEG[i], stop = i + 1 < SEG.length ? SEG[i + 1].from : TOTAL;
@@ -290,8 +293,8 @@ function stepFrame() {
   left.look(f.who === ID_L ? lk[0] : 0.8, f.who === ID_L ? lk[1] : (d.look ? lk[1] * 0.4 : 0));   // the lead keeps looking at whoever speaks
   right?.look(f.who === ID_L ? -0.9 : -0.2, 0);
   if (end && t >= end.turnAt) left.setExpression(end.expression, 4);
-  yawNow = lerp(yawNow, yawGoal, 1 - Math.exp(-4.5 / FPS));
-  pitchNow = lerp(pitchNow, end && t >= end.lookUpAt ? end.pitch : 0, 1 - Math.exp(-3 / FPS));   // looking up, daydreaming
+  yawNow = lerp(yawNow, yawGoal, 1 - Math.exp(-4.5 * (end?.rate ?? 1) / FPS));   // ending.rate < 1 = a slower turn
+  pitchNow = lerp(pitchNow, end && t >= end.lookUpAt ? end.pitch : 0, 1 - Math.exp(-3 * (end?.rate ?? 1) / FPS));   // looking up, daydreaming
   const hu = (t - hopStart) / 0.55;
   let LB = { x: ST.left.x, y: ST.y + (hu >= 0 && hu <= 1 ? 0.32 * Math.sin(Math.PI * hu) : 0), z: ST.z, ry: yawNow, rx: pitchNow };
   let RB = { x: ST.right?.x ?? 1.4, y: ST.y, z: ST.z, ry: ST.right?.yaw ?? -0.18, rx: 0 };
@@ -304,6 +307,9 @@ function stepFrame() {
     } else if (placeNow !== 'perch') { yawNow = yawGoal = ST.left.yaw; LB.ry = yawNow; }   // back to the perch
     placeNow = pn;
   }
+  const wl = errandAt('left', t), wr = errandAt('right', t);   // an errand spot replaces the seat for that character only
+  if (wl) LB = { ...LB, x: wl.x, y: wl.y ?? ST.y, z: wl.z ?? ST.z, ry: wl.yaw ?? 0, rx: 0 };
+  if (wr) RB = { ...RB, x: wr.x, y: wr.y ?? ST.y, z: wr.z ?? ST.z, ry: wr.yaw ?? 0, rx: 0 };
   put(left, LB, offsets('left', t));
   if (right) put(right, RB, offsets('right', t));
   left.update(1 / FPS);

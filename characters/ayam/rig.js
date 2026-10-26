@@ -117,6 +117,11 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
     eye['brow' + k] = mesh(body, 'Brow' + k, { mat: mats.brow, scale: [0.15, 0.035, 0.035], shadow: false });
   }
 
+  // ---- legs: their own group, so the body can squash, breathe and lean without dragging the feet; they lift and tuck on a hop
+  const legs = new THREE.Group();
+  legs.name = 'Legs';
+  group.add(legs);
+
   // ---- wings (pivot at the shoulder)
   const wingP = {};
   for (const s of [-1, 1]) {
@@ -127,7 +132,7 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
     body.add(p);
     mesh(p, 'Wing' + k, { mat: mats.wing, at: [s * 0.06, -0.30, 0], scale: [0.13, 0.38, 0.30], hull: true });
     wingP[k] = p;
-    mesh(body, 'Foot' + k, { mat: mats.leg, at: at(s * 0.30, -0.28, 0.07), scale: [0.20, 0.10, 0.32], hull: true });
+    mesh(legs, 'Foot' + k, { mat: mats.leg, at: at(s * 0.30, -0.28, 0.07), scale: [0.20, 0.10, 0.32], hull: true });
   }
 
   // ---- beak (hinged at its base), mouth, wattle
@@ -313,6 +318,9 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
     sq += A.sq;
     root.position.y = hop + A.y;
     root.scale.set(1 / Math.sqrt(sq), sq, 1 / Math.sqrt(sq));
+    // the legs follow only part of the hop and tuck their toes, so the body moves on its own
+    legs.position.y = 0.45 * hop;
+    legs.rotation.x = -0.6 * hop;
     root.rotation.x = (flying ? -0.45 : 0) + A.pitch;
     root.rotation.y = A.yaw;
     root.rotation.z = A.roll;

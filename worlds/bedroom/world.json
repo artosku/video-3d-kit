@@ -49,7 +49,12 @@
   "text",
   "video",
   "loginapp",
-  "gitdiff"
+  "gitdiff",
+  "limitboard",
+  "installchart",
+  "pipeline",
+  "commentfeed",
+  "filevanish"
  ],
  "themes": [
   "dark",

@@ -462,7 +462,7 @@ def stills(slug, at=None):
     sd.mkdir(parents=True)
     names = [f"s{i:02d}_{t:05.1f}.png" for i, t in enumerate(times)]
     size = shot_size()
-    with cf.ThreadPoolExecutor(max_workers=3) as ex:
+    with cf.ThreadPoolExecutor(max_workers=1 if _gpu_now() else 3) as ex:   # several browsers on one graphics card at once sometimes draw black frames
         list(ex.map(lambda a: shot(a[0], f"ep={slug}&t={a[1]}", size), zip(names, times)))
     for n in names:
         shutil.move(str(OUT / "shots" / n), sd / n)
@@ -485,9 +485,11 @@ def render(slug):
     fd = out_dir(slug) / "frames"
     missing = [i for i in range(n) if not (fd / f"f_{i:04d}.png").exists()]
     if not missing:
+        rw, rh = fmt_sizes()[0]
+        _redraw_blank(slug, fd, n, os.environ.get("VIDEO3D_SIZE", f"{rw},{rh}"))
         print(f"render: all {n} frames already exist"); return
     gpu = use_gpu()
-    workers = int(os.environ.get("VIDEO3D_WORKERS", 2 if gpu else max(1, min(4, (os.cpu_count() or 4) // 2))))   # a GPU is shared: 2 is enough
+    workers = int(os.environ.get("VIDEO3D_WORKERS", 1 if gpu else max(1, min(4, (os.cpu_count() or 4) // 2))))   # one on a GPU: two browsers at once once drew a whole half of the video black
     rw, rh = fmt_sizes()[0]
     size = os.environ.get("VIDEO3D_SIZE", f"{rw},{rh}")
     # chunks of contiguous missing frames, split among the workers
@@ -501,7 +503,43 @@ def render(slug):
     left = [i for i in range(n) if not (fd / f"f_{i:04d}.png").exists()]
     if left:
         sys.exit(f"{len(left)} frames are still missing (run render again; it resumes): first {left[:5]}")
+    _redraw_blank(slug, fd, n, size)
     print(f"render: {n} frames")
+
+
+def _gpu_now():
+    from browser import use_gpu
+    return use_gpu()
+
+
+def _blank_frames(fd, n):
+    """Frames the graphics card failed to draw come out as an empty black picture (a tiny file). The last frames of the fade-out are legitimately dark, so they are not checked."""
+    return [i for i in range(max(0, n - 12)) if (fd / f"f_{i:04d}.png").exists() and (fd / f"f_{i:04d}.png").stat().st_size < 40000]
+
+
+def _redraw_blank(slug, fd, n, size):
+    import browser
+    bad = _blank_frames(fd, n)
+    for software in (False, True):
+        if not bad:
+            return
+        print(f"render: {len(bad)} blank frames (the graphics card failed on part of the video): drawing them again {'with software WebGL' if software else 'one at a time'}")
+        if software:
+            os.environ["VIDEO3D_GPU"] = "off"; browser._GPU = False
+        for i in bad:
+            (fd / f"f_{i:04d}.png").unlink()
+        a = prev = bad[0]
+        ranges = []
+        for i in bad[1:]:
+            if i != prev + 1:
+                ranges.append((a, prev)); a = i
+            prev = i
+        ranges.append((a, prev))
+        for a, b in ranges:
+            print("  chunk done:", browser.capture(slug, a, b, size))
+        bad = _blank_frames(fd, n)
+    if bad:
+        sys.exit(f"{len(bad)} frames are still blank after a second try: first {bad[:5]}. Run with VIDEO3D_GPU=off.")
 
 
 def mp4_name(slug):
