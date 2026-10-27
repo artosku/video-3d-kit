@@ -1,6 +1,6 @@
 # AGENT_SETUP.md: read this once, then set everything up for the user
 
-You are an AI coding agent (Claude Code, Codex, Cursor, Gemini CLI, or similar). The user wants to make short 3D videos where two characters talk, using this kit. Your job now: install the kit as a tool on their machine and create a `/video-3d` command for them. After this, they only type `/video-3d <topic>` from any folder.
+You are an AI coding agent (Claude Code, Codex, Cursor, Gemini CLI, or similar). The user wants to make short 3D videos where two characters talk, using this kit. Your job now: install the kit as a tool on their machine and create the `/video-3d` and `/video-3d-toons` commands for them. After this, they only type `/video-3d <topic>` (two characters in a 3D place) or `/video-3d-toons <what to explain>` (the same characters over a video they already have) from any folder.
 
 ## Talk to the user like this (strict)
 - Reply in the user's own language. Bullet points only, short, plain words. No jargon (no "rig", "TTS", "frames", file names) unless asked.
@@ -41,7 +41,7 @@ You are an AI coding agent (Claude Code, Codex, Cursor, Gemini CLI, or similar).
 
 ## Step 5. Save the choices and make the command
 - `python tools/setup.py init --format <portrait|landscape|square> --language <code> --provider <cartesia|elevenlabs> --characters <idLeft>,<idRight> --world <id>` (finished videos are copied to `~/Videos/video-3d` by default; add `--delivery <folder>` if the user names another one, and say in one bullet where they will find their videos)
-- Install the slash command for the agent you are: `python tools/setup.py install-skill --agent <claude|codex|cursor|gemini|generic> --scope user`. (`generic` writes a file the user can hand to any agent.)
+- Install the slash commands for the agent you are: `python tools/setup.py install-skill --agent <claude|codex|cursor|gemini|generic> --scope user` (it writes BOTH `/video-3d` and `/video-3d-toons`; `--command video-3d-toons` writes only one). `generic` writes files the user can hand to any agent.
 - If you are not sure how your agent loads custom commands, check its current documentation and place the generated file there; the content is the same.
 
 ## Step 6. A quick check that it draws
@@ -49,7 +49,7 @@ You are an AI coding agent (Claude Code, Codex, Cursor, Gemini CLI, or similar).
 - Do NOT render a full video now (it takes a long time).
 
 ## Step 7. Final message to the user (bullets)
-- It is ready. To make a video: type `/video-3d <what the video is about>` (restart the agent or open a new session if the command is not listed yet).
+- It is ready. To make a video: type `/video-3d <what the video is about>`, or `/video-3d-toons <what to explain>` and give a video of a phone or PC screen (restart the agent or open a new session if the commands are not listed yet).
 - What they set: characters, place, shape, voices from, dialogue language.
 - Where videos are saved: the delivery folder (default `~/Videos/video-3d`; change it in `project.json` → `delivery.folder`); the working files stay in the tool folder.
 - A video takes a few minutes with a graphics card (used automatically) or about half a minute of waiting per second of video without one; the first questions are asked once, later runs remember them.

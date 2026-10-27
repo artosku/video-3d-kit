@@ -256,7 +256,7 @@ export async function createStudio(scene, cfg = {}) {
           g.fillStyle = c; g.beginPath(); g.arc(-w / 2 + 24, 0, 11, 0, 6.283); g.fill(); g.fillStyle = '#F0F6FC'; g.font = `700 24px ${FONT}`; g.textAlign = 'left'; g.fillText(tx, -w / 2 + 44, 9); g.restore();
         }
         g.fillStyle = `rgba(255,60,50,${0.12 + 0.05 * Math.sin(lt * 14)})`; g.fillRect(0, 0, 1024, 640);
-        g.fillStyle = '#FF6A5E'; g.font = `800 34px ${MONO}`; g.textAlign = 'right'; g.fillText(`${Math.min(999, Math.floor(ct * 37))} komentar baru`, 996, 44); g.textAlign = 'left';
+        g.fillStyle = '#FF6A5E'; g.font = `800 34px ${MONO}`; g.textAlign = 'right'; g.fillText(`${Math.min(999, Math.floor(ct * 37))} ${p.counterLabel || 'komentar baru'}`, 996, 44); g.textAlign = 'left';
       }
       g.textAlign = 'left';
     },
@@ -282,11 +282,54 @@ export async function createStudio(scene, cfg = {}) {
       if (lt >= va) g.fillText(left > 0 ? `Menghapus ... ${left} file tersisa` : 'Folder kosong.', 40, 600);
       if (left === 0 && lt >= va) { g.textAlign = 'center'; g.fillStyle = 'rgba(139,148,158,0.55)'; g.font = `700 54px ${FONT}`; g.fillText('kosong', 512, 340); g.textAlign = 'left'; }
     },
+    todolist: (g, p, th, t, lt0) => {   // a feature checklist that never ends: a big counter p.base + items shown, a list p.items [{text,at,doneAt?}] (the last 6 slide up, done ones get a green tick), a night clock p.clock {from,to,start,end} (turns red from p.clock.redAt), a users bar p.users that pulses red from p.pulseAt, confetti from p.confettiAt; p.shift continues the clock from an earlier page
+      const lt = lt0 + (p.shift || 0), cl = (x) => Math.max(0, Math.min(1, x)), ez = (u) => u * u * (3 - 2 * u), MONO = "'Cascadia Mono', Consolas, 'Courier New', monospace";
+      const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      g.fillStyle = '#0D1117'; g.fillRect(0, 0, 1024, 640);
+      g.fillStyle = '#161B22'; g.fillRect(0, 0, 1024, 64); g.textAlign = 'left'; g.fillStyle = '#F0F6FC'; g.font = `700 28px ${FONT}`; g.fillText(p.title || 'Daftar fitur', 28, 42);
+      const items = p.items || [], born = items.map((it) => it.at), nf = born.reduce((s, a) => s + ez(cl((lt - a) / 0.3)), 0), count = (p.base || 0) + items.filter((it) => lt >= it.at).length;
+      const c = p.clock;   // night clock, minutes from c.from to c.to over c.start..c.end seconds
+      if (c) {
+        const m0 = c.from.split(':').reduce((a, b) => a * 60 + +b), m1 = c.to.split(':').reduce((a, b) => a * 60 + +b) + (c.to < c.from ? 1440 : 0), m = Math.round(m0 + (m1 - m0) * cl((lt - c.start) / (c.end - c.start))) % 1440;
+        const red = c.redAt !== undefined && lt >= c.redAt, blink = red && Math.floor(lt * 3) % 2 === 0;
+        g.textAlign = 'right'; g.fillStyle = red ? (blink ? '#FF6A5E' : '#FFB4AD') : '#8B949E'; g.font = `700 34px ${MONO}`;
+        g.fillText(String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'), 996, 42); g.textAlign = 'left';
+      }
+      g.fillStyle = '#161B22'; rr(28, 92, 316, 440, 22); g.fill(); g.strokeStyle = '#30363D'; g.lineWidth = 3; rr(28, 92, 316, 440, 22); g.stroke();
+      const bump = 1 + 0.12 * Math.max(0, 1 - ((lt - Math.max(-9, ...items.filter((it) => lt >= it.at).map((it) => it.at))) / 0.25));
+      g.save(); g.translate(186, 340); g.scale(bump, bump); g.textAlign = 'center'; g.fillStyle = p.numColor || '#FFD166'; g.font = `800 190px ${FONT}`; g.fillText(String(count), 0, 0); g.restore();
+      g.textAlign = 'center'; g.fillStyle = '#C9D1D9'; g.font = `700 34px ${FONT}`; g.fillText(p.unit || 'fitur', 186, 400); g.fillStyle = '#8B949E'; g.font = `600 26px ${FONT}`; g.fillText(p.caption || 'tinggal 1 lagi', 186, 460); g.textAlign = 'left';
+      g.save(); g.beginPath(); g.rect(360, 80, 664, 470); g.clip();
+      const off = Math.max(0, nf - 6);
+      items.forEach((it, i) => {
+        if (lt < it.at - 0.01) return;
+        const slot = (i + 1) - nf + 5 + (nf > 6 ? 0 : 0), y = 92 + (i - off) * 78, u = ez(cl((lt - it.at) / 0.3)), done = it.doneAt !== undefined && lt >= it.doneAt, k = done ? ez(cl((lt - it.doneAt) / 0.25)) : 0;
+        if (y < 40) return;
+        g.save(); g.translate(660, y + 35); g.scale(0.85 + 0.15 * u, 0.85 + 0.15 * u); g.globalAlpha = u * (y < 100 ? 0.4 : 1); g.translate(-660, -(y + 35));
+        g.fillStyle = done ? '#12261A' : '#1B222C'; rr(372, y, 624, 70, 16); g.fill(); g.strokeStyle = done ? '#2EA043' : (it.alert ? '#FF7B72' : '#FFD166'); g.lineWidth = 3; rr(372, y, 624, 70, 16); g.stroke();
+        g.strokeStyle = done ? '#2EA043' : '#8B949E'; g.lineWidth = 4; rr(390, y + 15, 40, 40, 10); g.stroke();
+        if (done) { g.fillStyle = '#2EA043'; rr(390, y + 15, 40, 40, 10); g.fill(); g.strokeStyle = '#FFFFFF'; g.lineWidth = 6; g.lineCap = 'round'; g.beginPath(); g.moveTo(399, y + 36); g.lineTo(408, y + 46); g.lineTo(424, y + 26); g.stroke(); }
+        g.fillStyle = done ? '#7C8A83' : '#F0F6FC'; g.font = `700 30px ${FONT}`; g.fillText(it.text, 452, y + 46);
+        if (done) { const w = g.measureText(it.text).width; g.fillStyle = '#7C8A83'; g.fillRect(452, y + 37, w * k, 3); }
+        else if (Math.floor(lt * 2) % 2 === 0) { g.fillStyle = '#FFD166'; g.fillRect(452 + g.measureText(it.text).width + 8, y + 18, 3, 36); }
+        g.restore();
+      });
+      g.restore();
+      if (p.confettiAt !== undefined && lt >= p.confettiAt && lt < p.confettiAt + 2.4) {
+        const ct = lt - p.confettiAt, cols = ['#FF4B3E', '#FFB020', '#4C8DFF', '#B06CFF', '#2BB673', '#FF7AC8']; let sd = 17; const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
+        for (let i = 0; i < 80; i++) { const x0 = 20 + rnd() * 984, v = 160 + rnd() * 260, ph = rnd() * 6.28, bt = rnd() * 0.5, sz = 10 + rnd() * 10, cc = cols[(rnd() * 6) | 0]; const tt = ct - bt; if (tt < 0) continue; const y = 40 + tt * v; if (y > 640) continue;
+          g.save(); g.translate(x0 + Math.sin(tt * 3 + ph) * 28, y); g.rotate(tt * 6 + ph); g.globalAlpha = 1 - cl((ct - 1.8) / 0.6); g.fillStyle = cc; g.fillRect(-sz / 2, -sz / 4, sz, sz / 2); g.restore(); }
+      }
+      const pu = p.pulseAt !== undefined && lt >= p.pulseAt, pk = pu ? 0.5 + 0.5 * Math.sin((lt - p.pulseAt) * 9) : 0;
+      g.fillStyle = pu ? `rgba(255,75,62,${0.2 + 0.2 * pk})` : '#161B22'; g.fillRect(0, 560, 1024, 80);
+      g.font = `700 36px ${MONO}`; g.fillStyle = pu ? '#FF6A5E' : '#8B949E'; g.fillText(`Pengguna: ${p.users ?? 0}`, 28, 612);
+      g.textAlign = 'right'; g.fillStyle = pu ? '#FF6A5E' : '#6E7681'; g.fillText(p.release || 'Rilis: belum', 996, 612); g.textAlign = 'left';
+    },
     limitboard: (g, p, th, t, lt) => {   // a usage dashboard: a big counter p.value (blocks light up, a pop when it changes from p.from), a stuck task bar, a lock + "limit reached" and a reopening time typed in at p.revealAt
       const cl = (x) => Math.max(0, Math.min(1, x)), rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
       const T = { label: 'Sisa pesan', limit: 'Batas tercapai', reopen: 'Dibuka lagi pukul 03.00', task: 'Tugas', deadline: 'Deadline: besok pagi', ...(p.texts || {}) };
       const v = p.value ?? 3, max = p.max ?? 3, COL = { 3: '#5B8CFF', 2: '#FFC14D', 1: '#FF5A5A', 0: '#6B7280' }, col = COL[v] ?? '#5B8CFF';
-      g.fillStyle = '#0A0E19'; g.fillRect(0, 0, 1024, 640);
+      g.fillStyle = p.bg || '#0A0E19'; g.fillRect(0, 0, 1024, 640);   // p.bg: a lighter panel colour so the screen edge shows against a dark room
       g.fillStyle = 'rgba(255,255,255,0.04)'; rr(40, 40, 944, 560, 28); g.fill();
       // the stuck task bar (top left)
       g.textAlign = 'left'; g.fillStyle = '#8D97B3'; g.font = `600 22px ${FONT}`; g.fillText(`${T.task}  ${p.progress ?? 5}%`, 80, 96);

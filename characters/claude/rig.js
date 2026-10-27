@@ -110,6 +110,7 @@ export function createClaude({ rand = Math.random } = {}) {   // rand: a seeded 
   let blink = 0;
   let blinkAt = 3.1;
   const gaze = { x: 0, y: 0 };
+  const eyeStyle = { gain: 1, life: 0 };   // setEyeStyle({ gain, life }): gain > 1 moves the eyes further across the face; life adds tiny restless movements (both 0 = the original)
   let act = null;   // a short gesture: { name, t0, dur }
   const PLATEAU = (u) => Math.max(0, Math.min(1, u / 0.22, (1 - u) / 0.22));
   function actOff() {
@@ -151,8 +152,9 @@ export function createClaude({ rand = Math.random } = {}) {   // rand: a seeded 
     for (const e of eyes) {
       const h = Math.max(0.06, st.eyeH * (1 - 0.92 * blink) * (1 + (e.position.x < 0 ? 1 : -0.5) * st.eyeAsym));
       e.scale.set(st.eyeW, h, 1);
-      e.position.x = Math.sign(e.position.x) * 2.5 * U * st.eyeGap + gaze.x * 0.06;
-      e.position.y = BODY_H - 1.75 * U + gaze.y * 0.05;
+      const ln = eyeStyle.life ? eyeStyle.life * (Math.sin(t * 1.7) * 0.6 + Math.sin(t * 4.1 + 0.7) * 0.4) : 0, lm = eyeStyle.life ? eyeStyle.life * (Math.sin(t * 1.2 + 1.5) * 0.6 + Math.sin(t * 3.3) * 0.4) : 0;
+      e.position.x = Math.sign(e.position.x) * 2.5 * U * st.eyeGap + (gaze.x * eyeStyle.gain + ln) * 0.06;
+      e.position.y = BODY_H - 1.75 * U + (gaze.y * eyeStyle.gain + lm) * 0.05;
     }
     for (const a of arms) {
       const wig = talkK > 0.05 ? Math.sin(t * 8.0 + a.s) * 0.16 * talkK : Math.sin(t * 1.5 + a.s) * 0.02;
@@ -170,6 +172,7 @@ export function createClaude({ rand = Math.random } = {}) {   // rand: a seeded 
     act: (name, dur = 0.9) => { act = { name, t0: t, dur }; },
     setTalkLevel: (v) => { level = v === null ? null : clamp(v); },
     look: (x, y) => { gaze.x = clamp(x, -1, 1); gaze.y = clamp(y, -1, 1); },
+    setEyeStyle: (s) => { eyeStyle.gain = s.gain ?? 1; eyeStyle.life = s.life ?? 0; },
     get state() { return { ...st, talking }; },
   };
 }

@@ -53,7 +53,7 @@ Run from `{{KIT}}`. Never skip a step; a flat video is a failed video.
 - If the user asks for another moment outside the window, see `skill/guides/direction.md` (the `outside` field).
 
 ## Guides (read only when needed, except the playbook)
-`{{KIT}}/skill/guides/`: `cinematic-playbook.md` (always, step 3) · `script-craft.md` · `direction.md` · `light-theory.md` · `audio.md` · `new-character.md` · `new-world.md` · `build-qa-deliver.md` (troubleshooting) · `formats-and-voices.md`.
+`{{KIT}}/skill/guides/`: `cinematic-playbook.md` (always, step 3) · `toons-playbook.md` (only for `/video-3d-toons`) · `script-craft.md` · `direction.md` · `light-theory.md` · `audio.md` · `new-character.md` · `new-world.md` · `build-qa-deliver.md` (troubleshooting) · `formats-and-voices.md`.
 
 ## Fixed rules
 - Do not change the voices or look of existing characters unless the user asks.

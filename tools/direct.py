@@ -71,7 +71,7 @@ def classify(ln, gap):
 def generate(slug):
     d = ep_dir(slug)
     proj = project()
-    W = world(proj)
+    W = world(proj, load_json(d / "episode.json") if (d / "episode.json").exists() else None)
     chars = characters(proj)
     script = load_json(d / "script.json")
     ep = load_json(d / "episode.json")

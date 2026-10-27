@@ -220,6 +220,8 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
   let blinkAt = 2.2;
   let blink = 0;
   const look = { x: 0, y: 0 };
+  const eyeStyle = { gain: 1, life: 0, mouth: 1, beak: 1, speech: false };   // speech: while this character is the speaker the mouth follows the voice ONLY (it closes between syllables, even with a wide-open smile face)
+  let speaker = false;   // setEyeStyle({ gain, life }): gain > 1 lets the pupils travel to the edge of the white; life adds tiny restless eye movements (both 0 = the original face)
   let act = null;   // a short gesture: { name, t0, dur }
   const PLATEAU = (u) => Math.max(0, Math.min(1, u / 0.22, (1 - u) / 0.22));
   function actOff() {
@@ -250,7 +252,8 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
       eye['white' + k].scale.set(0.17 * eyeS, 0.20 * eyeS, 0.08);
       eye['pupil' + k].scale.set(0.105 * eyeS * st.pupil, 0.12 * eyeS * st.pupil, 0.05);
       eye['glint' + k].scale.set(0.03 * eyeS, 0.03 * eyeS, 0.02);
-      const lx = st.lookX + look.x, ly = st.lookY + look.y;
+      const ln = eyeStyle.life ? eyeStyle.life * (Math.sin(t * 1.9) * 0.6 + Math.sin(t * 4.3 + 1.1) * 0.4) : 0, lm = eyeStyle.life ? eyeStyle.life * (Math.sin(t * 1.3 + 2.0) * 0.6 + Math.sin(t * 3.7) * 0.4) : 0;
+      const lx = st.lookX + look.x * eyeStyle.gain + ln, ly = st.lookY + look.y * eyeStyle.gain + lm;
       eye['pupil' + k].position.set(s * 0.29 + lx * 0.045, 1.16 + ly * 0.05, 0.76);
       eye['glint' + k].position.set(s * 0.255 + lx * 0.045, 1.22 + ly * 0.05, 0.80);
       eye['cheek' + k].scale.set(0.14 * st.cheek, 0.09 * st.cheek, 0.04);
@@ -269,19 +272,22 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
       br.position.set(s * 0.30, 1.45 + st.browY, 0.74);
       br.rotation.z = -s * st.browTilt; // positive = sad (inner ends up), negative = angry
     }
-    const m = st.mouth;
+    const m = Math.min(1.6, st.mouth * eyeStyle.mouth);   // eyeStyle.mouth > 1 opens the mouth wider (the character is small on screen)
     mouth.visible = m > 0.02;
     mouth.scale.set(0.20 * m, 0.10 * m, 0.10 * Math.min(1, m * 2));
     tongue.visible = m > 0.25;
     tongue.scale.set(0.11 * m, 0.05 * m, 0.06 * Math.min(1, m * 2));
-    beakP.rotation.x = -0.314 * st.beak;
+    beakP.rotation.x = -Math.min(0.62, 0.314 * st.beak * eyeStyle.beak);
   }
 
   function update(dt) {
     t += dt;
     const k = 1 - Math.exp(-speed * dt);
     for (const key in st) st[key] = lerp(st[key], target[key], k);
-    if (level !== null) {
+    if (level !== null && speaker && eyeStyle.speech) {
+      st.mouth = level > 0.06 ? 0.10 + 0.85 * level : 0.03;
+      st.beak = 0.55 * level;
+    } else if (level !== null) {
       st.mouth = Math.max(st.mouth, level > 0.06 ? 0.12 + 0.8 * level : 0);
       st.beak = Math.max(st.beak, 0.55 * level);
     } else if (talking) {
@@ -353,6 +359,8 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
     talk: (on) => { talking = !!on; },
     setTalkLevel: (v) => { level = v === null ? null : clamp(v); },
     lookAt: (x, y) => { look.x = clamp(x, -1, 1); look.y = clamp(y, -1, 1); },
+    setEyeStyle: (s) => { eyeStyle.gain = s.gain ?? 1; eyeStyle.life = s.life ?? 0; eyeStyle.mouth = s.mouth ?? 1; eyeStyle.beak = s.beak ?? s.mouth ?? 1; eyeStyle.speech = !!s.speech; },
+    setSpeaker: (on) => { speaker = !!on; },
     freeze: (on = true) => { frozen = on; blink = 0; },
     // everything that exports: no outline hulls (they are a screen-space trick), the current face as it is
     exportRoot: () => { for (const h of hulls) h.visible = false; return group; },

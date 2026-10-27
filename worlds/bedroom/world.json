@@ -54,7 +54,8 @@
   "installchart",
   "pipeline",
   "commentfeed",
-  "filevanish"
+  "filevanish",
+  "todolist"
  ],
  "themes": [
   "dark",

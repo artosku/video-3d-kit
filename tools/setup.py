@@ -6,7 +6,7 @@
    python tools/setup.py set-voice <character-id> <provider> <voice-id> [--name "..."]
    python tools/setup.py preview-character <id> [--with <other-id>]      6 expression stills as one picture (out/previews/character_<id>.png)
    python tools/setup.py preview-world <id> [--chars <a>,<b>]            3 camera shots as one picture (out/previews/world_<id>.png)
-   python tools/setup.py install-skill --agent claude|codex|cursor|gemini|generic [--scope user|project] [--dir <path>]
+   python tools/setup.py install-skill --agent claude|codex|cursor|gemini|generic [--scope user|project] [--dir <path>] [--command video-3d|video-3d-toons|all]
    python tools/setup.py remember [--format ..] [--length ..] [--mood ..] [--characters a,b] [--world id]     keep the answers as the defaults for next time
 Nothing here ever asks for or stores an API key: the user puts keys in .env themselves (see .env.example)."""
 import json
@@ -18,6 +18,8 @@ from pathlib import Path
 from common import FORMATS, ROOT, has_key, load_json, project, save_json
 
 TEMPLATE_SKILL = ROOT / "skill" / "SKILL.template.md"
+TEMPLATE_TOONS = ROOT / "skill" / "SKILL.toons.template.md"
+COMMANDS = {"video-3d": TEMPLATE_SKILL, "video-3d-toons": TEMPLATE_TOONS}   # slash command name -> its template
 
 
 def arg(a, name, default=None):
@@ -180,40 +182,48 @@ def preview_world(a):
 
 # ------------------------------------------------------------------ the slash command
 def install_skill(a):
-    if not TEMPLATE_SKILL.exists():
-        sys.exit("skill/SKILL.template.md is missing")
+    """Writes the slash commands: /video-3d and /video-3d-toons (both by default; --command video-3d|video-3d-toons|all)."""
+    which = arg(a, "--command", "all")
+    names = list(COMMANDS) if which == "all" else [which]
+    for nm in names:
+        if nm not in COMMANDS:
+            sys.exit(f"unknown command '{nm}' (video-3d, video-3d-toons, all)")
+        if not COMMANDS[nm].exists():
+            sys.exit(f"{COMMANDS[nm].relative_to(ROOT)} is missing")
     agent = arg(a, "--agent", "claude")
     scope = arg(a, "--scope", "user")
     base = Path(arg(a, "--dir")).expanduser() if arg(a, "--dir") else (Path.home() if scope == "user" else Path.cwd())
     kit = str(ROOT).replace("\\", "/")
-    text = TEMPLATE_SKILL.read_text(encoding="utf-8")
-    body = text.split("<!-- BODY -->", 1)[1].strip()
-    desc = re.search(r"^description:\s*(.+)$", text, re.M).group(1).strip()
     args_word = {"claude": "$ARGUMENTS", "codex": "$ARGUMENTS", "cursor": "(whatever the user typed after the command)", "gemini": "{{args}}", "generic": "(whatever the user typed after the command)"}[agent]
-    body = body.replace("{{KIT}}", kit).replace("{{ARGS}}", args_word)
-    if agent == "claude":
-        dst = base / ".claude" / "skills" / "video-3d" / "SKILL.md"
-        content = f"---\nname: video-3d\ndescription: {desc}\n---\n\n{body}\n"
-    elif agent == "codex":
-        dst = base / ".codex" / "prompts" / "video-3d.md"
-        content = f"---\ndescription: {desc}\nargument-hint: [topic]\n---\n\n{body}\n"
-    elif agent == "cursor":
-        dst = base / ".cursor" / "commands" / "video-3d.md"
-        content = body + "\n"
-    elif agent == "gemini":
-        dst = base / ".gemini" / "commands" / "video-3d.toml"
-        content = f'description = "{desc}"\nprompt = """\n{body}\n"""\n'
-    else:
-        dst = ROOT / "skill" / "video-3d.installed.md"
-        content = body + "\n"
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    dst.write_text(content, encoding="utf-8")
-    print(f"slash command written: {dst}")
-    print({"claude": "the user types /video-3d <topic> (restart the agent or open a new session if it does not show up)",
-           "codex": "the user types /video-3d <topic> in a new Codex session",
-           "cursor": "the user types /video-3d <topic> in Cursor's chat",
-           "gemini": "the user types /video-3d <topic> in a new Gemini CLI session",
-           "generic": "tell the user to give their agent this file when they want a video"}[agent])
+    for nm in names:
+        text = COMMANDS[nm].read_text(encoding="utf-8")
+        body = text.split("<!-- BODY -->", 1)[1].strip()
+        desc = re.search(r"^description:\s*(.+)$", text, re.M).group(1).strip()
+        body = body.replace("{{KIT}}", kit).replace("{{ARGS}}", args_word)
+        if agent == "claude":
+            dst = base / ".claude" / "skills" / nm / "SKILL.md"
+            content = f"---\nname: {nm}\ndescription: {desc}\n---\n\n{body}\n"
+        elif agent == "codex":
+            dst = base / ".codex" / "prompts" / f"{nm}.md"
+            content = f"---\ndescription: {desc}\nargument-hint: [topic]\n---\n\n{body}\n"
+        elif agent == "cursor":
+            dst = base / ".cursor" / "commands" / f"{nm}.md"
+            content = body + "\n"
+        elif agent == "gemini":
+            dst = base / ".gemini" / "commands" / f"{nm}.toml"
+            content = f'description = "{desc}"\nprompt = """\n{body}\n"""\n'
+        else:
+            dst = ROOT / "skill" / f"{nm}.installed.md"
+            content = body + "\n"
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(content, encoding="utf-8")
+        print(f"slash command written: {dst}")
+    how = {"claude": "the user types /{n} <topic> (restart the agent or open a new session if it does not show up)",
+           "codex": "the user types /{n} <topic> in a new Codex session",
+           "cursor": "the user types /{n} <topic> in Cursor's chat",
+           "gemini": "the user types /{n} <topic> in a new Gemini CLI session",
+           "generic": "tell the user to give their agent the file when they want a video"}[agent]
+    print("; ".join(how.format(n=nm) for nm in names))
 
 
 def remember(a):

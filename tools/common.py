@@ -163,8 +163,8 @@ def characters(p=None):
     return [character(c) for c in (p or project())["characters"]]
 
 
-def world(p=None):
-    wid = (p or project())["world"]
+def world(p=None, ep=None):   # an episode can use another world than the project: episode.json "world" (the overlay world, for a video that already exists)
+    wid = (ep or {}).get("world") or (p or project())["world"]
     f = ROOT / "worlds" / wid / "world.json"
     if not f.exists():
         sys.exit(f"world '{wid}' not found (worlds/{wid}/world.json)")
@@ -187,11 +187,36 @@ def _dotenv():
     return out
 
 
+def _dated_key(name):
+    """A key can be replaced without touching the old one: NAME_PER_DD_MM_YYYY (e.g. CARTESIA_API_KEY_PER_28_10_2026). The newest dated variable wins over plain NAME."""
+    import re
+    names = list(os.environ)
+    if IS_WINDOWS:   # a terminal opened before the variable was set does not see it: look in the Windows environment too
+        try:
+            import winreg
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as k:
+                i = 0
+                while True:
+                    names.append(winreg.EnumValue(k, i)[0]); i += 1
+        except OSError:
+            pass
+    best = None
+    for n in set(names):
+        m = re.fullmatch(re.escape(name) + r"_PER_(\d{2})_(\d{2})_(\d{4})", n)
+        if m and (best is None or (m.group(3), m.group(2), m.group(1)) > best[0]):
+            best = ((m.group(3), m.group(2), m.group(1)), n)
+    return best[1] if best else None
+
+
 def has_key(name):
-    return bool(os.environ.get(name) or _dotenv().get(name))
+    d = _dated_key(name)
+    return bool((d and (os.environ.get(d) or keys_env(d))) or os.environ.get(name) or _dotenv().get(name))
 
 
 def keys_env(name):
+    d = _dated_key(name) if "_PER_" not in name else None
+    if d:
+        return keys_env(d)
     v = os.environ.get(name) or _dotenv().get(name)
     if not v and IS_WINDOWS:   # a terminal opened before the variable was set does not see it: read the Windows user environment
         try:

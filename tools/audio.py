@@ -145,7 +145,7 @@ def build(slug):
     total = total_of(ep, lines)
     clock = Clock(lines, total)
     n = int(round(total * SR))
-    mix = room_tone(total)[:n] if WORLD.get("roomTone") else np.zeros(n, dtype=np.float32)
+    mix = room_tone(total)[:n] if world(ep=ep).get("roomTone") else np.zeros(n, dtype=np.float32)
     mix = np.pad(mix, (0, max(0, n - len(mix))))
 
     amb = ep.get("ambience", True)

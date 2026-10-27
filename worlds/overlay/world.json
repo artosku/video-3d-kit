@@ -1,0 +1,47 @@
+{
+ "id": "overlay",
+ "name": "Overlay",
+ "description": "No set at all: only the two characters on a transparent picture, with a soft contact shadow, to be laid over a video (a screen recording) afterwards. Cartoon restyle at render time.",
+ "transparent": true,
+ "toon": {
+  "outline": "none",
+  "px": 0,
+  "levels": [
+   0.45,
+   0.68,
+   0.87,
+   1.0
+  ]
+ },
+ "features": {},
+ "look": {},
+ "backgrounds": {},
+ "outsideTypes": [],
+ "propTypes": [],
+ "pageTypes": [],
+ "themes": [],
+ "lightRoles": [
+  "key",
+  "rim",
+  "fill",
+  "hemi"
+ ],
+ "builtinShots": [
+  "wide",
+  "left",
+  "right",
+  "right34",
+  "two"
+ ],
+ "ambience": {},
+ "roomTone": false,
+ "lightCauseCheck": "text",
+ "cinematic": false,
+ "eyes": {
+  "gain": 1.5,
+  "life": 0.12,
+  "mouth": 0.56,
+  "beak": 0.67,
+  "speech": true
+ }
+}

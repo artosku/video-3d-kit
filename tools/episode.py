@@ -140,7 +140,7 @@ def init_directions(slug):
 def review(slug):
     import direct
     d = ep_dir(slug)
-    ep, script, W = load_json(d / "episode.json"), load_json(d / "script.json"), world()
+    ep, script = load_json(d / "episode.json"), load_json(d / "script.json"); W = world(None, ep)
     problems, m = direct.review(ep, script, W)
     direct.print_report(m, problems)
     return not problems
@@ -181,7 +181,7 @@ def validate(slug, quiet=False, pre=False):   # pre: before the voices exist, so
     errs, warns = [], []
     proj = project()
     R = proj["rules"]
-    W = world(proj)
+    W = world(proj, load_json(ep_dir(slug) / "episode.json") if (ep_dir(slug) / "episode.json").exists() else None)
     F = W.get("features", {})
     chars = {c["id"]: c for c in characters(proj)}
     G = gaps()
@@ -372,7 +372,7 @@ def validate(slug, quiet=False, pre=False):   # pre: before the voices exist, so
         if c and any(t["text"] == ln.get("text") for t in c.get("locked_takes", [])) and ln.get("tone"):
             warns.append(f"line {i} '{ln['text']}' uses a locked take: its tone/speed are ignored (remove the lock in characters/{c['id']}/character.json to act it again)")
     # --- the video must not be flat
-    if not pre and R.get("cinematic", True):
+    if not pre and R.get("cinematic", True) and W.get("cinematic", True):
         import direct
         problems, m = direct.review(ep, script, W)
         if problems:
@@ -512,8 +512,14 @@ def _gpu_now():
     return use_gpu()
 
 
+def _is_overlay(fd):
+    return bool(world(None, load_json(ep_dir(fd.parent.name) / "episode.json")).get("transparent"))
+
+
 def _blank_frames(fd, n):
     """Frames the graphics card failed to draw come out as an empty black picture (a tiny file). The last frames of the fade-out are legitimately dark, so they are not checked."""
+    if _is_overlay(fd):   # a transparent picture is legitimately tiny
+        return []
     return [i for i in range(max(0, n - 12)) if (fd / f"f_{i:04d}.png").exists() and (fd / f"f_{i:04d}.png").stat().st_size < 40000]
 
 
@@ -572,6 +578,28 @@ def encode(slug, max_mb=30):
         vf += ":fontsdir=fonts"
     vf += ",format=yuv420p"
     dst, base = mp4_name(slug)
+    ov = ep.get("overlay")
+    if ov and ov.get("video"):   # an overlay episode: the transparent characters are laid over a video that already exists (its own sound is mixed with the voices and the music)
+        vsrc = os.path.expanduser(ov["video"])
+        info = run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height:format=duration", "-of", "default=nw=1", vsrc]).stdout
+        vdur = float(re.search(r"duration=([\d.]+)", info).group(1)); total = n / FPS
+        hold = max(0.0, total - vdur)
+        v0 = float(ov.get("start", 0))   # the video starts this many seconds into the episode (an intro plays before it)
+        hold = max(0.0, total - vdur - v0)
+        bg = f"[0:v]fps={FPS},scale={fw}:{fh}:flags=lanczos" + (f",tpad=start_mode=clone:start_duration={v0:.2f}:stop_mode=clone:stop_duration={hold:.2f}" if (hold > 0 or v0 > 0) else "") + "[b];"
+        fc = bg + f"[1:v]scale={fw}:{fh}[o];[b][o]overlay=0:0:format=auto,ass=subs.ass" + (":fontsdir=fonts" if IS_WINDOWS else "") + ",format=yuv420p[v];"
+        has_a = "codec_type=audio" in run(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=codec_type", "-of", "default=nw=1", vsrc]).stdout
+        fc += (f"[0:a]adelay={int(v0 * 1000)}|{int(v0 * 1000)},apad,atrim=0:{total:.2f},volume={ov.get('videoGain', 1.0)}[va];[2:a]apad,atrim=0:{total:.2f}[na];[va][na]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.89:level=disabled[a]" if has_a else "[2:a]alimiter=limit=0.89:level=disabled[a]")
+        for crf, maxrate in ((19, "8M"), (22, "6M"), (25, "4M"), (28, "3M")):
+            cmd = ["ffmpeg", "-loglevel", "error", "-y", "-i", vsrc, "-framerate", str(FPS), "-i", str(o / "frames" / "f_%04d.png"), "-i", str(o / "audio.wav"), "-filter_complex", fc, "-map", "[v]", "-map", "[a]",
+                   "-frames:v", str(n), "-c:v", "libx264", "-preset", "medium", "-crf", str(crf), "-maxrate", maxrate, "-bufsize", str(int(maxrate[:-1]) * 2) + "M", "-c:a", "aac", "-b:a", "160k", "-r", str(FPS), "-movflags", "+faststart", str(dst)]
+            run(cmd, cwd=enc)
+            mb = dst.stat().st_size / 1048576
+            print(f"encode (overlay): crf {crf} -> {mb:.1f} MB")
+            if mb <= max_mb:
+                break
+        print(f"encode: {dst}")
+        return dst
     for crf, maxrate in ((19, "8M"), (22, "6M"), (25, "4M"), (28, "3M")):   # raise the compression until it is small enough for social media
         cmd = ["ffmpeg", "-loglevel", "error", "-y", "-framerate", str(FPS), "-i", str(o / "frames" / "f_%04d.png"), "-i", str(o / "audio.wav"), "-frames:v", str(n), "-vf", vf,
                "-c:v", "libx264", "-preset", "medium", "-crf", str(crf), "-maxrate", maxrate, "-bufsize", str(int(maxrate[:-1]) * 2) + "M", "-c:a", "aac", "-b:a", "160k", "-r", str(FPS), "-shortest", "-movflags", "+faststart", str(dst)]

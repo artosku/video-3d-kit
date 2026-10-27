@@ -1,5 +1,7 @@
 # Cinematic playbook: the standard every video must meet
 
+> This playbook is for `/video-3d` (a 3D place). For `/video-3d-toons` (the characters over an existing video) read `toons-playbook.md` instead: its camera rule is the opposite (flat 2D from the front, never moving).
+
 A flat video = the same two close-ups cutting left and right, faces that never change, nobody moving, one light all video. That is a failure, even when the script is good. Follow this playbook EVERY time. Do not skip steps; `validate` fails a flat plan.
 
 Where the ideas come from (honest note): established film grammar and character-animation practice, not a fresh web search. Film grammar: cover a dialogue from several angles (wide, medium, close-up, over-the-shoulder), shot/reverse shot, low angle = power, high angle = weak or small, extreme close-up for peak emotion, push in on feeling, tilt (dutch angle) for unease, rack focus. Animation: the 12 principles, mainly anticipation, squash and stretch, follow-through, secondary action, timing, exaggeration, staging, appeal.
