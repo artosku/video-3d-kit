@@ -1,0 +1,61 @@
+{
+ "id": "ujang",
+ "name": "UjangGPT",
+ "role": "A terminal-cloud assistant (read: Ujang-Ji-Pi-Ti). Does every task at once and never asks anything back. The only thing he ever says is 'Beres bos.' in the same voice, whatever happens, even after he deleted the whole database.",
+ "rig": "rig.js",
+ "look": {
+  "bodyColor": "#E6ECFF",
+  "bellyColor": "#F5F8FF",
+  "accentColor": "#2DD4BF",
+  "eyeColor": "#1B1B26",
+  "width": 0.85,
+  "height": 0.85,
+  "ears": "none",
+  "tail": false,
+  "cheeks": true,
+  "screenColor": "#0E1428"
+ },
+ "expressions": [
+  "neutral",
+  "happy",
+  "proud",
+  "blank",
+  "shocked",
+  "sad",
+  "smug",
+  "dread",
+  "sleepy"
+ ],
+ "defaultExpression": "neutral",
+ "voice": {
+  "level": 1.0,
+  "cartesia": {
+   "id": "04b567df-2923-4b0c-896b-4b7df0a07e1a",
+   "name": "Galang",
+   "emotion": "neutral",
+   "speed": 1.0,
+   "volume": 1.0
+  },
+  "elevenlabs": {
+   "id": null,
+   "name": null,
+   "stability": 0.45,
+   "similarity": 0.75,
+   "style": 0.3,
+   "speed": 1.0
+  },
+  "note": "Pick the id with: python tools/episode.py voices --provider <cartesia|elevenlabs> --language <code>"
+ },
+ "tones": {
+  "calm": {
+   "speed": 1.0,
+   "volume": 1.0,
+   "level": 1.0,
+   "use": "the only voice Ujang has"
+  }
+ },
+ "locked_takes": [],
+ "acts": [],
+ "expressionParams": {},
+ "_expressionParams_note": "Add your own faces here: name -> the numbers of rig.js EXPRESSIONS (lid, brow, tilt, mouth, wide, eye); then list the name in expressions."
+}

@@ -177,7 +177,9 @@ def build(slug):
     raw = o / "_mix_raw.wav"
     write_wav(raw, mix)
     fade_out = float(ep.get("fadeOut", 1.3))
-    ffmpeg("-i", raw, "-af", f"afade=t=out:st={total - fade_out}:d={fade_out},loudnorm=I=-16:TP=-1.5:LRA=9", "-ar", 48000, "-ac", 2, o / "audio.wav")
+    bo = ep.get("blackout")   # the camera died: every sound stops at that second (a number of seconds)
+    mute = f",volume=0:enable='gte(t,{float(bo['at'])})'" if bo and isinstance(bo.get("at"), (int, float)) else ""
+    ffmpeg("-i", raw, "-af", f"afade=t=out:st={total - fade_out}:d={fade_out},loudnorm=I=-16:TP=-1.5:LRA=9{mute}", "-ar", 48000, "-ac", 2, o / "audio.wav")
     raw.unlink()
     print(f"audio: {total:.1f} s -> {o / 'audio.wav'}")
 

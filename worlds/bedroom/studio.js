@@ -381,6 +381,215 @@ export async function createStudio(scene, cfg = {}) {
       g.restore();
       g.fillStyle = 'rgba(13,17,23,0.9)'; g.fillRect(0, 262, 1024, 4);
     },
+    filetree: (g, p, th, t, lt) => {   // an AI agent working on files: p.tree [{at,depth,name,kind:'folder'|'file'}] pops into a folder tree one by one (the newest flashes green); p.file { name, at, speed, lines[] } is typed into an editor on the right; p.steps [{at,text,doneAt}] are tool-call lines at the bottom (a dot, then a tick); p.title in the header
+      const cl = (x) => Math.max(0, Math.min(1, x)), ez = (u) => u * u * (3 - 2 * u), rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      const M2 = "'Cascadia Mono', Consolas, 'DejaVu Sans Mono', monospace";
+      g.fillStyle = '#0E1220'; g.fillRect(0, 0, 1024, 640); g.fillStyle = '#161B2E'; g.fillRect(0, 0, 1024, 60);
+      g.textAlign = 'left'; g.fillStyle = '#E6ECFF'; g.font = `700 26px ${FONT}`; g.fillText(p.title || 'Claude sedang bekerja', 28, 40);
+      if (p.counter && lt >= p.counter.at) { const c = p.counter, v = Math.round(c.from + (c.to - c.from) * Math.min(1, (lt - c.at) / c.dur)); g.textAlign = 'right'; g.fillStyle = '#FFD166'; g.font = `800 26px ${M2}`; g.fillText(`${v} ${c.label || 'baris'}`, 940, 40); g.textAlign = 'left'; }
+      const busy = (p.steps || []).some((st) => lt >= st.at && !(st.doneAt !== undefined && lt >= st.doneAt)); if (busy) { g.strokeStyle = '#5C7CFF'; g.lineWidth = 5; g.lineCap = 'round'; g.beginPath(); g.arc(984, 31, 14, lt * 6, lt * 6 + 4.2); g.stroke(); }
+      g.fillStyle = '#12172A'; rr(20, 80, 316, 420, 16); g.fill(); g.fillStyle = '#7C86A4'; g.font = `700 18px ${FONT}`; g.fillText('PROYEK', 40, 112);
+      const tree = (p.tree || []).filter((n) => lt >= n.at); const newest = tree.length ? tree[tree.length - 1] : null;
+      tree.forEach((n, i) => {
+        const u = ez(cl((lt - n.at) / 0.3)), y = 130 + i * 52, x = 40 + n.depth * 30, flash = n === newest ? Math.max(0, 1 - (lt - n.at) / 0.9) : 0;
+        g.save(); g.globalAlpha = u; g.translate(0, (1 - u) * 12);
+        if (flash > 0) { g.fillStyle = `rgba(46,160,67,${0.22 * flash})`; rr(28, y - 24, 300, 44, 10); g.fill(); }
+        if (n.kind === 'folder') { g.fillStyle = '#E3B341'; rr(x, y - 14, 30, 22, 4); g.fill(); g.fillRect(x, y - 18, 14, 8); } else { g.fillStyle = '#C9D3F2'; rr(x + 4, y - 18, 22, 28, 3); g.fill(); g.fillStyle = '#7C86A4'; g.fillRect(x + 8, y - 8, 14, 3); g.fillRect(x + 8, y - 1, 14, 3); }
+        g.fillStyle = n.kind === 'folder' ? '#F0F6FC' : '#9CC4FF'; g.font = `700 24px ${M2}`; g.fillText(n.name, x + 42, y + 6);
+        if (flash > 0.4) { g.fillStyle = '#7EE787'; g.font = `800 20px ${FONT}`; g.textAlign = 'right'; g.fillText('baru', 316, y + 6); g.textAlign = 'left'; }
+        g.restore();
+      });
+      g.fillStyle = '#12172A'; rr(352, 80, 652, 420, 16); g.fill(); g.fillStyle = '#1B2240'; rr(352, 80, 652, 44, 16); g.fill(); g.fillRect(352, 104, 652, 20);
+      const f = p.file;
+      if (f && lt >= f.at - 0.2) {
+        g.fillStyle = '#E6ECFF'; g.font = `700 20px ${M2}`; g.fillText(f.name, 376, 110);
+        let left = Math.max(0, Math.floor((lt - f.at) * (f.speed ?? 30)));
+        (f.lines || []).forEach((ln, i) => { const n = Math.min(ln.t.length, left); left = Math.max(0, left - ln.t.length - 2); const y = 160 + i * 44; g.fillStyle = '#4B5578'; g.font = `20px ${M2}`; g.textAlign = 'right'; g.fillText(String(i + 1), 398, y); g.textAlign = 'left'; g.fillStyle = ln.c || '#D6DCF2'; g.font = `${ln.b ? '700 ' : ''}24px ${M2}`; g.fillText(ln.t.slice(0, n), 414, y); if (n < ln.t.length && n > 0 && Math.floor(lt * 3) % 2 === 0) { g.fillStyle = '#E6ECFF'; g.fillRect(418 + g.measureText(ln.t.slice(0, n)).width, y - 22, 3, 28); } });
+      }
+      (p.steps || []).forEach((st, i) => {
+        if (lt < st.at) return; const u = ez(cl((lt - st.at) / 0.25)), y = 536 + i * 36, done = st.doneAt !== undefined && lt >= st.doneAt;
+        g.save(); g.globalAlpha = u; g.fillStyle = done ? '#2EA043' : '#FFD166'; g.font = `800 22px ${FONT}`; g.fillText(done ? '✓' : '●', 24, y); g.fillStyle = done ? '#9EE6AE' : '#E6ECFF'; g.font = `600 22px ${M2}`; g.fillText(st.text, 58, y); g.restore();
+      });
+      g.textAlign = 'left';
+    },
+    chatterm: (g, p, th, t, lt) => {   // an AI chat in a terminal: p.items [{kind:'user'|'bot', text, at, speed, think}] the user line is typed behind a ">" prompt; the bot line streams letter by letter after p.think seconds of a spinner; p.enterAt shows a key flash; p.flash {at} makes the screen blink red/blue (a siren outside); lines wrap and scroll
+      const cl = (x) => Math.max(0, Math.min(1, x)), M2 = "'Cascadia Mono', Consolas, 'DejaVu Sans Mono', monospace";
+      g.fillStyle = '#0D1117'; g.fillRect(0, 0, 1024, 640); g.fillStyle = '#161B22'; g.fillRect(0, 0, 1024, 60);
+      [['#FF5F56', 34], ['#FFBD2E', 62], ['#27C93F', 90]].forEach(([c, x]) => { g.fillStyle = c; g.beginPath(); g.arc(x, 30, 8, 0, 6.28); g.fill(); });
+      g.textAlign = 'left'; g.fillStyle = '#8B949E'; g.font = `600 22px ${M2}`; g.fillText(p.header || 'terminal', 140, 38);
+      if (p.counter && lt >= p.counter.at) { const c = p.counter, v = Math.round(c.from + (c.to - c.from) * Math.min(1, (lt - c.at) / c.dur)); g.textAlign = 'right'; g.fillStyle = '#FFD166'; g.font = `800 28px ${M2}`; g.fillText(`${v} ${c.label || 'baris'}`, 990, 40); g.textAlign = 'left'; }
+      const rows = []; const items = (p.items || []).filter((it) => lt >= it.at); let spinner = null, lastIdx = items.length - 1;
+      g.font = `28px ${M2}`; const maxW = 920;
+      items.forEach((it, idx) => {
+        const speed = it.speed ?? (it.kind === 'user' ? 14 : 34), think = it.kind === 'bot' ? (it.think ?? 0.9) : 0, ta = it.at + think, n = it.kind === 'user' ? Math.floor((lt - it.at) * speed) : Math.floor(Math.max(0, lt - ta) * speed), shown = it.text.slice(0, Math.max(0, n));
+        if (it.kind === 'bot' && lt < ta) { if (idx === lastIdx) spinner = idx; rows.push({ k: 'think', t: '' }); return; }
+        const pre = it.kind === 'user' ? '> ' : '● ', words = (pre + shown).split(' '); let cur = ''; const out = [];
+        for (const w of words) { const t2 = cur ? cur + ' ' + w : w; if (g.measureText(t2).width > maxW && cur) { out.push(cur); cur = w; } else cur = t2; } out.push(cur);
+        out.forEach((ln, i) => rows.push({ k: it.kind, t: i === 0 ? ln : '  ' + ln, c: it.c, caret: idx === lastIdx && i === out.length - 1 && n < it.text.length + 1 }));
+        rows.push({ k: 'gap', t: '' });
+      });
+      const LH = 40, vis = 12, start = Math.max(0, rows.length - vis);
+      rows.slice(start).forEach((r, i) => {
+        const y = 108 + i * LH + 22; if (r.k === 'gap') return;
+        if (r.k === 'user') { g.fillStyle = '#161B22'; g.fillRect(22, y - 28, 980, LH - 4); g.fillStyle = '#7EE787'; } else if (r.k === 'think') { g.fillStyle = '#E3B341'; r.t = '● ' + 'Berpikir' + '.'.repeat(1 + (Math.floor(lt * 3) % 3)); } else g.fillStyle = r.c || '#E6EDF3';
+        g.font = `${r.k === 'bot' ? '' : ''}28px ${M2}`; g.fillText(r.t, 34, y);
+        if (r.caret && Math.floor(lt * 2.6) % 2 === 0) { g.fillStyle = '#F0F6FC'; g.fillRect(36 + g.measureText(r.t).width, y - 24, 14, 30); }
+      });
+      if (p.enterAt !== undefined && lt >= p.enterAt && lt < p.enterAt + 0.5) { const u = 1 - (lt - p.enterAt) / 0.5; g.fillStyle = `rgba(255,255,255,${0.22 * u})`; g.fillRect(0, 60, 1024, 580); g.fillStyle = `rgba(240,246,252,${u})`; g.font = `800 40px ${M2}`; g.textAlign = 'right'; g.fillText('⏎', 990, 620); g.textAlign = 'left'; }
+      if (p.flash && lt >= p.flash.at) { const k = lt - p.flash.at, ramp = Math.min(1, k / 0.4), red = Math.floor(k / 0.3) % 2 === 0; g.fillStyle = red ? `rgba(255,30,45,${0.42 * ramp})` : `rgba(30,80,255,${0.42 * ramp})`; g.fillRect(0, 0, 1024, 640); }
+      g.textAlign = 'left';
+    },
+    dbdash: (g, p, th, t, lt) => {   // an app admin board: a big user counter + table cards (name, rows). p.wipeAt: a red "DROP DATABASE" is typed and the cards vanish one by one every p.wipeStep s while the counter falls to 0; p.startWiped + p.restoreAt/p.restoreDur: the cards come back one by one from a backup with a green bar
+      const cl = (x) => Math.max(0, Math.min(1, x)), ez = (u) => u * u * (3 - 2 * u), rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      const MONO2 = "'Cascadia Mono', Consolas, 'Courier New', monospace", tabs = p.tables || [{ name: 'pengguna', rows: 1284 }, { name: 'pesanan', rows: 5210 }, { name: 'foto', rows: 9876 }, { name: 'log', rows: 41230 }], N = tabs.length, users = p.users ?? 1284;
+      const wa = p.wipeAt, ws = p.wipeStep ?? 0.5, ra = p.restoreAt, rd = p.restoreDur ?? 3.2, sw = !!p.startWiped;
+      const state = (i) => {   // 1 = on screen, with an animation phase
+        if (sw) { const t0 = ra === undefined ? 1e9 : ra + (i * rd) / N; return { on: lt >= t0, u: ez(cl((lt - t0) / 0.3)), kind: 'in' }; }
+        const t0 = wa === undefined ? 1e9 : wa + i * ws; return { on: lt < t0, u: ez(cl((lt - t0) / 0.28)), kind: 'out' };
+      };
+      let wiped = 0; for (let i = 0; i < N; i++) { const st = state(i); if (!st.on || (st.kind === 'out' && st.u > 0)) wiped++; }
+      g.fillStyle = '#0D1117'; g.fillRect(0, 0, 1024, 640); g.fillStyle = '#161B22'; g.fillRect(0, 0, 1024, 64);
+      g.textAlign = 'left'; g.fillStyle = '#F0F6FC'; g.font = `700 28px ${FONT}`; g.fillText(p.title || 'Aplikasiku  ·  Admin', 28, 42);
+      const empty = (!sw && wa !== undefined && lt >= wa + N * ws) || (sw && (ra === undefined || lt < ra)), blink = empty && Math.floor(lt * 3) % 2 === 0;
+      g.fillStyle = empty ? (blink ? '#FF5A4E' : '#B3342B') : '#2EA043'; rr(808, 14, 188, 38, 19); g.fill(); g.fillStyle = '#FFF'; g.font = `800 22px ${FONT}`; g.textAlign = 'center'; g.fillText(empty ? 'KOSONG' : '● LIVE', 902, 41); g.textAlign = 'left';
+      const prog = sw ? (ra === undefined ? 0 : cl((lt - ra) / rd)) : (wa === undefined ? 1 : 1 - cl((lt - wa) / (N * ws)));
+      g.fillStyle = '#8B949E'; g.font = `600 24px ${FONT}`; g.fillText('pengguna', 40, 122); g.fillStyle = prog < 0.05 ? '#FF6A5E' : (sw && prog < 1 ? '#FFD166' : '#7EE787'); g.font = `800 120px ${FONT}`; g.fillText(Math.round(users * prog).toLocaleString('id-ID'), 40, 238);
+      g.fillStyle = '#12161F'; rr(40, 270, 360, 270, 18); g.fill(); g.fillStyle = '#8B949E'; g.font = `600 20px ${FONT}`; g.fillText('tabel tersisa', 62, 306); g.fillStyle = '#F0F6FC'; g.font = `800 96px ${FONT}`; g.fillText(`${N - wiped}/${N}`, 62, 410);
+      if (wa !== undefined && !sw && lt >= wa - 0.5) { const cmd = 'DROP DATABASE aplikasiku;', n = Math.floor(cl((lt - (wa - 0.5)) / 0.5) * cmd.length); g.fillStyle = '#2A0F12'; rr(40, 556, 944, 56, 12); g.fill(); g.fillStyle = '#FF7B72'; g.font = `700 26px ${MONO2}`; g.fillText('$ ' + cmd.slice(0, n), 58, 593); }
+      tabs.forEach((tb, i) => {
+        const st = state(i), cx = 440 + (i % 2) * 280, cy = 100 + ((i / 2) | 0) * 200, w = 264, h = 180;
+        let vis = st.on ? 1 : 0, sc = 1, col = '#30363D', bg = '#161B22', rows = tb.rows;
+        if (st.kind === 'out' && !st.on) { vis = 1 - st.u; sc = 1 - 0.4 * st.u; col = '#FF4B3E'; bg = '#2A0F12'; rows = Math.round(tb.rows * (1 - st.u)); }
+        if (st.kind === 'in' && st.on) { sc = 0.7 + 0.3 * st.u + 0.08 * Math.sin(Math.PI * st.u); col = '#2EA043'; bg = '#0F2418'; vis = st.u; }
+        if (vis <= 0.02) { g.save(); g.strokeStyle = '#21262D'; g.setLineDash([10, 10]); g.lineWidth = 2; rr(cx, cy, w, h, 16); g.stroke(); g.restore(); return; }
+        g.save(); g.globalAlpha = vis; g.translate(cx + w / 2, cy + h / 2); g.scale(sc, sc); g.fillStyle = bg; rr(-w / 2, -h / 2, w, h, 16); g.fill(); g.strokeStyle = col; g.lineWidth = 3; rr(-w / 2, -h / 2, w, h, 16); g.stroke();
+        g.fillStyle = '#C9D1D9'; g.font = `700 26px ${MONO2}`; g.fillText(tb.name, -w / 2 + 20, -h / 2 + 46); g.fillStyle = '#F0F6FC'; g.font = `800 52px ${FONT}`; g.fillText(rows.toLocaleString('id-ID'), -w / 2 + 20, 24); g.fillStyle = '#8B949E'; g.font = `600 20px ${FONT}`; g.fillText('baris', -w / 2 + 20, 62);
+        if (st.kind === 'in' && st.on && st.u > 0.5) { g.fillStyle = '#2EA043'; g.font = `800 40px ${FONT}`; g.textAlign = 'right'; g.fillText('✓', w / 2 - 20, -h / 2 + 46); g.textAlign = 'left'; }
+        g.restore();
+      });
+      if (sw && ra !== undefined && lt >= ra - 0.2) { const u = cl((lt - ra) / rd), by = 574; g.fillStyle = '#C9D1D9'; g.font = `700 24px ${MONO2}`; g.fillText(`Memulihkan dari backup tadi malam  ${Math.round(u * 100)}%`, 40, by - 12); g.fillStyle = '#21262D'; rr(40, by, 944, 22, 11); g.fill(); if (u > 0.01) { const gr = g.createLinearGradient(40, 0, 984, 0); gr.addColorStop(0, '#2EA043'); gr.addColorStop(1, '#7EE787'); g.fillStyle = gr; rr(40, by, Math.max(22, 944 * u), 22, 11); g.fill(); } if (u >= 1) { g.textAlign = 'right'; g.fillStyle = '#7EE787'; g.font = `800 26px ${MONO2}`; g.fillText('✓ pulih', 984, by - 12); g.textAlign = 'left'; } }
+      g.textAlign = 'left';
+    },
+    tutorial: (g, p, th, t, lt) => {   // a how-to board: a step list on the left (p.steps, p.step = the current one, earlier ones ticked; p.revealAt makes the steps pop in one by one; p.doneAt ticks the current one), and on the right either a terminal card (p.title, p.cmd typed from p.typeAt over p.typeDur, p.hint, p.out [{at,t,c}], p.bar {at,dur,label,done}, p.stamp {at,text,c}) or p.mode 'browser' (a search page: p.q typed from p.qAt, results, p.stamp)
+      const cl = (x) => Math.max(0, Math.min(1, x)), ez = (u) => u * u * (3 - 2 * u), rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      const STEPS = p.steps || ['Buka terminal', 'Pasang kit', 'Isi API key', 'Jalankan /video-3d', 'Tunggu sampai beres'], cur = p.step ?? 0;
+      g.fillStyle = '#0E1220'; g.fillRect(0, 0, 1024, 640); g.fillStyle = '#161B2E'; g.fillRect(0, 0, 1024, 60);
+      g.textAlign = 'left'; g.fillStyle = '#E6ECFF'; g.font = `700 26px ${FONT}`; g.fillText(p.head || 'Cara bikin video 3D', 28, 40);
+      if (cur) { g.textAlign = 'right'; g.fillStyle = '#8FA2D8'; g.font = `700 24px ${FONT}`; g.fillText(`Langkah ${cur} dari ${STEPS.length}`, 996, 40); g.textAlign = 'left'; }
+      STEPS.forEach((st, i) => {
+        const t0 = (p.revealAt ?? -1) + (p.revealAt === undefined ? 0 : i * 0.4); if (p.revealAt !== undefined && lt < t0) return;
+        const u = p.revealAt === undefined ? 1 : ez(cl((lt - t0) / 0.3)), isCur = cur === i + 1, done = cur > i + 1 || (isCur && p.doneAt !== undefined && lt >= p.doneAt), y = 92 + i * 108 + (1 - u) * 24;
+        g.save(); g.globalAlpha = u; g.fillStyle = isCur ? '#1D2A52' : '#141A2C'; rr(20, y, 262, 94, 18); g.fill(); g.strokeStyle = done ? '#2EA043' : (isCur ? '#5C7CFF' : '#232C47'); g.lineWidth = isCur ? 4 : 2; rr(20, y, 262, 94, 18); g.stroke();
+        const pop = done && isCur ? 1 + 0.25 * Math.max(0, 1 - (lt - p.doneAt) / 0.3) : 1; g.fillStyle = done ? '#2EA043' : (isCur ? '#5C7CFF' : '#2A3350'); g.beginPath(); g.arc(62, y + 47, 24 * pop, 0, 6.28); g.fill();
+        g.fillStyle = '#FFFFFF'; g.textAlign = 'center'; g.font = `800 26px ${FONT}`; g.fillText(done ? '✓' : String(i + 1), 62, y + 57); g.textAlign = 'left';
+        g.fillStyle = isCur || done ? '#F0F6FC' : '#8B97C4'; g.font = `700 21px ${FONT}`; const words = st.split(' '); let l1 = words[0], l2 = ''; for (let k = 1; k < words.length; k++) { if (g.measureText(l1 + ' ' + words[k]).width < 150 && !l2) l1 += ' ' + words[k]; else l2 += (l2 ? ' ' : '') + words[k]; }
+        g.fillText(l1, 100, y + (l2 ? 42 : 54)); if (l2) g.fillText(l2, 100, y + 68); g.restore();
+      });
+      const X0 = 306, W0 = 690;
+      if (p.mode === 'browser') {
+        g.fillStyle = '#F4F6FB'; rr(X0, 84, W0, 520, 20); g.fill(); g.fillStyle = '#D7DDEB'; rr(X0, 84, W0, 48, 20); g.fill(); g.fillRect(X0, 112, W0, 20); g.fillStyle = '#FFFFFF'; rr(X0 + 70, 94, W0 - 140, 30, 15); g.fill(); g.fillStyle = '#6B7488'; g.font = `18px ${FONT}`; g.fillText('google.com', X0 + 92, 115);
+        g.fillStyle = '#FFFFFF'; rr(X0 + 60, 164, W0 - 120, 60, 30); g.fill(); g.strokeStyle = '#C8D0E4'; g.lineWidth = 2; rr(X0 + 60, 164, W0 - 120, 60, 30); g.stroke();
+        const q = (p.q || '').slice(0, Math.max(0, Math.floor((lt - (p.qAt ?? 0.4)) * 9))); g.fillStyle = '#1B2236'; g.font = `600 28px ${FONT}`; g.fillText(q + (Math.floor(lt * 2.5) % 2 ? '|' : ''), X0 + 96, 204);
+        if (q.length >= (p.q || '').length) { for (let i = 0; i < 3; i++) { const ru = ez(cl((lt - (p.qAt ?? 0.4) - (p.q || '').length / 9 - 0.2 - i * 0.18) / 0.25)); g.save(); g.globalAlpha = ru; g.fillStyle = '#2A5BD7'; g.font = `600 24px ${FONT}`; g.fillText(['claude — berita terbaru', 'claude monet: lukisan terkenal', 'arti nama claude'][i], X0 + 60, 290 + i * 100); g.fillStyle = '#C3CADB'; rr(X0 + 60, 306 + i * 100, 420 + i * 40, 12, 6); g.fill(); rr(X0 + 60, 328 + i * 100, 330, 12, 6); g.fill(); g.restore(); } }
+      } else {
+        g.fillStyle = '#0D1117'; rr(X0, 84, W0, 520, 20); g.fill(); g.fillStyle = '#161B22'; rr(X0, 84, W0, 46, 20); g.fill(); g.fillRect(X0, 110, W0, 20); ['#FF5F56', '#FFBD2E', '#27C93F'].forEach((c, i) => { g.fillStyle = c; g.beginPath(); g.arc(X0 + 30 + i * 28, 107, 8, 0, 6.28); g.fill(); });
+        g.fillStyle = '#8B949E'; g.font = `600 20px ${MONO}`; g.fillText(p.file || 'terminal', X0 + 130, 114);
+        g.fillStyle = '#F0F6FC'; g.font = `700 34px ${FONT}`; g.fillText(p.title || '', X0 + 28, 186);
+        const size = p.cmdSize ?? 28, cmd = p.cmd || '', ta = p.typeAt ?? 0.3, td = p.typeDur ?? Math.max(0.6, cmd.length * 0.06), n = Math.floor(cl((lt - ta) / td) * cmd.length), shown = cmd.slice(0, n);
+        g.font = `700 ${size}px ${MONO}`; const maxW = W0 - 60 - g.measureText('$ ').width, words = shown.split(' '), lines = []; let cur2 = ''; for (const w of words) { const t2 = cur2 ? cur2 + ' ' + w : w; if (g.measureText(t2).width > maxW && cur2) { lines.push(cur2); cur2 = w; } else cur2 = t2; } lines.push(cur2);
+        g.fillStyle = '#161B22'; rr(X0 + 20, 214, W0 - 40, 24 + lines.length * (size + 12) + 16, 14); g.fill();
+        lines.forEach((ln, i) => { g.fillStyle = '#7EE787'; if (i === 0) g.fillText('$', X0 + 40, 262); g.fillStyle = '#F0F6FC'; g.fillText(ln, X0 + 40 + g.measureText('$ ').width, 262 + i * (size + 12)); });
+        if (Math.floor(lt * 2.4) % 2 === 0 && n < cmd.length + 40) { const last = lines[lines.length - 1]; g.fillStyle = '#F0F6FC'; g.fillRect(X0 + 44 + g.measureText('$ ' + last).width, 262 + (lines.length - 1) * (size + 12) - size + 6, 13, size); }
+        let y = 214 + 24 + lines.length * (size + 12) + 52;
+        if (p.hint) { g.fillStyle = p.hintColor || '#FFD166'; g.font = `600 22px ${FONT}`; g.fillText(p.hint, X0 + 28, y); y += 44; }
+        (p.out || []).forEach((o) => { if (lt >= o.at) { const u = ez(cl((lt - o.at) / 0.25)); g.globalAlpha = u; g.fillStyle = o.c || '#7EE787'; g.font = `700 26px ${MONO}`; g.fillText(o.t, X0 + 28, y + (1 - u) * 10); g.globalAlpha = 1; y += 46; } });
+        if (p.bar) { const b = p.bar, u = lt < b.at ? 0 : cl((lt - b.at) / b.dur), by = 558; if (lt >= b.at - 0.1) { g.fillStyle = '#C9D1D9'; g.font = `700 24px ${MONO}`; g.fillText(`${b.label}  ${Math.round(u * 100)}%`, X0 + 28, by - 14); g.fillStyle = '#21262D'; rr(X0 + 28, by, W0 - 56, 22, 11); g.fill(); if (u > 0.01) { const gr = g.createLinearGradient(X0 + 28, 0, X0 + W0 - 28, 0); gr.addColorStop(0, '#2EA043'); gr.addColorStop(1, '#7EE787'); g.fillStyle = gr; rr(X0 + 28, by, Math.max(22, (W0 - 56) * u), 22, 11); g.fill(); } if (u >= 1) { g.textAlign = 'right'; g.fillStyle = '#7EE787'; g.font = `800 26px ${MONO}`; g.fillText(b.done || '✓ beres', X0 + W0 - 28, by - 14); g.textAlign = 'left'; } } }
+      }
+      if (p.stamp && lt >= p.stamp.at && (p.stamp.until === undefined || lt < p.stamp.until)) { const st = p.stamp, u = cl((lt - st.at) / 0.18), sc = 1.6 - 0.6 * ez(u); g.save(); g.translate(X0 + W0 / 2, 380); g.rotate(-0.12); g.scale(sc, sc); g.globalAlpha = ez(u); g.strokeStyle = st.c || '#FF4B3E'; g.fillStyle = st.c || '#FF4B3E'; g.lineWidth = 8; rr(-250, -52, 500, 104, 14); g.stroke(); g.font = `800 52px ${FONT}`; g.textAlign = 'center'; g.fillText(st.text, 0, 18); g.restore(); }
+      g.textAlign = 'left';
+    },
+    clockpage: (g, p, th, t, lt) => {   // a big clock p.from -> p.to between p.start..p.end s, the day name p.day, a week strip (Sen..Min) where p.hl [indexes] pulse from p.hlAt, a note p.note at the bottom
+      const cl = (x) => Math.max(0, Math.min(1, x)), rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      g.fillStyle = '#10141F'; g.fillRect(0, 0, 1024, 640);
+      const m0 = (p.from || '12:00').split(':').reduce((a, b) => a * 60 + +b), m1 = (p.to || p.from || '12:00').split(':').reduce((a, b) => a * 60 + +b), m = Math.round(m0 + (m1 - m0) * cl((lt - (p.start ?? 0)) / Math.max(0.01, (p.end ?? 1) - (p.start ?? 0))));
+      const colon = Math.floor(lt * 2) % 2 === 0 ? ':' : ' ', tm = String(Math.floor(m / 60) % 24).padStart(2, '0') + colon + String(m % 60).padStart(2, '0');
+      g.textAlign = 'center'; g.fillStyle = '#8B97C4'; g.font = `700 34px ${FONT}`; g.fillText((p.day || '').toUpperCase(), 512, 96);
+      g.fillStyle = p.timeColor || '#E8EEFF'; g.font = `800 210px ${MONO}`; g.fillText(tm, 512, 300);
+      const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'], hl = p.hl || [4], on = p.hlAt !== undefined && lt >= p.hlAt, pulse = on ? 0.5 + 0.5 * Math.sin((lt - p.hlAt) * 7) : 0;
+      days.forEach((d, i) => {
+        const x = 62 + i * 132, y = 380, isHl = on && hl.includes(i);
+        g.fillStyle = isHl ? `rgba(255,106,94,${0.18 + 0.18 * pulse})` : '#181E30'; rr(x, y, 112, 96, 18); g.fill();
+        g.strokeStyle = isHl ? '#FF6A5E' : '#262E47'; g.lineWidth = isHl ? 4 : 2; rr(x, y, 112, 96, 18); g.stroke();
+        g.fillStyle = isHl ? '#FFD0CB' : '#6F7CA8'; g.font = `700 34px ${FONT}`; g.fillText(d, x + 56, y + 60);
+      });
+      if (p.note) { g.fillStyle = p.noteColor || '#8B97C4'; g.font = `600 30px ${FONT}`; g.fillText(p.note, 512, 556); }
+      g.textAlign = 'left';
+    },
+    deploydash: (g, p, th, t, lt) => {   // a production dashboard: LIVE badge, a traffic graph; at p.spikeAt the errors explode: the badge turns red, the red line spikes, the counter races up to p.max, red toast pills (p.toasts) pile in
+      const cl = (x) => Math.max(0, Math.min(1, x)), ez = (u) => u * u * (3 - 2 * u), rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      const sp = p.spikeAt ?? 0.6, k = cl((lt - sp) / 2.4), bad = lt >= sp;
+      g.fillStyle = '#0D1117'; g.fillRect(0, 0, 1024, 640); g.fillStyle = '#161B22'; g.fillRect(0, 0, 1024, 64);
+      g.textAlign = 'left'; g.fillStyle = '#F0F6FC'; g.font = `700 28px ${FONT}`; g.fillText(p.title || 'Produksi  ·  app.live', 28, 42);
+      const blink = bad && Math.floor(lt * 4) % 2 === 0; g.fillStyle = bad ? (blink ? '#FF5A4E' : '#B3342B') : '#2EA043'; rr(808, 14, 188, 38, 19); g.fill(); g.fillStyle = '#FFFFFF'; g.font = `800 22px ${FONT}`; g.textAlign = 'center'; g.fillText(bad ? 'ERROR' : '● LIVE', 902, 41);
+      g.textAlign = 'left'; g.fillStyle = '#8B949E'; g.font = `600 22px ${FONT}`; g.fillText(p.label || 'error / menit', 40, 120);
+      g.fillStyle = bad ? '#FF6A5E' : '#7EE787'; g.font = `800 130px ${FONT}`; g.fillText(String(Math.floor((p.max ?? 1284) * ez(k) * (0.98 + 0.02 * Math.sin(lt * 25)))), 40, 235);
+      const GX = 40, GY = 270, GW = 560, GH = 300; g.fillStyle = '#12161F'; rr(GX, GY, GW, GH, 18); g.fill(); g.strokeStyle = 'rgba(255,255,255,0.06)'; g.lineWidth = 2; for (let i = 1; i < 4; i++) { g.beginPath(); g.moveTo(GX + 10, GY + i * GH / 4); g.lineTo(GX + GW - 10, GY + i * GH / 4); g.stroke(); }
+      const N = 56, cut = Math.min(N, Math.floor(((lt % 1000) * 14))); const pt = (i, f) => [GX + 14 + (GW - 28) * i / N, GY + GH - 16 - f * (GH - 40)];
+      g.lineJoin = 'round'; g.lineWidth = 5; g.strokeStyle = '#4DDB91'; g.beginPath(); for (let i = 0; i <= Math.min(N, cut); i++) { const f = 0.34 + 0.05 * Math.sin(i * 0.7) - (bad && i / N > (sp / 4) ? 0.20 * ez(k) : 0); const [x, y] = pt(i, f); i ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke();
+      g.strokeStyle = '#FF5A4E'; g.shadowColor = '#FF5A4E'; g.shadowBlur = bad ? 14 : 0; g.beginPath(); for (let i = 0; i <= Math.min(N, cut); i++) { const stage = bad ? cl((lt - sp) / 2.0) : 0, f = 0.04 + stage * (0.75 * Math.pow(i / N, 1.6) + 0.1 * Math.abs(Math.sin(i * 1.3 + lt * 6))) * (i / N > 0.3 ? 1 : 0.3); const [x, y] = pt(i, Math.min(0.97, f)); i ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); g.shadowBlur = 0;
+      g.fillStyle = '#8B949E'; g.font = `600 20px ${FONT}`; g.fillText('lalu lintas', GX + 16, GY + 30);
+      const toasts = p.toasts || ['500 Internal Server Error', 'Login gagal', 'Pembayaran gagal', 'Halaman kosong', 'Tolong dong'], per = p.every ?? 0.5, n = bad ? Math.floor((lt - sp - 0.3) / per) + 1 : 0, show = Math.min(7, Math.max(0, n));
+      for (let j = 0; j < show; j++) { const idx = n - 1 - j, born = sp + 0.3 + idx * per, u = ez(cl((lt - born) / 0.28)), y = 110 + j * 74, tx = toasts[idx % toasts.length];
+        g.save(); g.globalAlpha = u * (1 - j * 0.1); g.translate((1 - u) * 260, 0); g.fillStyle = '#2A0F12'; rr(632, y, 372, 62, 16); g.fill(); g.strokeStyle = '#FF4B3E'; g.lineWidth = 3; rr(632, y, 372, 62, 16); g.stroke(); g.fillStyle = '#FF5A4E'; g.beginPath(); g.arc(662, y + 31, 11, 0, 6.28); g.fill(); g.fillStyle = '#FFE3E0'; g.font = `700 22px ${FONT}`; g.fillText(tx, 686, y + 39); g.restore(); }
+      if (bad) { g.fillStyle = `rgba(255,60,50,${0.08 + 0.05 * Math.sin(lt * 14)})`; g.fillRect(0, 64, 1024, 576); }
+      g.textAlign = 'left';
+    },
+    promptdoc: (g, p, th, t, lt) => {   // a text editor holding a long prompt: p.items [{at,t,c,b,n}] typed line by line with line numbers; p.pages {total,start,flips[]} a "Halaman k/total" counter with a page-turn sweep at each flip; p.search {at,q,hitAt,none} a find box that scans and finds nothing; p.goto {at,dur,n,t} line numbers race to n and that line lights up; p.bars true = the body is a long unreadable document (grey text bars)
+      const cl = (x) => Math.max(0, Math.min(1, x)), ez = (u) => u * u * (3 - 2 * u), LH = 46, TOP = 112, ROWS = 10;
+      const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      g.fillStyle = '#0F1320'; g.fillRect(0, 0, 1024, 640); g.fillStyle = '#161B2E'; g.fillRect(0, 0, 1024, 60);
+      ['#FF5F56', '#FFBD2E', '#27C93F'].forEach((c, i) => { g.fillStyle = c; g.beginPath(); g.arc(34 + i * 28, 30, 8, 0, 6.28); g.fill(); });
+      g.textAlign = 'left'; g.fillStyle = '#A9B6E6'; g.font = `600 22px ${MONO}`; g.fillText(p.file || 'prompt.md', 140, 38);
+      const pg = p.pages; let k = pg ? (pg.start ?? 1) : 1;
+      if (pg) { (pg.flips || []).forEach((a) => { if (lt >= a) k++; }); const pulse = Math.max(0, 1 - Math.min(...(pg.flips || [99]).map((a) => Math.abs(lt - a))) / 0.35);
+        g.textAlign = 'right'; g.fillStyle = pulse > 0 ? '#FFD166' : '#7C86A4'; g.font = `700 ${24 + 6 * pulse}px ${FONT}`; g.fillText(`Halaman ${Math.min(k, pg.total)}/${pg.total}`, 996, 38); g.textAlign = 'left'; }
+      let ln = 1, hot = -1;
+      const gut = (n, y, c) => { g.fillStyle = c || '#4B5578'; g.font = `22px ${MONO}`; g.textAlign = 'right'; g.fillText(String(n), 82, y); g.textAlign = 'left'; };
+      if (p.bars || p.goto) {   // long unreadable document
+        const gt = p.goto, base = gt ? Math.floor(gt.n * ez(cl((lt - gt.at) / (gt.dur ?? 1.4)))) : Math.floor(lt * (p.barSpeed ?? 60)), done = gt && lt >= gt.at + (gt.dur ?? 1.4);
+        let sd = 7; const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
+        for (let r = 0; r < ROWS; r++) {
+          const y = TOP + r * LH, n = done ? gt.n - 4 + r : base + r, w = 160 + ((n * 97) % 520);
+          const isHot = done && r === 4; if (isHot) { g.fillStyle = 'rgba(255,209,102,0.16)'; g.fillRect(96, y - 28, 900, LH - 6); }
+          gut(n, y, isHot ? '#FFD166' : null);
+          if (isHot) { g.fillStyle = '#FFE08A'; g.font = `700 28px ${MONO}`; g.fillText(gt.t, 104, y); g.strokeStyle = '#FF5A5A'; g.lineWidth = 3; g.beginPath(); const w2 = g.measureText(gt.t).width; for (let x = 0; x < w2; x += 8) g.lineTo(104 + x, y + 9 + (x % 16 ? 3 : 0)); g.stroke(); }
+          else { g.fillStyle = '#2A3150'; rr(104, y - 16, w, 14, 6); g.fill(); }
+        }
+        if (done) { g.fillStyle = '#FFD166'; g.font = `700 24px ${MONO}`; g.textAlign = 'right'; g.fillText(`Baris ${gt.n}`, 996, 90); g.textAlign = 'left'; }
+      } else {
+        const items = (p.items || []).filter((it) => lt >= it.at), scroll = Math.max(0, items.length - ROWS);
+        items.forEach((it, i) => {
+          const y = TOP + (i - scroll) * LH, n = it.n ?? i + 1, cnt = Math.min(it.t.length, Math.floor((lt - it.at) * (p.speed ?? 30)));
+          gut(n, y); g.font = `${it.b ? '700 ' : ''}28px ${MONO}`; g.fillStyle = it.c || '#D6DCF2'; g.fillText(it.t.slice(0, cnt), 104, y); ln = n + 1;
+          if (i === items.length - 1 && Math.floor(lt * 2.4) % 2 === 0) { g.fillStyle = '#E6ECFF'; g.fillRect(108 + g.measureText(it.t.slice(0, cnt)).width, y - 24, 3, 30); }
+        });
+        if (!items.length && Math.floor(lt * 2.4) % 2 === 0) { gut(1, TOP); g.fillStyle = '#E6ECFF'; g.fillRect(108, TOP - 24, 3, 30); }
+        else if (!items.length) gut(1, TOP);
+      }
+      if (p.search && lt >= p.search.at) {
+        const sr = p.search, q = sr.q.slice(0, Math.floor((lt - sr.at) * 16)), hit = sr.hitAt !== undefined && lt >= sr.hitAt, sh = hit && lt - sr.hitAt < 0.4 ? Math.sin(lt * 80) * 7 * (1 - (lt - sr.hitAt) / 0.4) : 0;
+        g.save(); g.translate(sh, 0); g.fillStyle = 'rgba(0,0,0,0.35)'; rr(404, 76, 600, 58, 14); g.fill(); g.fillStyle = '#1D2440'; rr(400, 70, 600, 58, 14); g.fill(); g.strokeStyle = hit ? '#FF5A5A' : '#5C7CFF'; g.lineWidth = 3; rr(400, 70, 600, 58, 14); g.stroke();
+        g.fillStyle = '#EAF0FF'; g.font = `600 26px ${MONO}`; g.fillText('⌕ ' + q + (!hit && Math.floor(lt * 3) % 2 ? '▌' : ''), 420, 108);
+        if (hit) { g.textAlign = 'right'; g.fillStyle = '#FF6A6A'; g.font = `800 26px ${FONT}`; g.fillText(sr.none || '0 hasil', 984, 108); g.textAlign = 'left'; }
+        else if (lt > sr.at + 0.6) { const sy = TOP - 20 + ((lt - sr.at - 0.6) * 340) % (ROWS * LH); g.fillStyle = 'rgba(92,124,255,0.20)'; g.fillRect(96, sy, 900, LH - 8); }
+        g.restore();
+      }
+      if (pg) (pg.flips || []).forEach((a) => {   // a page turning: a cream sheet sweeps from right to left
+        const u = (lt - a) / 0.5; if (u <= 0 || u >= 1) return; const e = ez(u), px = 1024 * (1 - e), wd = 40 + 200 * Math.sin(Math.PI * e);
+        const gr = g.createLinearGradient(px - wd, 0, px + 20, 0); gr.addColorStop(0, 'rgba(236,228,206,0)'); gr.addColorStop(0.7, 'rgba(236,228,206,0.95)'); gr.addColorStop(1, 'rgba(120,110,90,0.9)'); g.fillStyle = gr; g.fillRect(px - wd, 60, wd + 20, 580);
+      });
+      g.fillStyle = '#161B2E'; g.fillRect(0, 610, 1024, 30); g.fillStyle = '#6F7CA8'; g.font = `18px ${MONO}`; g.fillText(`Markdown   UTF-8   Baris ${ln}`, 28, 631);
+    },
     text: (g, p, th, t, lt) => {  // a title and a few lines
       g.fillStyle = th.bg; g.fillRect(0, 0, 1024, 640); tabsOf(g, p, th);
       g.fillStyle = th.num; g.font = `700 64px ${FONT}`; wrapText(g, p.title || '', 60, 150, 900, 76);
@@ -594,26 +803,150 @@ export async function createStudio(scene, cfg = {}) {
     const bh = nc.height ?? 20, bw = nc.width ?? 11;
     const body = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 3), blackM()); body.position.set(0, bh / 2 - 6, 0); g.add(body);
     const top = new THREE.Mesh(new THREE.BoxGeometry(bw * 0.7, 1.2, 2.6), blackM()); top.position.set(0, bh - 6 + 0.6, 0); g.add(top);
-    const sy = nc.signY ?? 10.5, sw = bw * 0.9, sh = sw * 0.25;
-    const draw = (on) => canvasTex(1024, 256, (c, w, h) => {
-      c.clearRect(0, 0, w, h); c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = "bold 150px 'Arial Rounded MT Bold', 'Trebuchet MS', Arial, sans-serif"; c.lineJoin = 'round';
-      if (on) { c.shadowColor = col; c.shadowBlur = 22; c.strokeStyle = col; c.lineWidth = 15; c.strokeText(txt, w / 2, h / 2 + 6); c.shadowBlur = 0; c.strokeStyle = '#C9FFE2'; c.lineWidth = 3; c.strokeText(txt, w / 2, h / 2 + 6); }
-      else { c.strokeStyle = '#26324A'; c.lineWidth = 9; c.strokeText(txt, w / 2, h / 2 + 6); c.strokeStyle = '#141B2E'; c.lineWidth = 3; c.strokeText(txt, w / 2, h / 2 + 6); }
+    const rows = txt.split('\n'), nl = rows.length, sy = nc.signY ?? 10.5, sw = bw * 0.9, sh = sw * 0.25 * nl, core = nc.core || '#C9FFE2';
+    const draw = (on) => canvasTex(1024, 256 * nl, (c, w, h) => {   // several lines when the text has \n; each line is shrunk to fit the board
+      c.clearRect(0, 0, w, h); c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
+      rows.forEach((row, i) => {
+        let fs = 150; c.font = `bold ${fs}px 'Arial Rounded MT Bold', 'Trebuchet MS', Arial, sans-serif`; const mw = c.measureText(row).width; if (mw > w * 0.9) { fs = Math.floor(fs * w * 0.9 / mw); c.font = `bold ${fs}px 'Arial Rounded MT Bold', 'Trebuchet MS', Arial, sans-serif`; }
+        const cy = 256 * i + 128 + 6;
+        if (on) { c.shadowColor = col; c.shadowBlur = 22; c.strokeStyle = col; c.lineWidth = 15; c.strokeText(row, w / 2, cy); c.shadowBlur = 0; c.strokeStyle = core; c.lineWidth = 3; c.strokeText(row, w / 2, cy); }
+        else { c.strokeStyle = nc.off1 || '#26324A'; c.lineWidth = 9; c.strokeText(row, w / 2, cy); c.strokeStyle = nc.off2 || '#141B2E'; c.lineWidth = 3; c.strokeText(row, w / 2, cy); }
+      });
     }).t;
     const bmat = new THREE.MeshBasicMaterial({ color: '#0A0F26' });
     const board = new THREE.Mesh(new THREE.PlaneGeometry(sw * 1.05, sh * 1.2), bmat); board.position.set(0, sy, 1.53); g.add(board);
     const offM = new THREE.Mesh(new THREE.PlaneGeometry(sw, sh), new THREE.MeshBasicMaterial({ map: draw(false), transparent: true, toneMapped: false })); offM.position.set(0, sy, 1.56); g.add(offM);
-    const onMat = new THREE.MeshBasicMaterial({ map: draw(true), transparent: true, toneMapped: false, opacity: 0 }); onMat.color.multiplyScalar(0.8);
+    const onMat = new THREE.MeshBasicMaterial({ map: draw(true), transparent: true, toneMapped: false, opacity: 0 }); onMat.color.multiplyScalar(nc.bright ?? 0.8);
     const onM = new THREE.Mesh(new THREE.PlaneGeometry(sw, sh), onMat); onM.position.set(0, sy, 1.6); g.add(onM);
     // the "pret-pret" start: [from, to, level] seconds after the switch-on; after the last one it stays on
     const seq = nc.flicker || [[0.0, 0.1, 0.55], [0.1, 0.28, 0], [0.28, 0.38, 0.8], [0.38, 0.7, 0], [0.7, 0.8, 0.6], [0.8, 0.92, 0], [0.92, 1.08, 1], [1.08, 1.2, 0.15], [1.2, 1.28, 1], [1.28, 1.4, 0.3]];
     const lvl = (s) => { if (s < 0) return 0; for (const [a, b, l] of seq) if (s >= a && s < b) return l; return s >= seq[seq.length - 1][1] ? 1 : 0; };
-    neon = { show(s) { const l = lvl(s) * (s > 2 ? 1 + 0.02 * Math.sin(s * 40) : 1); onMat.opacity = Math.min(1, l);  } };
+    neon = { show(s) { const l = lvl(s) * (s > 2 ? 1 + 0.02 * Math.sin(s * 40) : 1); onMat.opacity = Math.min(1, l) * (nc.max ?? 1);  } };
     neon.show(-1);
   }
 
+  // ---------------------------------------------------------------- a police siren outside the window (built ONLY when cfg.siren is set): from `at` seconds red and blue lights pulse in turn, washing the room, the window and the far skyline; a soft glow sits in the sky on each side
+  if (cfg.siren) {
+    const sc2 = cfg.siren, red = new THREE.PointLight('#FF1E2D', 0, 46, 1.6), blue = new THREE.PointLight('#1E50FF', 0, 46, 1.6);
+    red.position.set(-5.5, 6.5, -12); blue.position.set(5.5, 6.5, -12); group.add(red, blue);
+    const gr = glowSprite(-9, 8, -42, 46, '255,30,45', 0, OUT), gb = glowSprite(9, 8, -42, 46, '40,90,255', 0, OUT);
+    const tintR = new THREE.Mesh(new THREE.PlaneGeometry(WIN.w, WIN.h), new THREE.MeshBasicMaterial({ color: '#FF1E2D', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })), tintB = new THREE.Mesh(new THREE.PlaneGeometry(WIN.w, WIN.h), new THREE.MeshBasicMaterial({ color: '#1E50FF', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
+    tintR.position.set(0, WIN.y0 + WIN.h / 2, fz + 0.3); tintB.position.copy(tintR.position); tintB.position.z += 0.01; group.add(tintR, tintB);
+    updaters.push((t) => {
+      const k = t - sc2.at, ramp = k < 0 ? 0 : Math.min(1, k / 0.5), per = sc2.period ?? 0.62, ph = (k / per) % 2, pr = ph < 1 ? Math.pow(Math.sin(Math.PI * ph), 2) : 0, pb = ph >= 1 ? Math.pow(Math.sin(Math.PI * (ph - 1)), 2) : 0;
+      red.intensity = (sc2.power ?? 520) * pr * ramp; blue.intensity = (sc2.power ?? 520) * pb * ramp;
+      gr.material.opacity = 0.9 * pr * ramp; gb.material.opacity = 0.9 * pb * ramp; tintR.material.opacity = 0.16 * pr * ramp; tintB.material.opacity = 0.16 * pb * ramp;
+    });
+  }
+
+  // ---------------------------------------------------------------- two stickmen fighting on a far roof, their chests joined by a chain of fire (built ONLY when cfg.duel is set; a nod to a viral anime duel): the chain sways and burns, they trade punches, and at breakAt (seconds) the chain crumbles link by link and one of them falls
+  if (cfg.duel) {
+    const dc = cfg.duel, g = new THREE.Group(); g.position.set(dc.x ?? -1.5, dc.y ?? 9.0, dc.z ?? -27); OUT.add(g);
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(dc.roofW ?? 17, 14, 4), blackM()); roof.position.set(0, -7, 0); g.add(roof);
+    const lip = new THREE.Mesh(new THREE.BoxGeometry((dc.roofW ?? 17) * 1.03, 0.35, 4.2), blackM()); lip.position.set(0, 0.17, 0); g.add(lip);
+    const inkM = new THREE.MeshBasicMaterial({ color: new THREE.Color('#E8EEFF').multiplyScalar(dc.bright ?? 0.85), toneMapped: false });
+    const sc = dc.scale ?? 1.25, gap = dc.gap ?? 5.2, chestY = 2.5 * sc;
+    const limb = (parent, x1, y1, x2, y2, r = 0.085 * sc) => { const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy), m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 8), inkM); m.position.set((x1 + x2) / 2, (y1 + y2) / 2, 0); m.rotation.z = Math.atan2(dy, dx) - Math.PI / 2; parent.add(m); return m; };
+    function stickman(face) {   // face = +1 looks right, -1 looks left; arms are two-part groups so a punch can swing them
+      const m = new THREE.Group(); const u = sc;
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.38 * u, 16, 12), inkM); head.position.set(0, 3.55 * u, 0); m.add(head);
+      limb(m, 0, 3.15 * u, 0, 1.55 * u);   // torso
+      limb(m, 0, 1.55 * u, -0.5 * u, 0.0); limb(m, 0, 1.55 * u, 0.5 * u, 0.0);   // legs
+      const arms = [0, 1].map((k) => { const a = new THREE.Group(); a.position.set(0, 2.85 * u, 0); m.add(a); limb(a, 0, 0, face * 0.62 * u, -0.1 * u * (k ? -2 : 1)); limb(a, face * 0.62 * u, -0.1 * u * (k ? -2 : 1), face * 1.2 * u, (k ? 0.5 : -0.35) * u); return a; });
+      const legs = m.children.slice(-0);   // (kept simple)
+      return { m, arms, head };
+    }
+    const A = stickman(1), B = stickman(-1); A.m.position.set(-gap / 2, 0, 0); B.m.position.set(gap / 2, 0, 0); g.add(A.m, B.m);
+    // the chain: N links from chest to chest, alternating orientation, glowing orange; flames ride on the links
+    const N = dc.links ?? 13, linkGeo = new THREE.TorusGeometry(0.2 * sc, 0.06 * sc, 6, 14), linkMats = [], links = [], flames = [];
+    for (let i = 0; i < N; i++) { const lm = new THREE.MeshBasicMaterial({ color: new THREE.Color('#FF9A2E').multiplyScalar(1.7), toneMapped: false, transparent: true }); const l = new THREE.Mesh(linkGeo, lm); l.scale.set(1.35, 1, 1); g.add(l); links.push(l); linkMats.push(lm); }
+    for (let i = 0; i < N * 2; i++) { const f = glowSprite(0, 0, 0.25, (0.9 + 0.5 * R()) * sc, i % 2 ? '255,170,60' : '255,110,30', 0.75, g); flames.push({ f, i, ph: R() * 6.28 }); }
+    const heat = glowSprite(0, chestY, -0.2, gap * 1.25, '255,120,40', 0.28, g);
+    const chestA = (t) => [-gap / 2 + 0.25 * sc, chestY + 0.05 * Math.sin(t * 2.1)], chestB = (t) => [gap / 2 - 0.25 * sc, chestY + 0.05 * Math.sin(t * 2.1 + 1)];
+    updaters.push((t) => {
+      const br = dc.breakAt, bu = br === undefined ? 0 : Math.max(0, Math.min(1, (t - br) / 1.6));   // 0..1 how far the chain has crumbled
+      const [ax, ay] = chestA(t), [bx, by] = chestB(t);
+      // fight: A and B lean in and trade punches; after the break A stands tall and B falls
+      const beat = (t * 1.35) % 2, pa = beat < 1 ? Math.sin(Math.PI * beat) : 0, pb = beat >= 1 ? Math.sin(Math.PI * (beat - 1)) : 0;
+      A.m.position.x = -gap / 2 + 0.25 * pa * (1 - bu) + 0.12 * Math.sin(t * 5); B.m.position.x = gap / 2 - 0.25 * pb * (1 - bu) + 0.12 * Math.sin(t * 5 + 2);
+      A.arms[0].rotation.z = -0.5 * pa - 0.15 * Math.sin(t * 4); A.arms[1].rotation.z = 0.2 + 0.12 * Math.sin(t * 3.1);
+      B.arms[0].rotation.z = 0.5 * pb + 0.15 * Math.sin(t * 4 + 1); B.arms[1].rotation.z = -0.2 - 0.12 * Math.sin(t * 3.1);
+      A.m.rotation.z = 0.08 * pa * (1 - bu) - 0.1 * pb; B.m.rotation.z = -0.08 * pb * (1 - bu) + 0.1 * pa;
+      if (bu > 0) { const fu = Math.max(0, Math.min(1, (t - br - 0.2) / 1.2)); B.m.rotation.z = -1.45 * fu * fu; B.m.position.y = -0.9 * fu * fu; B.m.position.x = gap / 2 + 0.9 * fu; A.arms[0].rotation.z = -1.1 * Math.min(1, bu * 2); }
+      links.forEach((l, i) => {
+        const u = (i + 0.5) / N, sag = 0.7 * sc * Math.sin(Math.PI * u) * (1 + 0.15 * Math.sin(t * 3 + i)), x = lerp(ax, bx, u), y = lerp(ay, by, u) - sag;
+        const dropU = Math.max(0, Math.min(1, (bu * 1.6) - Math.abs(u - 0.5) * 1.4));   // links crumble from the middle outwards
+        l.position.set(x, y - 2.2 * dropU * dropU, 0); l.rotation.z = (i % 2 ? 0 : 0.2) + dropU * 3 * (i % 2 ? 1 : -1); l.rotation.y = i % 2 ? Math.PI / 2 : 0; linkMats[i].opacity = 1 - dropU;
+      });
+      flames.forEach(({ f, i, ph }) => {
+        const u = ((i / (N * 2)) * 0.98) + 0.01, k = (u * N) | 0, l = links[Math.min(N - 1, k)], fl = 0.6 + 0.4 * Math.sin(t * 11 + ph) * Math.sin(t * 7.3 + ph * 1.7);
+        const rise = ((t * 1.4 + ph) % 1.2) * 0.7 * sc, alive = 1 - Math.max(0, Math.min(1, (bu * 1.6) - Math.abs(u - 0.5) * 1.4));
+        f.position.set(l.position.x + 0.1 * Math.sin(t * 6 + ph), l.position.y + 0.2 * sc + rise, 0.25); f.material.opacity = 0.75 * fl * alive * (1 - rise / (0.9 * sc)); f.scale.setScalar(0.7 + 0.5 * fl);
+      });
+      heat.material.opacity = 0.28 * (0.8 + 0.2 * Math.sin(t * 9)) * (1 - bu);
+    });
+  }
+
+  // ---------------------------------------------------------------- a printed cloth banner (style 'fabric', image + bump from the episode) tied to the face of a building outside: a real wall that receives light, ropes and grommets, folds that sway in the wind, two floodlamps on the roof that really light it
+  if (cfg.banner && cfg.banner.style === 'fabric') {
+    const bc = cfg.banner, g = new THREE.Group(); g.position.set(bc.x ?? -1.2, 0, bc.z ?? -23); OUT.add(g);
+    const bh = bc.height ?? 24, bw = bc.width ?? 12, roofY = bh - 6;
+    const wallTex = canvasTex(256, 512, (c, w, h) => {   // dark painted concrete: mottled, with faint panel joints and window recesses
+      c.fillStyle = '#2A3048'; c.fillRect(0, 0, w, h);
+      for (let i = 0; i < 2600; i++) { const v = 30 + (R() * 34) | 0; c.fillStyle = `rgba(${v},${v + 4},${v + 18},0.35)`; c.fillRect(R() * w, R() * h, 2 + R() * 6, 2 + R() * 6); }
+      c.strokeStyle = 'rgba(8,10,22,0.55)'; c.lineWidth = 2; for (let y = 0; y < h; y += 64) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); }
+    });
+    wallTex.t.wrapS = wallTex.t.wrapT = THREE.RepeatWrapping; wallTex.t.repeat.set(bw / 5, bh / 10);
+    const wallM = new THREE.MeshStandardMaterial({ map: wallTex.t, bumpMap: wallTex.t, bumpScale: 1.5, roughness: 0.95, metalness: 0 });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 3), wallM); body.position.set(0, bh / 2 - 6, 0); g.add(body);
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(bw * 1.04, 0.5, 3.2), new THREE.MeshStandardMaterial({ color: '#1B2036', roughness: 0.9 })); cap.position.set(0, roofY + 0.25, 0); g.add(cap);
+    for (const [wx, wy] of [[-4.6, 3.6], [4.6, 3.6], [-4.6, -2.2], [4.6, -2.2], [-4.6, -7.4], [4.6, -7.4]]) {   // window recesses on both sides of the banner, a couple of them dimly lit
+      const lit = (wx * wy) > 12 || (wx > 0 && wy < -6);
+      const rec = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 2.1), lit ? glow('#E8B060', 0.9) : new THREE.MeshBasicMaterial({ color: '#0C1022' })); rec.position.set(wx, wy + 2, 1.515); g.add(rec);
+      const sill = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.14, 0.3), new THREE.MeshStandardMaterial({ color: '#1B2036', roughness: 0.9 })); sill.position.set(wx, wy + 0.9, 1.62); g.add(sill);
+    }
+    const imA = await loadImage(`${base}/${bc.image}`), imB = await loadImage(`${base}/${bc.bump}`);
+    const tex = new THREE.CanvasTexture(imA); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 16;
+    const bump = new THREE.CanvasTexture(imB); bump.anisotropy = 16;
+    const BW = bc.w ?? 5.2, BH = bc.h ?? BW * (imA.height / imA.width), top = roofY - 0.5, cx = bc.dx ?? 0.4;
+    const mat = new THREE.MeshStandardMaterial({ map: tex, bumpMap: bump, bumpScale: bc.bumpScale ?? 2.2, roughness: 0.9, metalness: 0, side: THREE.DoubleSide, emissive: new THREE.Color('#ffffff'), emissiveMap: tex, emissiveIntensity: bc.ambient ?? 0.16 });
+    const SX = 36, SY = 90, geo = new THREE.PlaneGeometry(BW, BH, SX, SY), pos = geo.attributes.position, rest = new Float32Array(pos.array);
+    const sheet = new THREE.Mesh(geo, mat); sheet.position.set(cx, top - BH / 2, 1.78); g.add(sheet);
+    const fold = (u, v, t) => {   // u,v in 0..1 (v=0 top). pinned corners; a belly in the middle; long vertical ripples; a slow wind swell
+      const pinTop = 1 - v, edge = Math.sin(Math.PI * u), free = Math.min(1, 0.25 + 0.75 * v);
+      const belly = 0.20 * edge * Math.sin(Math.PI * Math.min(1, v * 1.1)) * (0.8 + 0.2 * Math.sin(t * 0.9));
+      const rip = (0.05 * Math.sin(u * 17 + 0.7 + t * 1.3) + 0.03 * Math.sin(u * 31 + t * 1.9 + v * 3)) * Math.pow(Math.max(0, Math.min(1, v * 1.4)), 0.8) * free * edge;
+      const sag = 0.06 * Math.sin(v * 9 + u * 4 + t * 1.1) * free;
+      return belly + rip + sag + 0.0 * pinTop;
+    };
+    const shapeBanner = (t) => {
+      for (let i = 0; i < pos.count; i++) {
+        const rx = rest[i * 3], ry = rest[i * 3 + 1], u = rx / BW + 0.5, v = 0.5 - ry / BH;
+        pos.setZ(i, fold(u, v, t)); pos.setX(i, rx + 0.05 * Math.sin(v * 7 + t * 1.2) * v * Math.sin(Math.PI * u) * 0.6);
+      }
+      pos.needsUpdate = true; geo.computeVertexNormals();
+    };
+    shapeBanner(0); let lastT = -9; updaters.push((t) => { if (Math.abs(t - lastT) > 0.04) { lastT = t; shapeBanner(t); } });
+    const ropeM = new THREE.MeshStandardMaterial({ color: '#B9A98A', roughness: 1 });
+    const rope = (x1, y1, z1, x2, y2, z2) => { const a = new THREE.Vector3(x1, y1, z1), b = new THREE.Vector3(x2, y2, z2), m = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, a.distanceTo(b), 6), ropeM); m.position.copy(a).add(b).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); g.add(m); };
+    const gx = BW / 2 - BW * (34 / 1024), gTop = top - BH * (34 / 1536), gBot = top - BH + BH * (34 / 1536);
+    for (const sx of [-1, 1]) {
+      rope(cx + sx * gx, gTop, 1.82, cx + sx * (gx + 0.15), roofY + 0.5, 1.65);   // up to the roof edge
+      rope(cx + sx * gx, gBot, 1.82, cx + sx * (gx + 0.5), gBot - 0.7, 1.55);       // down to an anchor in the wall
+      const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.2, 8), new THREE.MeshStandardMaterial({ color: '#555', roughness: 0.5, metalness: 0.7 })); bolt.rotation.x = Math.PI / 2; bolt.position.set(cx + sx * (gx + 0.5), gBot - 0.7, 1.55); g.add(bolt);
+    }
+    rope(cx, gTop, 1.82, cx, roofY + 0.5, 1.65);
+    const spots = [];
+    for (const fx of [-2.6, 2.6]) {   // two floodlamps on short arms, tilted down at the banner; they are the visible source of the light on the cloth and the wall
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.9), new THREE.MeshStandardMaterial({ color: '#222', roughness: 0.6, metalness: 0.5 })); arm.position.set(cx + fx, roofY + 0.55, 2.0); g.add(arm);
+      const head = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.2, 0.34, 14), new THREE.MeshStandardMaterial({ color: '#2B2B30', roughness: 0.5, metalness: 0.6 })); head.position.set(cx + fx, roofY + 0.45, 2.5); head.rotation.x = 2.2; g.add(head);
+      const lens = new THREE.Mesh(new THREE.CircleGeometry(0.22, 14), glow('#FFE9C4', 1.5)); lens.position.set(cx + fx, roofY + 0.34, 2.64); lens.lookAt(cx + fx, top - 2, 3.5); g.add(lens); spots.push(lens);
+      const sp = new THREE.SpotLight('#FFE0B0', bc.lamp ?? 360, 24, 0.62, 0.85, 1.6); sp.position.set(cx + fx, roofY + 0.5, 2.6); sp.target.position.set(cx - fx * 0.2, top - BH * 0.55, 1.7); g.add(sp, sp.target);
+    }
+  }
+
   // ---------------------------------------------------------------- a protest banner hung down the face of a building outside (built ONLY when cfg.banner is set): colours and lettering only, no logo
-  if (cfg.banner && cfg.banner.style !== 'led') {
+  if (cfg.banner && cfg.banner.style !== 'led' && cfg.banner.style !== 'fabric') {
     const bc = cfg.banner, lines = bc.lines || ['BENCANA', 'MAKIN PARAH', 'HIDUP', 'MAKIN SUSAH', 'APA KERJA', 'PEMERINTAH?'];
     const g = new THREE.Group(); g.position.set(bc.x ?? -1.2, 0, bc.z ?? -23); OUT.add(g);
     const bh = bc.height ?? 22, bw = bc.width ?? 11, roofY = bh - 6;

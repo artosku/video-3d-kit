@@ -30,12 +30,12 @@ Math.random = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return 
 
 const J = (url, fallback) => fetch(url).then((r) => (r.ok ? r.json() : fallback)).catch(() => fallback);
 const PROJECT = (await J(`${BASE}/project.json`, null)) || (await J(`${BASE}/project.example.json`, {}));
-const CHAR_IDS = q.get('chars') ? q.get('chars').split(',') : (PROJECT.characters || ['ayam', 'claude']);
 const EP_EARLY = slug ? await J(`${BASE}/episodes/${slug}/episode.json`, null) : null;
+const CHAR_IDS = q.get('chars') ? q.get('chars').split(',') : (EP_EARLY?.characters || (PROJECT.characters || ['ayam', 'claude']).slice(0, 2));   // a third character (the MIDDLE one) only when the episode lists it
 const WORLD_ID = q.get('world') || EP_EARLY?.world || PROJECT.world || 'bedroom';   // an episode may use another world (episode.json "world")
 const WORLD_INFO = await J(`${BASE}/worlds/${WORLD_ID}/world.json`, {});
 const TRANSP = !!WORLD_INFO.transparent;   // an overlay world: only the characters are drawn, on a transparent picture (laid over a video afterwards, tools/episode.py encode)
-const CHARS = await Promise.all(CHAR_IDS.slice(0, 2).map(async (id) => ({ id, cfg: await J(`${BASE}/characters/${id}/character.json`, null) })));
+const CHARS = await Promise.all(CHAR_IDS.slice(0, 3).map(async (id) => ({ id, cfg: await J(`${BASE}/characters/${id}/character.json`, null) })));
 for (const c of CHARS) if (!c.cfg) throw new Error('characters/' + c.id + '/character.json not found');
 const EP = slug ? await J(`${BASE}/episodes/${slug}/episode.json`, null) : { scene: {}, directions: [], pages: undefined };
 if (slug && !EP) throw new Error('episodes/' + slug + '/episode.json not found');
@@ -78,11 +78,13 @@ const pages = EP.pages || { idle: { type: 'code', theme: 'dark', lines: ['> ...'
 const worldMod = await import(`${BASE}/worlds/${WORLD_ID}/world.js`);
 const NEON = EP.neon || (q.has('neon') ? { text: 'NEON' } : null);   // a neon sign on a building outside (the preview: &neon=<seconds since it switches on, negative = off>)
 const studio = await worldMod.createWorld(scene, {
-  neon: NEON, keys: !!EP.keys, counter: EP.counter || null, banner: EP.banner ? { ...EP.banner, alarmAt: EP.banner.alarmAt !== undefined ? T(EP.banner.alarmAt) : undefined } : null,
+  neon: NEON, keys: !!EP.keys, counter: EP.counter || null, siren: EP.siren ? { ...EP.siren, at: T(EP.siren.at) } : null, duel: EP.duel ? { ...EP.duel, breakAt: EP.duel.breakAt !== undefined ? T(EP.duel.breakAt) : undefined } : null, banner: EP.banner ? { ...EP.banner, alarmAt: EP.banner.alarmAt !== undefined ? T(EP.banner.alarmAt) : undefined } : null,
   base: BASE, bg: q.get('bg') || sc.bg, light: q.get('light') || sc.light || 'rembrandt',
   pages, phone: EP.phone, wall: EP.wall || [], props: EP.props || [], outside: EP.outside, episode: EP,
 });
-const ST = studio.stage;   // where the two characters stand: { y, z, scale, left: { x, yaw }, right: { x, yaw } }
+const ST = studio.stage;
+if (EP.layout) { if (EP.layout.scale) ST.scale = EP.layout.scale; ST.left = { ...ST.left, x: EP.layout.left ?? ST.left.x }; ST.right = { ...(ST.right || { yaw: -0.18 }), x: EP.layout.right ?? ST.right?.x ?? 1.4 }; }   // layout: { scale, left, mid, right } = x of each seat (three characters need wider seats)
+ST.mid = { x: EP.layout?.mid ?? 0, yaw: EP.layout?.midYaw ?? 0 };   // where the two characters stand: { y, z, scale, left: { x, yaw }, right: { x, yaw } }
 
 // presets used by this episode: the base one plus every one a "preset" event blends into
 const baseLight = q.get('light') || sc.light || 'rembrandt';
@@ -100,17 +102,19 @@ async function makeChar(c, side, seed) {
   scene.add(ch.group);
   return ch;
 }
-const left = await makeChar(CHARS[0], 'left', 11), right = CHARS[1] ? await makeChar(CHARS[1], 'right', 23) : null;   // the LEFT character is the lead: it hops, turns and daydreams at the end
+const left = await makeChar(CHARS[0], 'left', 11), right = CHARS[1] ? await makeChar(CHARS[1], 'right', 23) : null, mid = CHARS[2] ? await makeChar(CHARS[2], 'mid', 37) : null;   // the LEFT character is the lead: it hops, turns and daydreams at the end
 for (const [n, p] of Object.entries(EP.expressions?.left || {})) left.defineExpression?.(n, p);   // an episode may invent its own faces: expressions: { left: { shock: { ...rig parameters } }, right: { ... } }
 for (const [n, p] of Object.entries(EP.expressions?.right || {})) right?.defineExpression?.(n, p);
+for (const [n, p] of Object.entries(EP.expressions?.mid || {})) mid?.defineExpression?.(n, p);
 const EYES = EP.eyes || WORLD_INFO.eyes;   // { gain, life }: wider eye travel and a little eye life (the body stays still, the eyes show where they look)
-if (EYES) { left.setEyeStyle?.(EYES); right?.setEyeStyle?.(EYES); }
+if (EYES) { left.setEyeStyle?.(EYES); right?.setEyeStyle?.(EYES); mid?.setEyeStyle?.(EYES); }
 const TOON = q.has('toon') ? (q.get('toon') === 'off' ? null : JSON.parse(q.get('toon'))) : (EP.toon || WORLD_INFO.toon);   // a cartoon restyle at render time: { outline, px, levels }
-const toonSyncs = TOON ? [left, right].filter(Boolean).map((c) => toonify(c.group, { size: [W, H], ...(TOON === true ? {} : TOON) })) : [];
+const toonSyncs = TOON ? [left, right, mid].filter(Boolean).map((c) => toonify(c.group, { size: [W, H], ...(TOON === true ? {} : TOON) })) : [];
 const renderFrame = () => { toonSyncs.forEach((s) => s()); if (TRANSP) renderer.render(scene, camera); else composer.render(); };
-if (q.has('nochars')) { left.group.visible = false; if (right) right.group.visible = false; }   // a picture of the set alone (a backdrop for an overlay episode)
-const ID_L = CHARS[0].id, ID_R = CHARS[1]?.id;
+if (q.has('nochars')) { left.group.visible = false; if (right) right.group.visible = false; if (mid) mid.group.visible = false; }   // a picture of the set alone (a backdrop for an overlay episode)
+const ID_L = CHARS[0].id, ID_R = CHARS[1]?.id, ID_M = CHARS[2]?.id;
 const DEF_L = CHARS[0].cfg.defaultExpression || CHARS[0].cfg.expressions[0];
+const DEF_M = CHARS[2] ? (CHARS[2].cfg.defaultExpression || CHARS[2].cfg.expressions[0]) : null;
 const DEF_R = CHARS[1] ? (CHARS[1].cfg.defaultExpression || CHARS[1].cfg.expressions[0]) : null;
 
 // ---- camera shots (portrait 9:16), relative to where the characters sit; an episode can add or override shots
@@ -197,7 +201,7 @@ function outroPose(t) {
 }
 
 // ---- the director's notes, per line
-const D = Array.from({ length: N }, (_, i) => ({ cam: 'left', left: DEF_L, right: DEF_R, ...(EP.directions || [])[i] }));
+const D = Array.from({ length: N }, (_, i) => ({ cam: 'left', left: DEF_L, right: DEF_R, mid: DEF_M, ...(EP.directions || [])[i] }));
 const SEG = [];   // camera segments: { from, name, blend }
 D.forEach((d, k) => { if (d.cam) SEG.push({ from: d.cut !== undefined ? T(d.cut) : lines[k].start - 0.3, name: d.cam, blend: d.blend ?? (k === 0 ? 1.1 : 0.08), move: d.move, roll: d.roll, focus: d.focus, dof: d.dof }); });
 for (const c of EP.camExtra || []) SEG.push({ from: T(c.at), name: c.cam, blend: c.blend ?? 0.08, move: c.move, roll: c.roll, focus: c.focus, dof: c.dof });
@@ -223,6 +227,7 @@ function poseOf(i, t) {   // a shot with a slow push-in while it lasts
   pos.lerp(look, ((m.push ?? 0.06) - (m.pull ?? 0)) * p);
   if (m.orbit) { const off = pos.clone().sub(look); off.applyAxisAngle(new THREE.Vector3(0, 1, 0), (m.orbit * Math.PI / 180) * p); pos.copy(look).add(off); }
   if (m.rise) pos.y += m.rise * p;
+  if (EP.headroom && !s.fixed) { const hr = EP.headroom * 2 * pos.distanceTo(look) * Math.tan((s.fov * FOV_SCALE * Math.PI / 180) / 2); pos.y += hr; look.y += hr; }   // headroom: the whole shot is raised so the subjects sit lower in the frame (a fraction of the frame height) and the subtitle at the top is above the heads
   return { pos, look, fov: s.fov * FOV_SCALE * (1 + (m.zoom || 0) * p), roll: (sg.roll || 0) + (m.roll || 0) * p, focus: sg.focus, dof: sg.dof };
 }
 function cameraAt(t) {
@@ -288,7 +293,7 @@ const ACTLIB = { ...(await J(`${BASE}/assets/acts.json`, {})), ...(EP.actDefs ||
 const live = [];   // JSON acts playing now
 const ZERO3 = [0, 0, 0], ONE3 = [1, 1, 1];
 function doAct(side, name, dur, amp, t) {
-  const ch = side === 'right' ? right : left; if (!ch || !name) return;
+  const ch = side === 'right' ? right : (side === 'mid' ? mid : left); if (!ch || !name) return;
   if (ch.actNames?.includes(name)) { ch.act(name, dur); return; }
   const def = ACTLIB[name]; if (!def) throw new Error('unknown act: ' + name + ' (rig acts: ' + (ch.actNames || []).join(', ') + '; library: ' + Object.keys(ACTLIB).join(', ') + ')');
   live.push({ side, def, t0: t, dur: dur ?? def.dur, amp: amp ?? 1 });
@@ -312,7 +317,7 @@ function offsets(side, t) {
     for (let j = 0; j < 3; j++) { o.pos[j] += e.pos[j]; o.rot[j] += e.rot[j]; o.scl[j] *= e.scl[j]; }
   }
   if (ALIVE > 0) {
-    const ph = side === 'right' ? 1.7 : 0, speaking = (side === 'left' ? ID_L : ID_R) === curWho;
+    const ph = side === 'right' ? 1.7 : (side === 'mid' ? 3.1 : 0), speaking = (side === 'left' ? ID_L : (side === 'mid' ? ID_M : ID_R)) === curWho;
     if (speaking) { o.rot[2] += 0.03 * ALIVE * curLevel * Math.sin(t * 6.1 + ph); o.rot[0] += 0.03 * ALIVE * curLevel * Math.sin(t * 5.3 + ph); o.pos[1] += 0.02 * ALIVE * curLevel; }
     else { o.rot[2] += 0.012 * ALIVE * Math.sin(t * 0.9 + ph); o.rot[0] += 0.008 * ALIVE * Math.sin(t * 0.7 + ph); }   // listening: a slow sway, never frozen
   }
@@ -337,12 +342,12 @@ if (EP.autoReact !== false && PROJECT.autoReact !== false) {   // the one who li
 ACTS.sort((a, b) => a.at - b.at);
 function stepFrame() {
   const t = cur / FPS;
-  for (const a of ACTS) if (!a.done && t >= a.at) { a.done = true; doAct(a.who === 'right' ? 'right' : 'left', a.name, a.dur, a.amp, t); }
+  for (const a of ACTS) if (!a.done && t >= a.at) { a.done = true; doAct(a.who === 'right' ? 'right' : (a.who === 'mid' ? 'mid' : 'left'), a.name, a.dur, a.amp, t); }
   for (const s of screenEv) if (t >= s.at) studio.screen?.setPage(s.page, s.at);
   const i = lineAt(t);
   if (i !== curLine) {
     curLine = i;
-    if (i >= 0) { const d = D[i]; left.setExpression(d.left, 9); right?.setExpression(d.right, 9); if (d.hop) hopStart = t; left.setPose?.(d.leftPose || 'stand'); right?.setPose?.(d.rightPose || 'stand'); const act = d.act || {}, aL = d.leftAct || act.left, aR = d.rightAct || act.right; if (aL) queueAct('left', aL, d.leftActDur, d.leftActAmp, t + (d.actAt || 0)); if (aR) queueAct('right', aR, d.rightActDur, d.rightActAmp, t + (d.actAt || 0)); yawGoal = d.turn !== undefined ? d.turn : ST.left.yaw; yawGoalR = d.turnR !== undefined ? d.turnR : (ST.right?.yaw ?? -0.18); pitchGoalL = d.pitch ?? 0; pitchGoalR = d.pitchR ?? 0; }   // pitch > 0: the head bows (looks down at the phone)
+    if (i >= 0) { const d = D[i]; left.setExpression(d.left, 9); right?.setExpression(d.right, 9); mid?.setExpression(d.mid || DEF_M, 9); if (d.hop) hopStart = t; left.setPose?.(d.leftPose || 'stand'); right?.setPose?.(d.rightPose || 'stand'); const act = d.act || {}, aL = d.leftAct || act.left, aR = d.rightAct || act.right; if (aL) queueAct('left', aL, d.leftActDur, d.leftActAmp, t + (d.actAt || 0)); if (aR) queueAct('right', aR, d.rightActDur, d.rightActAmp, t + (d.actAt || 0)); if (act.mid) queueAct('mid', act.mid, undefined, undefined, t + (d.actAt || 0)); yawGoal = d.turn !== undefined ? d.turn : ST.left.yaw; yawGoalR = d.turnR !== undefined ? d.turnR : (ST.right?.yaw ?? -0.18); pitchGoalL = d.pitch ?? 0; pitchGoalR = d.pitchR ?? 0; }   // pitch > 0: the head bows (looks down at the phone)
   }
   if (end && t >= end.turnAt) yawGoal = end.yaw;
   const d = i >= 0 ? D[i] : { look: undefined };
@@ -350,6 +355,7 @@ function stepFrame() {
   curWho = f.who; curLevel = f.level;
   left.setTalkLevel(f.who === ID_L ? f.level : 0); left.setSpeaker?.(f.who === ID_L);
   right?.setTalkLevel(f.who === ID_R ? f.level : 0);
+  mid?.setTalkLevel(f.who === ID_M ? f.level : 0); mid?.setSpeaker?.(f.who === ID_M); mid?.look(f.who === ID_M ? 0 : (f.who === ID_L ? -0.6 : 0.6), 0);
   const lk = d.look || [0.7, 0];
   if (d.gazeL) left.look(d.gazeL[0], d.gazeL[1]); else left.look(f.who === ID_L ? lk[0] : 0.8, f.who === ID_L ? lk[1] : (d.look ? lk[1] * 0.4 : 0));   // the lead keeps looking at whoever speaks; gazeL / gazeR [x, y] hold the eyes (e.g. up at the phone) whoever speaks
   if (d.gazeR) right?.look(d.gazeR[0], d.gazeR[1]); else right?.look(f.who === ID_L ? -0.9 : -0.2, 0);
@@ -375,40 +381,45 @@ function stepFrame() {
   if (wr) RB = { ...RB, x: wr.x, y: wr.y ?? ST.y, z: wr.z ?? ST.z, ry: wr.yaw ?? 0, rx: 0 };
   put(left, LB, offsets('left', t));
   if (right) put(right, RB, offsets('right', t));
+  if (mid) put(mid, { x: ST.mid.x, y: ST.y, z: ST.z, ry: ST.mid.yaw, rx: 0 }, offsets('mid', t));
   if (EP.intro && studio.intro) introPose(t);   // overlay worlds: the hook, jump and pull of the blind
   if (EP.outro && studio.outro) outroPose(t);   // overlay worlds: the vortex sucks both characters in, then they drop onto the end card
   left.update(1 / FPS);
   right?.update(1 / FPS);
+  mid?.update(1 / FPS);
   studio.update(t);
   applyLights(t);
   const c = cameraAt(t);
-  for (const f of FX) {   // camera effects: { type: 'shake' | 'punch' | 'roll', at, dur, amp | amount }
-    const u = (t - f.at) / (f.dur ?? 0.4); if (u < 0 || u > 1) continue; const env = Math.sin(Math.PI * u);
-    if (f.type === 'shake') { c.pos.x += (f.amp ?? 0.08) * env * Math.sin(t * 61); c.pos.y += (f.amp ?? 0.08) * env * Math.sin(t * 47 + 1); }
+  for (const f of FX) {   // camera effects: { type: 'shake' | 'punch' | 'roll' | 'fall', at, dur, amp | amount }. shake with ramp:true grows from amp to amp1; fall = the camera drops, tilts over and stays down (drop, roll, dx)
+    const u = (t - f.at) / (f.dur ?? 0.4);
+    if (f.type === 'fall') { if (u < 0) continue; const k = Math.min(1, u), e = k * k; c.pos.y -= (f.drop ?? 6) * e; c.pos.x += (f.dx ?? 0) * e; c.roll += (f.roll ?? 1.4) * e; continue; }
+    if (u < 0 || u > 1) continue; const env = Math.sin(Math.PI * u);
+    if (f.type === 'shake') { const a = f.ramp ? (f.amp ?? 0.01) + ((f.amp1 ?? f.amp ?? 0.08) - (f.amp ?? 0.01)) * u : (f.amp ?? 0.08) * env; c.pos.x += a * Math.sin(t * 61); c.pos.y += a * Math.sin(t * 47 + 1); if (f.ramp) c.roll += 0.35 * a * Math.sin(t * 53 + 2); }
     else if (f.type === 'punch') c.fov *= 1 - (f.amount ?? 0.12) * env;
     else if (f.type === 'roll') c.roll += (f.amount ?? 0.1) * env;
   }
   camera.position.copy(c.pos); camera.lookAt(c.look); camera.rotateZ(c.roll || 0); camera.fov = c.fov; camera.updateProjectionMatrix();
   if (studio.viewShift) camera.setViewOffset(W, H, 0, -studio.viewShift * H, W, H);   // a lens shift: the camera stays level, the picture is moved up
   let wantFocus = c.pos.distanceTo(c.look);   // focus: 'left' | 'right' (rack focus on that character) or a distance
-  if (c.focus === 'left' || c.focus === 'right') { const ch = c.focus === 'right' ? right : left; if (ch) { ch.group.getWorldPosition(tmpV); tmpV.y += 1.1 * (ST.scale ?? 0.95); wantFocus = c.pos.distanceTo(tmpV); } }
+  if (c.focus === 'left' || c.focus === 'right' || c.focus === 'mid') { const ch = c.focus === 'right' ? right : (c.focus === 'mid' ? mid : left); if (ch) { ch.group.getWorldPosition(tmpV); tmpV.y += 1.1 * (ST.scale ?? 0.95); wantFocus = c.pos.distanceTo(tmpV); } }
   else if (typeof c.focus === 'number') wantFocus = c.focus;
   focusNow = c.focus === undefined || focusNow === null ? wantFocus : lerp(focusNow, wantFocus, 1 - Math.exp(-9 / FPS));
   bokeh.uniforms.focus.value = focusNow;
   dofNow = lerp(dofNow, c.dof ?? 1, 1 - Math.exp(-6 / FPS)); bokeh.uniforms.aperture.value = LOOK.aperture * dofNow;   // dof > 1: shallower (a close-up), < 1: sharper
   finish.uniforms.fade.value = Math.min(1, Math.max(0, (TOTAL - t) / (EP.fadeOut ?? 1.3))) * Math.min(1, t / 0.5 + 0.2);
+  if (EP.blackout) { const bk = T(EP.blackout.at); if (t >= bk) finish.uniforms.fade.value *= Math.max(0, 1 - (t - bk) / (EP.blackout.dur ?? 0.05)); }   // blackout: the picture cuts to black at once (the camera died)
   cur++;
 }
 
 if (shot) {
-  left.freeze?.(); right?.freeze?.();
+  left.freeze?.(); right?.freeze?.(); mid?.freeze?.();
   const tt = Number(q.get('t') || 0);
   while (cur / FPS < tt) stepFrame();
   if (!slug || q.get('cam')) {   // a look preview, or a still from a chosen shot
     const s = SHOTS[q.get('cam') || 'wide'];
     camera.position.set(...s.pos); camera.lookAt(...s.look); camera.fov = s.fov * FOV_SCALE; camera.updateProjectionMatrix();
     bokeh.uniforms.focus.value = camera.position.distanceTo(v3(s.look));
-    for (let k = 0; k < 3; k++) { left.update(0.016); right?.update(0.016); studio.update(tt || 3); }
+    for (let k = 0; k < 3; k++) { left.update(0.016); right?.update(0.016); mid?.update(0.016); studio.update(tt || 3); }
   }
   if (NEON && q.has('neon')) studio.neon?.show(Number(q.get('neon')));
   renderFrame();
@@ -438,4 +449,4 @@ if (shot) {
     requestAnimationFrame(loop);
   })();
 }
-window.episode = { studio, left, right, stepFrame, EP };
+window.episode = { studio, left, right, mid, stepFrame, EP };
