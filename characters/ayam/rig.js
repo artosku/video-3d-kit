@@ -218,6 +218,7 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
   let frozen = false;
   let t = 0;
   let blinkAt = 2.2;
+  let holdSide = null, holdAmt = 0, holdTarget = 0;
   let blink = 0;
   const look = { x: 0, y: 0 };
   const eyeStyle = { gain: 1, life: 0, mouth: 1, beak: 1, speech: false };   // speech: while this character is the speaker the mouth follows the voice ONLY (it closes between syllables, even with a wide-open smile face)
@@ -305,6 +306,8 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
     const wingA = (flying ? 0.96 + 0.96 * flap : cheer ? 1.75 + 0.38 * flap : 0.2 + 0.05 * Math.sin(t * 2.2)) + A.wing;
     wingP.R.rotation.z = -wingA;
     wingP.L.rotation.z = wingA;
+    holdAmt += (holdTarget - holdAmt) * Math.min(1, dt * 9);   // setHold(side, on): one wing held straight up (to show a paper, a diploma)
+    if (holdSide && holdAmt > 0.002) { const hw = wingP[holdSide], sg = holdSide === 'R' ? -1 : 1; hw.rotation.z = sg * (Math.abs(hw.rotation.z) * (1 - holdAmt) + 2.75 * holdAmt); }
     tailP.rotation.x = flying ? -0.35 : cheer ? 0.1 : 0;
     tailP.rotation.z = Math.sin(t * (flying || cheer ? 5 : 2)) * (flying || cheer ? 0.12 : 0.04);
     combP.rotation.x = Math.sin(t * 5.5) * 0.05;
@@ -353,6 +356,7 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
     group, root, parts: { body: bodyMesh, wingP, tailP, combP, beakP, eye, mouth }, EXPRESSIONS,
     update, setExpression, setViewport, setOutline,
     setPose: (p) => { pose = p; },
+    setHold: (side, on) => { if (side) holdSide = side; holdTarget = on ? 1 : 0; },
     act: (name, dur = 0.9) => { act = { name, t0: t, dur }; },
     actNames: ['jolt', 'bounce', 'shake', 'slump', 'panic', 'nod', 'tilt', 'lean', 'cheer', 'wings_up'],   // the acts that need the wings or comb; any other act comes from assets/acts.json
     defineExpression: (name, params) => { EXPRESSIONS[name] = { ...EXPRESSIONS.neutral, ...params }; },

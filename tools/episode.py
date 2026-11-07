@@ -517,10 +517,10 @@ def _is_overlay(fd):
 
 
 def _blank_frames(fd, n):
-    """Frames the graphics card failed to draw come out as an empty black picture (a tiny file). The last frames of the fade-out are legitimately dark, so they are not checked."""
+    """Frames the graphics card failed to draw come out as an empty black picture (a tiny file). Frame 0 (the fade-in starts from black) and the last frames of the fade-out are legitimately dark, so they are not checked."""
     if _is_overlay(fd):   # a transparent picture is legitimately tiny
         return []
-    return [i for i in range(max(0, n - 12)) if (fd / f"f_{i:04d}.png").exists() and (fd / f"f_{i:04d}.png").stat().st_size < 40000]
+    return [i for i in range(1, max(1, n - 12)) if (fd / f"f_{i:04d}.png").exists() and (fd / f"f_{i:04d}.png").stat().st_size < 40000]
 
 
 def _redraw_blank(slug, fd, n, size):

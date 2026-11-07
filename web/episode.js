@@ -113,6 +113,23 @@ const toonSyncs = TOON ? [left, right, mid].filter(Boolean).map((c) => toonify(c
 const renderFrame = () => { toonSyncs.forEach((s) => s()); if (TRANSP) renderer.render(scene, camera); else composer.render(); };
 if (q.has('nochars')) { left.group.visible = false; if (right) right.group.visible = false; if (mid) mid.group.visible = false; }   // a picture of the set alone (a backdrop for an overlay episode)
 const ID_L = CHARS[0].id, ID_R = CHARS[1]?.id, ID_M = CHARS[2]?.id;
+// certificate: a paper the lead holds up: { show: [[from, to], ...], x?, y?, z?, w?, h?, tilt?, title?, line1?, line2?, name? } (times as seconds or "L3.start"). Drawn here, no image needed.
+let CERT = null;
+if (EP.certificate) {
+  const cc = EP.certificate, cv = document.createElement('canvas'); cv.width = 640; cv.height = 450; const g = cv.getContext('2d');
+  g.fillStyle = '#F6EBCB'; g.fillRect(0, 0, 640, 450);
+  g.strokeStyle = '#B58A2B'; g.lineWidth = 14; g.strokeRect(14, 14, 612, 422); g.strokeStyle = '#7A1620'; g.lineWidth = 4; g.strokeRect(34, 34, 572, 382);
+  g.textAlign = 'center'; g.fillStyle = '#7A1620'; g.font = "bold 62px 'Times New Roman', serif"; g.fillText(cc.title || 'SERTIFIKAT', 320, 120);
+  g.fillStyle = '#2B2418'; g.font = "26px 'Times New Roman', serif"; g.fillText(cc.line1 || 'diberikan kepada', 320, 170);
+  g.font = "bold 50px 'Times New Roman', serif"; g.fillText(cc.name || 'AYAM', 320, 235);
+  g.font = "26px 'Times New Roman', serif"; g.fillText(cc.line2 || 'atas kelulusan Kursus AI', 320, 285);
+  g.fillStyle = '#C79A2E'; g.beginPath(); g.arc(150, 360, 38, 0, 6.283); g.fill(); g.fillStyle = '#7A1620'; g.font = 'bold 34px serif'; g.fillText('★', 150, 372);
+  g.strokeStyle = '#2B2418'; g.lineWidth = 3; g.beginPath(); g.moveTo(380, 372); g.bezierCurveTo(420, 330, 450, 395, 480, 350); g.bezierCurveTo(500, 330, 520, 380, 560, 352); g.stroke();
+  const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 8;
+  CERT = new THREE.Mesh(new THREE.PlaneGeometry(cc.w ?? 1.15, cc.h ?? 0.81), new THREE.MeshBasicMaterial({ map: tx, side: THREE.DoubleSide, toneMapped: false }));
+  CERT.visible = false; left.group.add(CERT);
+}
+
 const DEF_L = CHARS[0].cfg.defaultExpression || CHARS[0].cfg.expressions[0];
 const DEF_M = CHARS[2] ? (CHARS[2].cfg.defaultExpression || CHARS[2].cfg.expressions[0]) : null;
 const DEF_R = CHARS[1] ? (CHARS[1].cfg.defaultExpression || CHARS[1].cfg.expressions[0]) : null;
@@ -144,9 +161,9 @@ const bokeh = new BokehPass(scene, camera, { focus: 8, aperture: LOOK.aperture, 
 composer.addPass(bokeh);
 composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), ...LOOK.bloom));
 const finish = new ShaderPass({
-  uniforms: { tDiffuse: { value: null }, amount: { value: LOOK.vignette }, v0: { value: LOOK.vignetteStart }, v1: { value: LOOK.vignetteEnd }, top: { value: LOOK.topShade }, fade: { value: 1 } },
+  uniforms: { tDiffuse: { value: null }, amount: { value: LOOK.vignette }, v0: { value: LOOK.vignetteStart }, v1: { value: LOOK.vignetteEnd }, top: { value: LOOK.topShade }, fade: { value: 1 }, flash: { value: 0 } },
   vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-  fragmentShader: 'uniform sampler2D tDiffuse; uniform float amount; uniform float v0; uniform float v1; uniform float top; uniform float fade; varying vec2 vUv; void main(){ vec4 c = texture2D(tDiffuse, vUv); float d = distance(vUv, vec2(0.5)); c.rgb *= 1.0 - amount * smoothstep(v0, v1, d); float t = smoothstep(0.58, 0.8, vUv.y) * (1.0 - smoothstep(0.88, 1.0, vUv.y)); c.rgb *= 1.0 - top * t; c.rgb *= fade; gl_FragColor = c; }',
+  fragmentShader: 'uniform sampler2D tDiffuse; uniform float amount; uniform float v0; uniform float v1; uniform float top; uniform float fade; uniform float flash; varying vec2 vUv; void main(){ vec4 c = texture2D(tDiffuse, vUv); float d = distance(vUv, vec2(0.5)); c.rgb *= 1.0 - amount * smoothstep(v0, v1, d); float t = smoothstep(0.58, 0.8, vUv.y) * (1.0 - smoothstep(0.88, 1.0, vUv.y)); c.rgb *= 1.0 - top * t; c.rgb *= fade; c.rgb += flash * vec3(1.0, 0.97, 0.9); gl_FragColor = c; }',
 });
 composer.addPass(finish);
 composer.addPass(new OutputPass());
@@ -387,6 +404,13 @@ function stepFrame() {
   left.update(1 / FPS);
   right?.update(1 / FPS);
   mid?.update(1 / FPS);
+  if (CERT) {   // show: [[from, to, 'up'|'chest'], ...]. 'up' = one wing (hand: 'R' = the left of the picture) holds the paper high beside the head; 'chest' = held in front
+    const cc = EP.certificate, sh = (cc.show || []).find(([a0, b0]) => t >= T(a0) && t < T(b0)), hs = cc.hand || 'R', wing = left.parts?.wingP?.[hs];
+    CERT.visible = !!sh; const up = !!sh && (sh[2] || 'chest') === 'up' && !!wing;
+    left.setHold?.(hs, up);
+    if (up) { if (CERT.parent !== wing) wing.add(CERT); CERT.position.set(cc.upX ?? 0, cc.upY ?? -1.12, cc.upZ ?? 0.12); CERT.rotation.z = -wing.rotation.z + (cc.upTilt ?? 0.08); }
+    else { if (CERT.parent !== left.group) left.group.add(CERT); CERT.position.set(cc.x ?? 0, cc.y ?? 0.1, cc.z ?? 0.85); CERT.rotation.z = cc.tilt ?? -0.04; }
+  }
   studio.update(t);
   applyLights(t);
   const c = cameraAt(t);
@@ -407,6 +431,7 @@ function stepFrame() {
   bokeh.uniforms.focus.value = focusNow;
   dofNow = lerp(dofNow, c.dof ?? 1, 1 - Math.exp(-6 / FPS)); bokeh.uniforms.aperture.value = LOOK.aperture * dofNow;   // dof > 1: shallower (a close-up), < 1: sharper
   finish.uniforms.fade.value = Math.min(1, Math.max(0, (TOTAL - t) / (EP.fadeOut ?? 1.3))) * Math.min(1, t / 0.5 + 0.2);
+  { let fl = 0; for (const f of (EP.flashes || [])) { const u = (t - T(f.at)) / (f.dur ?? 0.1); if (u >= 0 && u < 1) fl = Math.max(fl, (f.amp ?? 0.4) * (1 - u) * (1 - u)); } finish.uniforms.flash.value = fl; }   // flashes: [ { at, dur?, amp? } ] short soft white pulses (press cameras); keep amp <= 0.5 and only a few seconds
   if (EP.blackout) { const bk = T(EP.blackout.at); if (t >= bk) finish.uniforms.fade.value *= Math.max(0, 1 - (t - bk) / (EP.blackout.dur ?? 0.05)); }   // blackout: the picture cuts to black at once (the camera died)
   cur++;
 }

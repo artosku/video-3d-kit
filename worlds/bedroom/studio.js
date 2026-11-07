@@ -88,6 +88,8 @@ export async function createStudio(scene, cfg = {}) {
   const specs = cfg.pages || { idle: { type: 'text', theme: 'dark', title: '', lines: [] } };
   const imgs = {};
   for (const [name, p] of Object.entries(specs)) if (p.type === 'image' && p.src) imgs[name] = await loadImage(`${base}/${p.src}`);
+  let WMAP = null;   // cybermap pages: the projected world map (assets/worldmap.json, made from Natural Earth 110m)
+  if (Object.values(specs).some((p) => p.type === 'cybermap')) WMAP = await (await fetch(`${base}/assets/worldmap.json`)).json();
   const vids = {};   // a video page: numbered frames dir/f_0001.jpg ... played from the moment the page is switched to (p.fps, default 30), the last frame stays
   for (const [name, p] of Object.entries(specs)) if (p.type === 'video') vids[name] = await Promise.all(Array.from({ length: p.count }, (_, i) => loadImage(`${base}/${p.dir}/f_${String(i + 1).padStart(4, '0')}.jpg`)));
   const tabsOf = (g, p, th) => {
@@ -97,6 +99,24 @@ export async function createStudio(scene, cfg = {}) {
     g.font = `600 20px ${FONT}`;
     let x = 24;
     tabs.forEach((n, i) => { const px = tabs.length === 3 ? [24, 150, 290][i] : x; g.fillStyle = i === 0 ? th.tabFg : th.tabMute; g.fillText(n, px, 32); x += g.measureText(n).width + 46; });
+  };
+  const flag = (g, c, x, y, w, h) => {   // small flags drawn in code (no images): FR SG UA US PH JP MY CA ID
+    g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip();
+    const R = (col, a, b, cw, ch) => { g.fillStyle = col; g.fillRect(x + a * w, y + b * h, cw * w, ch * h); };
+    const star = (cx, cy, r, col) => { g.fillStyle = col; g.beginPath(); for (let i = 0; i < 10; i++) { const rr = i % 2 ? r * 0.4 : r, an = -Math.PI / 2 + i * Math.PI / 5; g.lineTo(cx + rr * Math.cos(an), cy + rr * Math.sin(an)); } g.closePath(); g.fill(); };
+    switch (c) {
+      case 'FR': R('#0055A4', 0, 0, 1 / 3, 1); R('#FFFFFF', 1 / 3, 0, 1 / 3, 1); R('#EF4135', 2 / 3, 0, 1 / 3, 1); break;
+      case 'UA': R('#0057B7', 0, 0, 1, 0.5); R('#FFD700', 0, 0.5, 1, 0.5); break;
+      case 'ID': R('#E70011', 0, 0, 1, 0.5); R('#FFFFFF', 0, 0.5, 1, 0.5); break;
+      case 'JP': R('#FFFFFF', 0, 0, 1, 1); g.fillStyle = '#BC002D'; g.beginPath(); g.arc(x + w / 2, y + h / 2, h * 0.3, 0, 6.283); g.fill(); break;
+      case 'SG': R('#EF3340', 0, 0, 1, 0.5); R('#FFFFFF', 0, 0.5, 1, 0.5); g.fillStyle = '#FFFFFF'; g.beginPath(); g.arc(x + w * 0.2, y + h * 0.25, h * 0.17, 0, 6.283); g.fill(); g.fillStyle = '#EF3340'; g.beginPath(); g.arc(x + w * 0.25, y + h * 0.25, h * 0.15, 0, 6.283); g.fill(); for (let i = 0; i < 5; i++) { const an = -Math.PI / 2 + i * 1.2566; star(x + w * 0.36 + w * 0.085 * Math.cos(an) + 0.02 * w, y + h * 0.25 + h * 0.12 * Math.sin(an), h * 0.045, '#FFFFFF'); } break;
+      case 'PH': R('#0038A8', 0, 0, 1, 0.5); R('#CE1126', 0, 0.5, 1, 0.5); g.fillStyle = '#FFFFFF'; g.beginPath(); g.moveTo(x, y); g.lineTo(x + w * 0.5, y + h / 2); g.lineTo(x, y + h); g.closePath(); g.fill(); g.fillStyle = '#FCD116'; g.beginPath(); g.arc(x + w * 0.16, y + h / 2, h * 0.09, 0, 6.283); g.fill(); break;
+      case 'US': for (let i = 0; i < 13; i++) R(i % 2 ? '#FFFFFF' : '#B22234', 0, i / 13, 1, 1 / 13); R('#3C3B6E', 0, 0, 0.4, 7 / 13); for (let r2 = 0; r2 < 4; r2++) for (let c2 = 0; c2 < 5; c2++) { g.fillStyle = '#FFFFFF'; g.beginPath(); g.arc(x + w * (0.04 + c2 * 0.075), y + h * (0.06 + r2 * 0.12), h * 0.022, 0, 6.283); g.fill(); } break;
+      case 'MY': for (let i = 0; i < 14; i++) R(i % 2 ? '#FFFFFF' : '#CC0001', 0, i / 14, 1, 1 / 14); R('#010066', 0, 0, 0.5, 8 / 14); g.fillStyle = '#FFCC00'; g.beginPath(); g.arc(x + w * 0.2, y + h * 0.27, h * 0.14, 0, 6.283); g.fill(); g.fillStyle = '#010066'; g.beginPath(); g.arc(x + w * 0.235, y + h * 0.27, h * 0.12, 0, 6.283); g.fill(); star(x + w * 0.31, y + h * 0.27, h * 0.1, '#FFCC00'); break;
+      case 'CA': R('#E8112D', 0, 0, 0.25, 1); R('#FFFFFF', 0.25, 0, 0.5, 1); R('#E8112D', 0.75, 0, 0.25, 1); g.fillStyle = '#E8112D'; { const cx = x + w / 2, cy = y + h / 2, u = h * 0.0105, pts = [[0, -34], [6, -22], [14, -26], [11, -10], [24, -14], [20, -2], [28, 2], [14, 14], [16, 20], [2, 17], [2, 34], [-2, 34], [-2, 17], [-16, 20], [-14, 14], [-28, 2], [-20, -2], [-24, -14], [-11, -10], [-14, -26], [-6, -22]]; g.beginPath(); pts.forEach(([a, b], i) => (i ? g.lineTo(cx + a * u, cy + b * u) : g.moveTo(cx + a * u, cy + b * u))); g.closePath(); g.fill(); } break;
+      default: R('#555', 0, 0, 1, 1);
+    }
+    g.restore(); g.strokeStyle = 'rgba(255,255,255,0.55)'; g.lineWidth = 2; g.strokeRect(x, y, w, h);
   };
   const wrapText = (g, text, x, y, maxW, lh) => { const words = String(text).split(' '); let line = ''; for (const w of words) { const t2 = line ? line + ' ' + w : w; if (g.measureText(t2).width > maxW && line) { g.fillText(line, x, y); y += lh; line = w; } else line = t2; } if (line) g.fillText(line, x, y); return y + lh; };
   const DRAW = {
@@ -141,6 +161,50 @@ export async function createStudio(scene, cfg = {}) {
       const fr = vids[name], im = fr[Math.max(0, Math.min(fr.length - 1, Math.floor(lt * (p.fps ?? 30))))];
       const top = p.tabs && p.tabs.length === 0 ? 0 : 48, H = 640 - top, k = (p.fit === 'cover' ? Math.max : Math.min)(1024 / im.width, H / im.height);
       g.drawImage(im, (1024 - im.width * k) / 2, top + (H - im.height * k) / 2, im.width * k, im.height * k);
+    },
+    cybermap: (g, p, th, t, lt, name) => {   // a digital world map: grey at first, each country in p.events turns red at its time (lt = seconds since this page started), the view zooms to it and a card shows flag + sector. p: { title, events: [{ at, name: 'France' (map name), mark?: 'Singapore', flag: 'FR', label: 'PRANCIS', sector: 'KESEHATAN', detail: '...', tag: 'TERKONFIRMASI', center?: [lon, lat], zoom?: 2.4 }], zoomOutAt, total? }
+      const W = 1024, H = 640, MY = 50, MH = 400, cl = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v)), ease = (u) => u * u * (3 - 2 * u);
+      const LON0 = -170, LON1 = 180, LAT0 = -57, LAT1 = 80, pj = (lon, lat) => [(lon - LON0) / (LON1 - LON0) * 1024, (LAT1 - lat) / (LAT1 - LAT0) * (WMAP ? WMAP.h : 400.8)];
+      g.fillStyle = '#060B1B'; g.fillRect(0, 0, W, H);
+      const ev = (p.events || []).map((e) => ({ ...e })), hit = ev.filter((e) => lt >= e.at), last = hit[hit.length - 1];
+      const cen = (e) => { if (e.center) return pj(e.center[0], e.center[1]); if (e.mark && WMAP.marks[e.mark]) return WMAP.marks[e.mark]; const c = WMAP.countries.find((q) => q.name === e.name); if (!c || !c.rings.length) return [512, 200]; let best = null, ba = -1; for (const r of c.rings) { const xs = r.map((q) => q[0]), ys = r.map((q) => q[1]), a = (Math.max(...xs) - Math.min(...xs)) * (Math.max(...ys) - Math.min(...ys)); if (a > ba) { ba = a; best = [(Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...ys) + Math.min(...ys)) / 2]; } } return best; };
+      // the view: zoom to the latest hit, back out at zoomOutAt
+      let vs = 1, vx = 512, vy = 200;
+      if (last) { const c = cen(last), tz = last.zoom ?? 2.4, u = ease(cl((lt - last.at) / 0.8)); const prev = hit[hit.length - 2]; let sx = 512, sy = 200, ss = 1; if (prev) { const pc = cen(prev); sx = pc[0]; sy = pc[1]; ss = prev.zoom ?? 2.4; } vs = ss + (tz - ss) * u; vx = sx + (c[0] - sx) * u; vy = sy + (c[1] - sy) * u; }
+      if (p.zoomOutAt !== undefined && lt >= p.zoomOutAt) { const u = ease(cl((lt - p.zoomOutAt) / 0.9)); vs = vs + (1 - vs) * u; vx = vx + (512 - vx) * u; vy = vy + (200 - vy) * u; }
+      vx = cl(vx, 512 / vs, 1024 - 512 / vs); vy = cl(vy, 200 / vs, 400 - 200 / vs);
+      g.save(); g.beginPath(); g.rect(0, MY, W, MH); g.clip(); g.translate(W / 2, MY + MH / 2); g.scale(vs, vs); g.translate(-vx, -vy);
+      g.fillStyle = '#08112A'; g.fillRect(0, 0, 1024, 401);
+      g.strokeStyle = 'rgba(70,110,190,0.16)'; g.lineWidth = 1 / vs; for (let lo = -150; lo <= 180; lo += 30) { const a = pj(lo, 80), b = pj(lo, -57); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); } for (let la = -40; la <= 80; la += 20) { const a = pj(-170, la), b = pj(180, la); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); }
+      const hitBy = {}; hit.forEach((e) => { if (e.name) hitBy[e.name] = e; });
+      for (const c of WMAP.countries) {
+        const e = hitBy[c.name]; let fill = '#1D2947', line = '#3B4F82';
+        if (e) { const age = lt - e.at, fl = cl(1 - age / 0.7); fill = `rgb(${Math.round(190 + 60 * fl)},${Math.round(36 + 150 * fl)},${Math.round(48 + 150 * fl)})`; line = '#FF8A8A'; }
+        g.fillStyle = fill; g.strokeStyle = line; g.lineWidth = (e ? 1.6 : 0.7) / vs;
+        for (const r of c.rings) { g.beginPath(); r.forEach((q, i) => (i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]))); g.closePath(); g.fill(); g.stroke(); }
+      }
+      // pulses on every hit (a small ring that keeps beating on the latest one)
+      for (const e of hit) { const c = cen(e), age = lt - e.at, isLast = e === last; const rings = isLast ? 3 : 1; for (let k = 0; k < rings; k++) { const u = isLast ? ((lt * 0.9 + k / 3) % 1) : cl(age / 1.4); const rad = (6 + 26 * u) / vs; g.strokeStyle = `rgba(255,90,90,${(1 - u) * (isLast ? 0.9 : 0.5)})`; g.lineWidth = 2.2 / vs; g.beginPath(); g.arc(c[0], c[1], rad, 0, 6.283); g.stroke(); } g.fillStyle = '#FF5A5A'; g.beginPath(); g.arc(c[0], c[1], 3.2 / vs, 0, 6.283); g.fill(); }
+      g.restore();
+      // a scan line sweeping across the map
+      const sx = ((lt * 140) % (W + 200)) - 100; const gr = g.createLinearGradient(sx - 60, 0, sx, 0); gr.addColorStop(0, 'rgba(90,160,255,0)'); gr.addColorStop(1, 'rgba(90,160,255,0.16)'); g.fillStyle = gr; g.fillRect(sx - 60, MY, 60, MH);
+      // header
+      g.fillStyle = '#0B1330'; g.fillRect(0, 0, W, MY); g.fillStyle = '#FF4D4D'; g.globalAlpha = 0.55 + 0.45 * Math.sin(lt * 6); g.beginPath(); g.arc(30, MY / 2, 8, 0, 6.283); g.fill(); g.globalAlpha = 1;
+      g.fillStyle = '#CFE0FF'; g.font = `700 24px ${FONT}`; g.textAlign = 'left'; g.fillText(p.title || 'CYBER ATTACK MONITOR', 52, MY / 2 + 8);
+      g.textAlign = 'right'; g.fillStyle = hit.length ? '#FF8A8A' : '#7E91BE'; g.fillText(`${hit.length} NEGARA TERSERANG`, W - 24, MY / 2 + 8); g.textAlign = 'left';
+      // the card for the latest hit
+      g.fillStyle = '#0B1330'; g.fillRect(0, MY + MH, W, H - MY - MH);
+      g.fillStyle = 'rgba(255,80,80,0.5)'; g.fillRect(0, MY + MH, W, 3);
+      if (last) {
+        const u = ease(cl((lt - last.at) / 0.35)), cx = 40 + (1 - u) * 60; g.globalAlpha = u;
+        const fx = 34, fy = MY + MH + 26, fw = 200, fh = 130;
+        flag(g, last.flag, fx + (1 - u) * 60, fy, fw, fh);
+        g.fillStyle = '#FFFFFF'; g.font = `800 52px ${FONT}`; g.fillText(last.label || '', 262 + (1 - u) * 60, fy + 46);
+        g.fillStyle = '#FF6B6B'; g.font = `700 30px ${FONT}`; g.fillText(last.sector || '', 262 + (1 - u) * 60, fy + 86);
+        g.fillStyle = '#B9C7E8'; g.font = `500 25px ${FONT}`; wrapText(g, last.detail || '', 262 + (1 - u) * 60, fy + 120, 730, 30);
+        if (last.tag) { g.fillStyle = last.tag.startsWith('DUGA') || last.tag.startsWith('DIDUGA') ? '#FFC24D' : '#7CE0A0'; g.font = `700 20px ${FONT}`; g.textAlign = 'right'; g.fillText(last.tag, W - 24, MY + MH + 30); g.textAlign = 'left'; }
+        g.globalAlpha = 1;
+      } else { g.fillStyle = '#5F73A3'; g.font = `600 30px ${FONT}`; g.fillText('Memantau serangan siber dunia...', 40, MY + MH + 100); }
     },
     loginapp: (g, p, th, t, lt) => {   // a login page in a browser: p.hide 'login'|'daftar' (a button vanishes p.at s after the page starts, with a console error); p.restore 'login'|'daftar'|'both' (it pops back in with a green "fixed")
       const norm = (v) => (v === 'register' ? 'daftar' : v); p = { ...p, hide: norm(p.hide), restore: norm(p.restore) };   // 'register' = 'daftar'
