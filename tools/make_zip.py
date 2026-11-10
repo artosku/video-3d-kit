@@ -1,6 +1,6 @@
 """Packs the kit into one zip (dist/video-3d-kit.zip): everything a user needs, nothing private.
    python tools/make_zip.py
-Left out: out/, dist/, .git, .env, project.json (yours), *.mp4, __pycache__, dialog.wav (rebuilt), node_modules."""
+Left out: out/, dist/, .git, .env, project.json (yours; project.snapshot.json carries the choices), *.mp4, __pycache__, dialog.wav (rebuilt), node_modules."""
 import os
 import sys
 import zipfile

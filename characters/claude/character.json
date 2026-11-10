@@ -91,6 +91,48 @@
    "file": "locked/beres.wav",
    "voice": "cartesia:f3b7c445-d015-40f7-a665-9595e0bc0c90",
    "note": "berlebihan: cepat dan keras, kecepatan 1,2"
+  },
+  {
+   "text": "Wajar. Aku juga nggak.",
+   "file": "locked/wajar_aku_juga_nggak.wav",
+   "voice": "cartesia:f3b7c445-d015-40f7-a665-9595e0bc0c90",
+   "note": "pilihan user untuk Ep3 (versi cepat/tegas)"
+  },
+  {
+   "text": "Belum pernah.",
+   "file": "locked/belum_pernah.wav",
+   "voice": "cartesia:f3b7c445-d015-40f7-a665-9595e0bc0c90",
+   "note": "take asli Ep5 dengan ekor 190 ms ditambahkan supaya akhir kalimat tidak terpotong; intonasi dan suara sama persis"
+  },
+  {
+   "text": "Aku yang atur. Semuanya.",
+   "file": "locked/ep05-cara-bikin-video_L12.wav",
+   "voice": "cartesia:f3b7c445-d015-40f7-a665-9595e0bc0c90",
+   "note": "chosen by the author (ep05-cara-bikin-video line 12)"
+  },
+  {
+   "text": "Beres",
+   "file": "locked/ep06-fork-tanpa-kredit_L18.wav",
+   "voice": "cartesia:f3b7c445-d015-40f7-a665-9595e0bc0c90",
+   "note": "chosen by the author (ep06-fork-tanpa-kredit line 18)"
+  },
+  {
+   "text": "Kunci ei pi ai-nya kamu taruh di mana?",
+   "file": "locked/ep08-kunci-rahasia_L2.wav",
+   "voice": "cartesia:f3b7c445-d015-40f7-a665-9595e0bc0c90",
+   "note": "chosen by the author (ep08-kunci-rahasia line 2)"
+  },
+  {
+   "text": "Kodenya itu bisa dilihat publik.",
+   "file": "locked/ep08-kunci-rahasia_L4.wav",
+   "voice": "cartesia:f3b7c445-d015-40f7-a665-9595e0bc0c90",
+   "note": "chosen by the author (ep08-kunci-rahasia line 4)"
+  },
+  {
+   "text": "Kunci ei pi ai itu, password kartu kreditmu.",
+   "file": "locked/ep08-kunci-rahasia_L6.wav",
+   "voice": "cartesia:f3b7c445-d015-40f7-a665-9595e0bc0c90",
+   "note": "chosen by the author (ep08-kunci-rahasia line 6)"
   }
  ],
  "acts": [

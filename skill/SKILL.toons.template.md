@@ -58,3 +58,5 @@ Run from `{{KIT}}`.
 - The scream starts inside the whirlpool, never before it. Emotion tags work in English only; do not switch the language to get emotion.
 - Do not change the voices or look of existing characters unless the user asks. No real brands on screen unless the owner asked.
 - Do not commit `out/`, MP4 files, `.env`, `project.json`, or the user's own episodes.
+
+## Fixed rules

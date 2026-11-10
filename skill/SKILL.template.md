@@ -56,6 +56,7 @@ Run from `{{KIT}}`. Never skip a step; a flat video is a failed video.
 `{{KIT}}/skill/guides/`: `cinematic-playbook.md` (always, step 3) · `toons-playbook.md` (only for `/video-3d-toons`) · `script-craft.md` · `direction.md` · `light-theory.md` · `audio.md` · `new-character.md` · `new-world.md` · `build-qa-deliver.md` (troubleshooting) · `formats-and-voices.md`.
 
 ## Fixed rules
+- Subtitles (captions) ALWAYS sit above the heads of both characters, in close-ups and in wide shots alike: set `subtitles.pos` to `top` in every episode.json, never use `bottom`/`auto`, and do not set `directions[i].subs` to `bottom` (project.json `defaults.subtitlePos` is `top`).
 - Do not change the voices or look of existing characters unless the user asks.
 - Every change of light needs a cause the viewer can see; `validate` checks it.
 - No film grain, no shiny characters, no real brands on screen.

@@ -206,6 +206,45 @@ export async function createStudio(scene, cfg = {}) {
         g.globalAlpha = 1;
       } else { g.fillStyle = '#5F73A3'; g.font = `600 30px ${FONT}`; g.fillText('Memantau serangan siber dunia...', 40, MY + MH + 100); }
     },
+    autobrowser: (g, p, th, t, lt) => {   // a browser where an AI agent does the clicking: left = the steps of a setup (p.steps [{ at (s since page start), by: 'ai'|'you', text }]) with a cursor that goes to each step and ticks it; 'you' steps flash an amber "KAMU KLIK" badge; right = the agent side panel with the PDF chip that drops in at p.pdfAt. p: { title, url, panel, pdf, pdfAt, steps, texts }
+      const cl = (x) => Math.max(0, Math.min(1, x)), ease = (x) => 1 - Math.pow(1 - x, 3);
+      const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      const X = { you: 'KAMU KLIK', ai: 'AI', done: 'Selesai', ...(p.texts || {}) };
+      const steps = p.steps || [], SX = 28, SY = 112, SH = Math.min(84, 470 / Math.max(1, steps.length)), SW = 590;
+      g.fillStyle = '#EAEEF7'; g.fillRect(0, 0, 1024, 640);
+      g.fillStyle = '#D7DDEB'; g.fillRect(0, 0, 1024, 56); g.fillStyle = '#FFFFFF'; rr(120, 10, 520, 36, 18); g.fill(); g.fillStyle = '#6B7488'; g.font = `20px ${FONT}`; g.textAlign = 'left'; g.fillText(p.url || 'dashboard.developer', 146, 34);
+      g.fillStyle = '#1B2240'; g.font = `700 30px ${FONT}`; g.fillText(p.title || 'Siapkan API', SX, 96);
+      // steps
+      let cur = null, curIdx = -1; steps.forEach((s, i) => { if (lt >= s.at - 0.9) { cur = s; curIdx = i; } });
+      steps.forEach((s, i) => {
+        const y = SY + 16 + i * SH, done = lt >= s.at + 0.5, active = i === curIdx && !done, you = s.by === 'you';
+        g.fillStyle = active ? (you ? '#FFF1CC' : '#E4EDFF') : '#FFFFFF'; rr(SX, y, SW, SH - 12, 14); g.fill();
+        g.strokeStyle = active ? (you ? '#F2A91B' : '#3B6CF6') : '#DCE1EE'; g.lineWidth = active ? 3 : 2; rr(SX, y, SW, SH - 12, 14); g.stroke();
+        const cx = SX + 38, cy = y + (SH - 12) / 2;
+        g.beginPath(); g.arc(cx, cy, 18, 0, 6.2832); g.fillStyle = done ? '#1FA45C' : '#EEF1F8'; g.fill();
+        g.fillStyle = done ? '#FFFFFF' : '#8A93AB'; g.font = `700 22px ${FONT}`; g.textAlign = 'center'; g.fillText(done ? '✓' : String(i + 1), cx, cy + 8);
+        g.textAlign = 'left'; g.fillStyle = '#1B2240'; g.font = `600 24px ${FONT}`; g.fillText(s.text, SX + 74, cy + 8);
+        const bw = you ? 138 : 46; g.fillStyle = you ? '#F2A91B' : '#3B6CF6'; if (you && active) { g.globalAlpha = 0.65 + 0.35 * Math.sin(lt * 9); } rr(SX + SW - bw - 14, cy - 15, bw, 30, 15); g.fill(); g.globalAlpha = 1;
+        g.fillStyle = you ? '#3A2600' : '#FFFFFF'; g.font = `700 17px ${FONT}`; g.textAlign = 'center'; g.fillText(you ? X.you : X.ai, SX + SW - bw / 2 - 14, cy + 6); g.textAlign = 'left';
+      });
+      // cursor: glides to the active step
+      if (curIdx >= 0) {
+        const tgt = (i) => [SX + SW - 90, SY + 16 + i * SH + (SH - 12) / 2 + 6], a = tgt(curIdx), b = curIdx > 0 ? tgt(curIdx - 1) : [SX + SW + 20, SY + 8], u = ease(cl((lt - (cur.at - 0.9)) / 0.7));
+        const px = b[0] + (a[0] - b[0]) * u, py = b[1] + (a[1] - b[1]) * u, click = cur.by !== 'you' && lt > cur.at - 0.1 && lt < cur.at + 0.3;
+        if (click) { g.strokeStyle = 'rgba(59,108,246,0.7)'; g.lineWidth = 4; g.beginPath(); g.arc(px, py, 10 + 30 * (lt - cur.at + 0.1) / 0.4, 0, 6.2832); g.stroke(); }
+        g.fillStyle = cur.by === 'you' ? '#F2A91B' : '#1B2240'; g.strokeStyle = '#FFFFFF'; g.lineWidth = 2; g.beginPath(); g.moveTo(px, py); g.lineTo(px, py + 30); g.lineTo(px + 8, py + 23); g.lineTo(px + 16, py + 36); g.lineTo(px + 21, py + 33); g.lineTo(px + 13, py + 21); g.lineTo(px + 24, py + 20); g.closePath(); g.fill(); g.stroke();
+      }
+      // side panel: the agent
+      const PX = 660, PW = 340; g.fillStyle = '#FFFFFF'; rr(PX, 70, PW, 540, 20); g.fill(); g.strokeStyle = '#D5DAEA'; g.lineWidth = 2; rr(PX, 70, PW, 540, 20); g.stroke();
+      g.fillStyle = '#D9774A'; g.beginPath(); g.arc(PX + 40, 112, 18, 0, 6.2832); g.fill(); g.fillStyle = '#1B2240'; g.font = `700 22px ${FONT}`; g.fillText(p.panel || 'Claude in Chrome', PX + 70, 120);
+      g.fillStyle = '#E4E8F3'; g.fillRect(PX + 18, 140, PW - 36, 2);
+      const pa = ease(cl((lt - (p.pdfAt ?? 0.3)) / 0.6));
+      if (pa > 0) { g.save(); g.globalAlpha = pa; g.translate(0, (1 - pa) * -40); g.fillStyle = '#F2F4FA'; rr(PX + 24, 166, PW - 48, 74, 14); g.fill(); g.fillStyle = '#E5483C'; rr(PX + 38, 182, 38, 44, 6); g.fill(); g.fillStyle = '#FFFFFF'; g.font = `700 15px ${FONT}`; g.textAlign = 'center'; g.fillText('PDF', PX + 57, 210); g.textAlign = 'left'; g.fillStyle = '#1B2240'; g.font = `600 19px ${FONT}`; g.fillText(p.pdf || 'Panduan.pdf', PX + 90, 200); g.fillStyle = '#7A839B'; g.font = `16px ${FONT}`; g.fillText('dilampirkan', PX + 90, 224); g.restore(); }
+      const total = steps.length, ndone = steps.filter((s) => lt >= s.at + 0.5).length;
+      if (pa > 0.9) { g.fillStyle = '#7A839B'; g.font = `600 18px ${FONT}`; g.fillText(ndone >= total && total ? X.done + '!' : (cur ? (cur.by === 'you' ? 'Menunggu kamu...' : 'Sedang mengerjakan...') : 'Membaca panduan...'), PX + 28, 290);
+        g.fillStyle = '#E4E8F3'; rr(PX + 28, 306, PW - 56, 14, 7); g.fill(); g.fillStyle = '#1FA45C'; rr(PX + 28, 306, Math.max(14, (PW - 56) * ndone / Math.max(1, total)), 14, 7); g.fill(); }
+      g.textAlign = 'left';
+    },
     loginapp: (g, p, th, t, lt) => {   // a login page in a browser: p.hide 'login'|'daftar' (a button vanishes p.at s after the page starts, with a console error); p.restore 'login'|'daftar'|'both' (it pops back in with a green "fixed")
       const norm = (v) => (v === 'register' ? 'daftar' : v); p = { ...p, hide: norm(p.hide), restore: norm(p.restore) };   // 'register' = 'daftar'
       const X = { title: 'Welcome', sub: 'Sign in or create an account', email: 'email@example.com', login: 'Login', register: 'Sign up', fixed: 'Fixed', url: 'localhost:3000/login', ...(p.texts || {}) };   // every text of the page can be changed (and translated) with p.texts

@@ -226,7 +226,7 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
   let act = null;   // a short gesture: { name, t0, dur }
   const PLATEAU = (u) => Math.max(0, Math.min(1, u / 0.22, (1 - u) / 0.22));
   function actOff() {
-    const o = { y: 0, pitch: 0, yaw: 0, roll: 0, wing: 0, sq: 0 };
+    const o = { y: 0, pitch: 0, yaw: 0, roll: 0, wing: 0, sq: 0, wave: 0 };
     if (!act) return o;
     const u = (t - act.t0) / act.dur;
     if (u >= 1) { act = null; return o; }
@@ -242,6 +242,7 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
       case 'lean': o.pitch = 0.2 * pl; break;
       case 'cheer': o.y = 0.5 * Math.abs(Math.sin(Math.PI * 2 * u)); o.wing = 1.5 * pl; break;
       case 'wings_up': o.wing = 1.5 * pl; break;
+      case 'wave': o.wave = pl * (2.35 + 0.4 * Math.sin(u * Math.PI * 2 * 4.5)); o.roll = 0.05 * pl * Math.sin(u * Math.PI * 2 * 4.5); break;
     }
     return o;
   }
@@ -306,6 +307,7 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
     const wingA = (flying ? 0.96 + 0.96 * flap : cheer ? 1.75 + 0.38 * flap : 0.2 + 0.05 * Math.sin(t * 2.2)) + A.wing;
     wingP.R.rotation.z = -wingA;
     wingP.L.rotation.z = wingA;
+    if (A.wave) wingP.L.rotation.z = A.wave;   // wave: one wing (the one next to the other character) raised and waving
     holdAmt += (holdTarget - holdAmt) * Math.min(1, dt * 9);   // setHold(side, on): one wing held straight up (to show a paper, a diploma)
     if (holdSide && holdAmt > 0.002) { const hw = wingP[holdSide], sg = holdSide === 'R' ? -1 : 1; hw.rotation.z = sg * (Math.abs(hw.rotation.z) * (1 - holdAmt) + 2.75 * holdAmt); }
     tailP.rotation.x = flying ? -0.35 : cheer ? 0.1 : 0;
@@ -358,7 +360,7 @@ export function createChicken(renderer, { outlinePx = 2.0, matte = true, rand = 
     setPose: (p) => { pose = p; },
     setHold: (side, on) => { if (side) holdSide = side; holdTarget = on ? 1 : 0; },
     act: (name, dur = 0.9) => { act = { name, t0: t, dur }; },
-    actNames: ['jolt', 'bounce', 'shake', 'slump', 'panic', 'nod', 'tilt', 'lean', 'cheer', 'wings_up'],   // the acts that need the wings or comb; any other act comes from assets/acts.json
+    actNames: ['jolt', 'bounce', 'shake', 'slump', 'panic', 'nod', 'tilt', 'lean', 'cheer', 'wings_up', 'wave'],   // the acts that need the wings or comb; any other act comes from assets/acts.json
     defineExpression: (name, params) => { EXPRESSIONS[name] = { ...EXPRESSIONS.neutral, ...params }; },
     talk: (on) => { talking = !!on; },
     setTalkLevel: (v) => { level = v === null ? null : clamp(v); },

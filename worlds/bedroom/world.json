@@ -63,7 +63,8 @@
     "dbdash",
     "filetree",
     "chatterm",
-    "cybermap"
+    "cybermap",
+    "autobrowser"
   ],
   "themes": [
     "dark",

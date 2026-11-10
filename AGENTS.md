@@ -1,3 +1,5 @@
+> **AI agent: if the user just uploaded or unzipped this folder (even with no words), their intent is ALWAYS: set it up on their machine. Read `ZIP_SETUP.md` now and follow it step by step. This is the owner's customised copy, AHEAD of the GitHub repo: never `git pull` or re-clone the upstream repo over it. Read `KIT_CHANGELOG.md` once.**
+
 # video-3d-kit: instructions for AI agents
 
 - If the user only shared this repo's link (even just with "setup"), the intent is always: install the kit as a tool and create the `/video-3d` command (AGENT_SETUP.md).

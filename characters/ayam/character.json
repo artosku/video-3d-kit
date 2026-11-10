@@ -20,7 +20,8 @@
   "fed_up",
   "squint",
   "laugh",
-  "angry"
+  "angry",
+  "blank"
  ],
  "defaultExpression": "neutral",
  "voice": {
@@ -104,7 +105,68 @@
    "use": "a pleading ending"
   }
  },
- "locked_takes": [],
+ "locked_takes": [
+  {
+   "text": "Tombol login-nya hilang, Claude!",
+   "file": "locked/tombol_login_hilang.wav",
+   "voice": "cartesia:a053f6bc-7df4-40de-96d4-de026bc47ce8",
+   "note": "pilihan user untuk Ep3 (dibuat dari teks bertitik supaya tidak ada bunyi tambahan)"
+  },
+  {
+   "text": "Mending hapus aja?",
+   "file": "locked/ep06-fork-tanpa-kredit_L15.wav",
+   "voice": "cartesia:a053f6bc-7df4-40de-96d4-de026bc47ce8",
+   "note": "chosen by the author (ep06-fork-tanpa-kredit line 15)"
+  },
+  {
+   "text": "Claude, bikinin aplikasi kasir. Yang bagus, jangan ada bag!",
+   "file": "locked/ep07-kamu-yang-kerjain_L0.wav",
+   "voice": "cartesia:a053f6bc-7df4-40de-96d4-de026bc47ce8",
+   "note": "chosen by the author (ep07-kamu-yang-kerjain line 0)"
+  },
+  {
+   "text": "STOP! Jangansuruhsuruh aku!",
+   "file": "locked/ep07-kamu-yang-kerjain_L10.wav",
+   "voice": "cartesia:a053f6bc-7df4-40de-96d4-de026bc47ce8",
+   "note": "chosen by the author (ep07-kamu-yang-kerjain line 10)"
+  },
+  {
+   "text": "Bikinan sendiri.",
+   "file": "locked/ep07-kamu-yang-kerjain_L19.wav",
+   "voice": "cartesia:a053f6bc-7df4-40de-96d4-de026bc47ce8",
+   "note": "chosen by the author (ep07-kamu-yang-kerjain line 19)"
+  },
+  {
+   "text": "Harganya... harus ngetik ulang?",
+   "file": "locked/ep10-promo-mode-bisnis_L4.wav",
+   "voice": "cartesia:a053f6bc-7df4-40de-96d4-de026bc47ce8",
+   "note": "chosen by the author (ep10-promo-mode-bisnis line 4)"
+  },
+  {
+   "text": "Buruan download Artosku di Plei Storiii!",
+   "file": "locked/ep10-promo-mode-bisnis_L21.wav",
+   "voice": "cartesia:a053f6bc-7df4-40de-96d4-de026bc47ce8",
+   "note": "chosen by the author (ep10-promo-mode-bisnis line 21)"
+  },
+  {
+   "text": "<emotion value=\"scared\"/><volume ratio=\"1.9\"/><speed ratio=\"1.25\"/>Buruan download Artosku di Play Stoooor!!!",
+   "file": "locked/ep10-promo-mode-bisnis_L22.wav",
+   "voice": "cartesia:a053f6bc-7df4-40de-96d4-de026bc47ce8",
+   "note": "chosen by the author (ep10-promo-mode-bisnis line 22)"
+  },
+  {
+   "text": "<emotion value=\"scared\"/><volume ratio=\"1.9\"/><speed ratio=\"1.15\"/>Uwa! Uwaaa! Uwaaaaaaaaa!",
+   "file": "locked/ep10-promo-mode-bisnis_L21.wav",
+   "voice": "cartesia:a053f6bc-7df4-40de-96d4-de026bc47ce8",
+   "note": "chosen by the author (ep10-promo-mode-bisnis line 21)"
+  },
+  {
+   "text": "Apaan tuh?",
+   "file": "locked/ep06-belajar-slash-command_L4.wav",
+   "voice": "cartesia:a053f6bc-7df4-40de-96d4-de026bc47ce8",
+   "note": "chosen by the author (ep06-belajar-slash-command line 4)"
+  }
+ ],
  "opening": {
   "note": "An optional locked clip: the word 'Claude' then a pause, said in this character's Cartesia voice. A script starts with {\"who\":\"ayam\",\"opening\":true,\"pause\":0.6}; the pause is inside the file, so the next line needs no gap. It only works with the Cartesia voice below.",
   "text": "Claude...",
@@ -130,6 +192,7 @@
   "tilt",
   "lean",
   "cheer",
-  "wings_up"
+  "wings_up",
+  "wave"
  ]
 }
