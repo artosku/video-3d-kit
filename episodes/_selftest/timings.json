@@ -1,0 +1,14 @@
+[
+ {
+  "who": "ayam",
+  "text": "Satu.",
+  "start": 0.6,
+  "end": 1.6
+ },
+ {
+  "who": "claude",
+  "text": "Dua.",
+  "start": 2.0,
+  "end": 3.0
+ }
+]

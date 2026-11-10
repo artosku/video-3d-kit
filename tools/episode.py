@@ -15,6 +15,9 @@
    python tools/episode.py variants <slug> <line> [--n 3]   3 takes of one line (as written, with a full stop, a little faster) to choose from, in out/<slug>/variants/
    python tools/episode.py lock <slug> <line> <file>         pin the take you chose: it is used as it is whenever that exact text is spoken by that character
    python tools/episode.py voices [--provider cartesia|elevenlabs] [--language id]    list the voices an account can use
+   python tools/episode.py actsheet <character> [--world <id>] [--cam wide]   every face and act of a character as contact sheets (out/actsheets/<character>/)
+   python tools/episode.py selftest [--update]     6 fixed stills per world + a fixture episode, compared with tests/golden/ (run after touching a rig, world or web/)
+   python tools/episode.py join <slugA> <slugB> [--transition slidedown|cut|whip] [--dur 0.6]   one MP4 from two episodes (crossfade, whoosh, limiter, peak under -1 dB)
    python tools/episode.py characters              list the characters and worlds this kit has, and which ones the project uses
 """
 import concurrent.futures as cf
@@ -475,6 +478,50 @@ def stills(slug, at=None):
     return sd / "contact.png"
 
 
+def frames_key(slug):
+    """Hash of everything that changes how a frame looks: episode + script + timings, the cast's rig and character files, the world's files, web/ and assets/acts.json.
+    Stored next to the frames; a different hash means the old frames are stale and are thrown away."""
+    import hashlib
+    h = hashlib.sha256()
+    proj = project()
+    d = ep_dir(slug)
+    ep = load_json(d / "episode.json")
+    files = [d / "episode.json", d / "script.json", d / "timings.json", ASSETS / "acts.json"]
+    for c in proj["characters"]:
+        files += sorted((ROOT / "characters" / c).glob("*.js")) + [ROOT / "characters" / c / "character.json"]
+    wid = ep.get("world") or proj["world"]
+    files += sorted(p for p in (ROOT / "worlds" / wid).rglob("*") if p.is_file())
+    files += sorted(p for p in (ROOT / "web").rglob("*") if p.is_file() and "vendor" not in p.parts)
+    h.update(json_dump_small({"format": proj["format"], "characters": proj["characters"], "world": wid}).encode())
+    for f in files:
+        if f.is_file():
+            h.update(str(f.relative_to(ROOT)).replace("\\", "/").encode())
+            h.update(f.read_bytes().replace(b"\r\n", b"\n"))
+    return h.hexdigest()[:16]
+
+
+def json_dump_small(o):
+    import json
+    return json.dumps(o, sort_keys=True)
+
+
+def ensure_fresh_frames(slug, fd):
+    """Throw the old frames away when the key differs from the one stored with them (a rig, act, world or script changed since)."""
+    key = frames_key(slug)
+    kf = fd / ".key"
+    fd.mkdir(parents=True, exist_ok=True)
+    old = kf.read_text().strip() if kf.exists() else None
+    have = any(fd.glob("f_*.png"))
+    if have and old is None:
+        print("render: these frames have no key yet (drawn by an older kit): kept as they are. If you changed a rig, act or world since, delete this frames folder once: " + str(fd))
+    elif have and old != key:
+        n = 0
+        for f in fd.glob("f_*.png"):
+            f.unlink(); n += 1
+        print(f"render: the kit, rig, world or script changed since these frames were drawn ({old} -> {key}): {n} old frames discarded, drawing all again")
+    kf.write_text(key)
+
+
 def render(slug):
     from browser import capture, use_gpu
     d = ep_dir(slug)
@@ -483,6 +530,7 @@ def render(slug):
     total = total_of(ep, lines)
     n = math.ceil(total * FPS)
     fd = out_dir(slug) / "frames"
+    ensure_fresh_frames(slug, fd)
     missing = [i for i in range(n) if not (fd / f"f_{i:04d}.png").exists()]
     if not missing:
         rw, rh = fmt_sizes()[0]
@@ -563,6 +611,9 @@ def encode(slug, max_mb=30):
     ep = load_json(d / "episode.json")
     lines = load_json(d / "timings.json")
     n = math.ceil(total_of(ep, lines) * FPS)
+    kf = o / "frames" / ".key"
+    if kf.exists() and kf.read_text().strip() != frames_key(slug):
+        sys.exit("encode: the frames are stale (the kit, rig, world or script changed after they were drawn). Run render first (it discards them by itself).")
     fw, fh = fmt_sizes()[1]
     enc = o / "enc"
     shutil.rmtree(enc, ignore_errors=True)
@@ -768,4 +819,13 @@ if __name__ == "__main__":
     elif cmd == "variants": variants(args[0], int(args[1]), int(args[args.index("--n") + 1]) if "--n" in args else 3)
     elif cmd == "lock": lock(args[0], int(args[1]), args[2])
     elif cmd == "characters": list_assets()
+    elif cmd == "actsheet":
+        import sheets
+        sheets.actsheet(args[0], args[args.index("--world") + 1] if "--world" in args else None, args[args.index("--cam") + 1] if "--cam" in args else "wide")
+    elif cmd == "selftest":
+        import sheets
+        sheets.selftest("--update" in args)
+    elif cmd == "join":
+        import join as joiner
+        joiner.join(args[0], args[1], args[args.index("--transition") + 1] if "--transition" in args else "slidedown", float(args[args.index("--dur") + 1]) if "--dur" in args else 0.6, args[args.index("--out") + 1] if "--out" in args else None)
     else: sys.exit(f"unknown command '{cmd}'\n{__doc__}")

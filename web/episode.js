@@ -436,6 +436,7 @@ function stepFrame() {
   cur++;
 }
 
+if (shot && q.get('act')) queueAct(q.get('who') || 'left', q.get('act'), q.has('actdur') ? Number(q.get('actdur')) : undefined, Number(q.get('amp') || 1), 0.5);   // an act sheet: the act starts at 0.5 s, ask for the still with t = 0.5 + seconds into the act (tools/episode.py actsheet)
 if (shot) {
   left.freeze?.(); right?.freeze?.(); mid?.freeze?.();
   const tt = Number(q.get('t') || 0);

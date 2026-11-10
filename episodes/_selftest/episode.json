@@ -1,0 +1,23 @@
+{
+ "title": "selftest fixture",
+ "scene": {
+  "light": "rembrandt",
+  "bg": "quiet"
+ },
+ "tail": 1.5,
+ "fadeOut": 1.0,
+ "music": {
+  "mood": "calm"
+ },
+ "screen": [],
+ "directions": [
+  {
+   "cam": "wide"
+  },
+  {
+   "cam": "two"
+  }
+ ],
+ "lightEvents": [],
+ "facts": []
+}
