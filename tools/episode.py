@@ -746,7 +746,7 @@ def variants(slug, line, n=3):
     cv = ch["voice"][provider]
     t = ln["text"].strip()
     base = re.sub(r"[!?.…]+$", "", t).rstrip()
-    options = [("as_written", t, p["speed"]), ("full_stop", base + ".", p["speed"]), ("full_stop_faster", base + ".", min(1.5, p["speed"] * 1.12)), ("slower", t, max(0.6, p["speed"] * 0.9))][:n]
+    options = [("as_written", t, p["speed"]), ("full_stop", base + ".", p["speed"]), ("full_stop_faster", base + ".", min(1.5, p["speed"] * 1.12)), ("slower", t, max(0.6, p["speed"] * 0.9)), ("fast", t, min(1.5, p["speed"] * 1.25)), ("faster", t, min(1.5, p["speed"] * 1.4)), ("fastest", t, 1.5)][:n]
     out = out_dir(slug) / "variants"
     out.mkdir(exist_ok=True)
     for name, text, sp in options:

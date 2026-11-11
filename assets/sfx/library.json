@@ -479,6 +479,24 @@
    "file": "earshot/ov_woodchop.mp3",
    "rms": 1500,
    "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "siren_wail": {
+   "source": "kit",
+   "file": "synth/siren_wail_klasik.wav",
+   "rms": 1500,
+   "note": "classic police wail, 6 s, made from code by the minyam-samurai agent (square wave sweep + horn filter + street echo)"
+  },
+  "siren_yelp": {
+   "source": "kit",
+   "file": "synth/siren_yelp_kejar.wav",
+   "rms": 1500,
+   "note": "fast yelp, chase siren, 5 s"
+  },
+  "siren_pass": {
+   "source": "kit",
+   "file": "synth/siren_jauh_mendekat_lewat.wav",
+   "rms": 1500,
+   "note": "far, approaching, passing by with Doppler, 9 s"
   }
  }
 }
