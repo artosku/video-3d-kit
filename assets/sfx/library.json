@@ -191,6 +191,294 @@
    "duration": 1.6,
    "rms": 900,
    "prompt": "A soft sad downward whoosh of a file being deleted, a gentle fading sweep then silence"
+  },
+  "es_click_snap": {
+   "source": "kit",
+   "file": "earshot/es_click_snap.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_click_thock": {
+   "source": "kit",
+   "file": "earshot/es_click_thock.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_downlifter_air_fall": {
+   "source": "kit",
+   "file": "earshot/es_downlifter_air_fall.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_drip_bloop": {
+   "source": "kit",
+   "file": "earshot/es_drip_bloop.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_drip_drop": {
+   "source": "kit",
+   "file": "earshot/es_drip_drop.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_fit_bell_small_bell": {
+   "source": "kit",
+   "file": "earshot/es_fit_bell_small_bell.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_fit_hit_bamboo_tok": {
+   "source": "kit",
+   "file": "earshot/es_fit_hit_bamboo_tok.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_hover_tick_detent": {
+   "source": "kit",
+   "file": "earshot/es_hover_tick_detent.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_knock_wood": {
+   "source": "kit",
+   "file": "earshot/es_knock_wood.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_logo_sting_zip_ping": {
+   "source": "kit",
+   "file": "earshot/es_logo_sting_zip_ping.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_mallet_celesta": {
+   "source": "kit",
+   "file": "earshot/es_mallet_celesta.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_mallet_flourish": {
+   "source": "kit",
+   "file": "earshot/es_mallet_flourish.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_mallet_glock": {
+   "source": "kit",
+   "file": "earshot/es_mallet_glock.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_mallet_marimba": {
+   "source": "kit",
+   "file": "earshot/es_mallet_marimba.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_mallet_pluck": {
+   "source": "kit",
+   "file": "earshot/es_mallet_pluck.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_pluck_kalimba": {
+   "source": "kit",
+   "file": "earshot/es_pluck_kalimba.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_pro_click_glass": {
+   "source": "kit",
+   "file": "earshot/es_pro_click_glass.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_pro_hover_tick_ping": {
+   "source": "kit",
+   "file": "earshot/es_pro_hover_tick_ping.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_pro_impact_short": {
+   "source": "kit",
+   "file": "earshot/es_pro_impact_short.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_pro_notify_ding_1930": {
+   "source": "kit",
+   "file": "earshot/es_pro_notify_ding_1930.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_pro_notify_ding_2296": {
+   "source": "kit",
+   "file": "earshot/es_pro_notify_ding_2296.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_pro_pop_bloop": {
+   "source": "kit",
+   "file": "earshot/es_pro_pop_bloop.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_pro_pop_chirp": {
+   "source": "kit",
+   "file": "earshot/es_pro_pop_chirp.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_pro_pop_double": {
+   "source": "kit",
+   "file": "earshot/es_pro_pop_double.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_pro_tap_knock": {
+   "source": "kit",
+   "file": "earshot/es_pro_tap_knock.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_pro_zip_down": {
+   "source": "kit",
+   "file": "earshot/es_pro_zip_down.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_pro_zip_up": {
+   "source": "kit",
+   "file": "earshot/es_pro_zip_up.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_shimmer_m1": {
+   "source": "kit",
+   "file": "earshot/es_shimmer_m1.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_shutter_film": {
+   "source": "kit",
+   "file": "earshot/es_shutter_film.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_swipe_cloth": {
+   "source": "kit",
+   "file": "earshot/es_swipe_cloth.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_swipe_paper": {
+   "source": "kit",
+   "file": "earshot/es_swipe_paper.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_swipe_velvet": {
+   "source": "kit",
+   "file": "earshot/es_swipe_velvet.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_toggle_latch": {
+   "source": "kit",
+   "file": "earshot/es_toggle_latch.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_ui_pop_blip": {
+   "source": "kit",
+   "file": "earshot/es_ui_pop_blip.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_ui_pop_boop": {
+   "source": "kit",
+   "file": "earshot/es_ui_pop_boop.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_ui_pop_soft": {
+   "source": "kit",
+   "file": "earshot/es_ui_pop_soft.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_whoosh_big_gust": {
+   "source": "kit",
+   "file": "earshot/es_whoosh_big_gust.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_whoosh_big_jet": {
+   "source": "kit",
+   "file": "earshot/es_whoosh_big_jet.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_whoosh_fast_crisp": {
+   "source": "kit",
+   "file": "earshot/es_whoosh_fast_crisp.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_whoosh_fast_tight": {
+   "source": "kit",
+   "file": "earshot/es_whoosh_fast_tight.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "es_whoosh_fast_whistle": {
+   "source": "kit",
+   "file": "earshot/es_whoosh_fast_whistle.wav",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "ov_glass": {
+   "source": "kit",
+   "file": "earshot/ov_glass.mp3",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "ov_lego": {
+   "source": "kit",
+   "file": "earshot/ov_lego.mp3",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "ov_paper": {
+   "source": "kit",
+   "file": "earshot/ov_paper.mp3",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "ov_pencil": {
+   "source": "kit",
+   "file": "earshot/ov_pencil.mp3",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "ov_scissors": {
+   "source": "kit",
+   "file": "earshot/ov_scissors.mp3",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "ov_wind": {
+   "source": "kit",
+   "file": "earshot/ov_wind.mp3",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
+  },
+  "ov_woodchop": {
+   "source": "kit",
+   "file": "earshot/ov_woodchop.mp3",
+   "rms": 1500,
+   "note": "from artosku/motion-style-kit (earshot MIT / openverse CC0)"
   }
  }
 }

@@ -87,9 +87,9 @@ export async function createStudio(scene, cfg = {}) {
   // ---------------------------------------------------------------- the laptop screen: pages, each one with a theme and a glow
   const specs = cfg.pages || { idle: { type: 'text', theme: 'dark', title: '', lines: [] } };
   const imgs = {};
-  for (const [name, p] of Object.entries(specs)) if (p.type === 'image' && p.src) imgs[name] = await loadImage(`${base}/${p.src}`);
+  for (const [name, p] of Object.entries(specs)) if ((p.type === 'image' && p.src) || p.type === 'vpnmap') imgs[name] = await loadImage(`${base}/${p.src || 'assets/images/grandpa_avatar.png'}`);
   let WMAP = null;   // cybermap pages: the projected world map (assets/worldmap.json, made from Natural Earth 110m)
-  if (Object.values(specs).some((p) => p.type === 'cybermap')) WMAP = await (await fetch(`${base}/assets/worldmap.json`)).json();
+  if (Object.values(specs).some((p) => p.type === 'cybermap' || p.type === 'vpnmap')) WMAP = await (await fetch(`${base}/assets/worldmap.json`)).json();
   const vids = {};   // a video page: numbered frames dir/f_0001.jpg ... played from the moment the page is switched to (p.fps, default 30), the last frame stays
   for (const [name, p] of Object.entries(specs)) if (p.type === 'video') vids[name] = await Promise.all(Array.from({ length: p.count }, (_, i) => loadImage(`${base}/${p.dir}/f_${String(i + 1).padStart(4, '0')}.jpg`)));
   const tabsOf = (g, p, th) => {
@@ -205,6 +205,85 @@ export async function createStudio(scene, cfg = {}) {
         if (last.tag) { g.fillStyle = last.tag.startsWith('DUGA') || last.tag.startsWith('DIDUGA') ? '#FFC24D' : '#7CE0A0'; g.font = `700 20px ${FONT}`; g.textAlign = 'right'; g.fillText(last.tag, W - 24, MY + MH + 30); g.textAlign = 'left'; }
         g.globalAlpha = 1;
       } else { g.fillStyle = '#5F73A3'; g.font = `600 30px ${FONT}`; g.fillText('Memantau serangan siber dunia...', 40, MY + MH + 100); }
+    },
+    vpnmap: (g, p, th, t, lt, name) => {   // a tracker whose target hops between countries very fast (a free VPN changing server). p: { title, countries: [{ name: 'Japan' (map name), label: 'JEPANG' }], start (s, default 0.3), step (s per hop, default 0.4), stopHop (stop at this hop number), lost (true = signal lost, grey + red banner), avatar (png, default assets/images/grandpa_avatar.png), texts: { who, last, count, hops, head, lost, lost2 } }
+      const W = 1024, H = 640, MY = 50, MH = 400, cl = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v)), ease = (u) => u * u * (3 - 2 * u);
+      const LON0 = -170, LON1 = 180, LAT0 = -57, LAT1 = 80, pj = (lon, lat) => [(lon - LON0) / (LON1 - LON0) * 1024, (LAT1 - lat) / (LAT1 - LAT0) * WMAP.h];
+      const cenOf = (nm) => { if (WMAP.marks[nm]) return WMAP.marks[nm]; const c = WMAP.countries.find((q) => q.name === nm); if (!c) return [512, 200]; const r = c.rings.reduce((a, b) => (b.length > a.length ? b : a)); return [r.reduce((s2, q) => s2 + q[0], 0) / r.length, r.reduce((s2, q) => s2 + q[1], 0) / r.length]; };
+      const X = { title: 'TARGET TRACKER', who: 'TARGET: KAKEK RAMBUT PUTIH', last: 'Lokasi terakhir', count: 'Pindah negara', hops: 'kali', head: 'LOKASI BERUBAH TERUS', lost: 'SINYAL HILANG', lost2: 'LOKASI TIDAK BISA DILACAK', ...(p.texts || {}) };
+      const list = p.countries || [], L = list.length || 1, step = p.step ?? 0.4, t0 = p.start ?? 0.3;
+      let n = lt < t0 ? 0 : Math.floor((lt - t0) / step); if (p.stopHop !== undefined) n = Math.min(n, p.stopHop);
+      const rnd = (k) => { const x = Math.sin(k * 127.1 + (p.seed ?? 7) * 311.7) * 43758.5453; return x - Math.floor(x); };   // a seeded shuffle: every country comes up once per round, in a random order, never the same one twice in a row
+      const perms = {}, perm = (r) => { if (!perms[r]) { const o = list.map((_, i) => i).sort((x, y) => rnd(r * 1000 + x) - rnd(r * 1000 + y)); if (r > 0 && o[0] === perm(r - 1)[L - 1] && L > 1) [o[0], o[1]] = [o[1], o[0]]; perms[r] = o; } return perms[r]; };
+      const at = (k) => (k < 0 ? { name: '', label: '' } : list[perm(Math.floor(k / L))[k % L]] || { name: '', label: '' }), cur = at(n), prv = at(Math.max(0, n - 1));
+      const pt = (k) => { const c = cenOf(at(k).name), j = p.jitter ?? 16; return [c[0] + (rnd(k * 3 + 1) - 0.5) * 2 * j, c[1] + (rnd(k * 3 + 2) - 0.5) * 2 * j * 0.7]; };   // a random spot inside the country
+      const u = n === 0 ? 1 : ease(cl(((lt - t0) - n * step) / (step * 0.6))), a0 = pt(Math.max(0, n - 1)), a1 = pt(n);
+      const pos = [a0[0] + (a1[0] - a0[0]) * u, a0[1] + (a1[1] - a0[1]) * u - Math.sin(Math.PI * u) * 34];
+      const av = imgs[name], lost = !!p.lost;
+      g.fillStyle = '#060B1B'; g.fillRect(0, 0, W, H);
+      g.save(); g.beginPath(); g.rect(0, MY, W, MH); g.clip(); g.translate(0, MY);
+      g.fillStyle = '#08112A'; g.fillRect(0, 0, 1024, 401);
+      g.strokeStyle = 'rgba(70,110,190,0.16)'; g.lineWidth = 1; for (let lo = -150; lo <= 180; lo += 30) { const a = pj(lo, 80), b = pj(lo, -57); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); } for (let la = -40; la <= 80; la += 20) { const a = pj(-170, la), b = pj(180, la); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); }
+      const recent = {}; for (let k = Math.max(0, n - 2); k <= n; k++) recent[at(k).name] = n - k;
+      for (const c of WMAP.countries) {
+        const age = recent[c.name]; let fill = '#1D2947', line = '#3B4F82';
+        if (age !== undefined && !lost) { const f = age === 0 ? 1 : age === 1 ? 0.45 : 0.2; fill = `rgb(${Math.round(29 + 170 * f)},${Math.round(41 + 40 * f)},${Math.round(71 + 10 * f)})`; line = '#FF8A8A'; }
+        g.fillStyle = fill; g.strokeStyle = line; g.lineWidth = age === 0 && !lost ? 1.6 : 0.7;
+        for (const r of c.rings) { g.beginPath(); r.forEach((q, i) => (i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]))); g.closePath(); g.fill(); g.stroke(); }
+      }
+      if (!lost) {
+        for (let k = Math.max(0, n - 4); k < n; k++) { const A = pt(k), B = pt(k + 1), al = 0.25 + 0.15 * (k - (n - 4)); g.strokeStyle = `rgba(255,211,107,${al})`; g.lineWidth = 2.4; g.setLineDash([9, 7]); g.beginPath(); g.moveTo(A[0], A[1]); g.lineTo(B[0], B[1]); g.stroke(); g.setLineDash([]); g.fillStyle = 'rgba(255,211,107,0.8)'; g.beginPath(); g.arc(A[0], A[1], 4, 0, 6.283); g.fill(); }
+        for (let k = 0; k < 2; k++) { const ph = (lt * 2.2 + k / 2) % 1; g.strokeStyle = `rgba(255,90,90,${(1 - ph) * 0.8})`; g.lineWidth = 2.4; g.beginPath(); g.arc(pos[0], pos[1], 18 + 34 * ph, 0, 6.283); g.stroke(); }
+      }
+      const R = 22; g.fillStyle = lost ? '#6B7488' : '#FF4D4D'; g.beginPath(); g.arc(pos[0], pos[1], R + 4, 0, 6.283); g.fill();
+      g.save(); g.beginPath(); g.arc(pos[0], pos[1], R, 0, 6.283); g.clip(); g.drawImage(av, pos[0] - R, pos[1] - R, 2 * R, 2 * R); if (lost) { g.fillStyle = 'rgba(30,34,48,0.6)'; g.fillRect(pos[0] - R, pos[1] - R, 2 * R, 2 * R); } g.restore();
+      if (!lost) { g.font = `800 20px ${FONT}`; const tw = g.measureText(cur.label).width, lx = Math.max(6, Math.min(1018 - tw - 20, pos[0] - tw / 2 - 10)), ly = pos[1] + 32; g.fillStyle = 'rgba(8,17,42,0.85)'; g.fillRect(lx, ly - 18, tw + 20, 28); g.fillStyle = '#FFE9A8'; g.textAlign = 'left'; g.fillText(cur.label, lx + 10, ly + 3); }
+      g.restore();
+      const sx = ((lt * 140) % (W + 200)) - 100; const gr = g.createLinearGradient(sx - 60, 0, sx, 0); gr.addColorStop(0, 'rgba(90,160,255,0)'); gr.addColorStop(1, 'rgba(90,160,255,0.14)'); g.fillStyle = gr; g.fillRect(sx - 60, MY, 60, MH);
+      g.fillStyle = '#0B1330'; g.fillRect(0, 0, W, MY); g.fillStyle = lost ? '#8A93A8' : '#FF4D4D'; g.globalAlpha = lost ? 1 : 0.55 + 0.45 * Math.sin(lt * 9); g.beginPath(); g.arc(30, MY / 2, 8, 0, 6.283); g.fill(); g.globalAlpha = 1;
+      g.fillStyle = '#CFE0FF'; g.font = `700 24px ${FONT}`; g.textAlign = 'left'; g.fillText(X.title, 52, MY / 2 + 8);
+      g.textAlign = 'right'; g.fillStyle = lost ? '#FF8A8A' : '#FFC24D'; g.fillText(lost ? X.lost : X.head, W - 24, MY / 2 + 8); g.textAlign = 'left';
+      g.fillStyle = '#0B1330'; g.fillRect(0, MY + MH, W, H - MY - MH); g.fillStyle = 'rgba(255,80,80,0.5)'; g.fillRect(0, MY + MH, W, 3);
+      const cx = 100, cy = MY + MH + 95, CR = 58; g.fillStyle = lost ? '#6B7488' : '#FF4D4D'; g.beginPath(); g.arc(cx, cy, CR + 5, 0, 6.283); g.fill();
+      g.save(); g.beginPath(); g.arc(cx, cy, CR, 0, 6.283); g.clip(); g.drawImage(av, cx - CR, cy - CR, 2 * CR, 2 * CR); if (lost) { g.fillStyle = 'rgba(30,34,48,0.6)'; g.fillRect(cx - CR, cy - CR, 2 * CR, 2 * CR); } g.restore();
+      g.fillStyle = '#FFFFFF'; g.font = `800 30px ${FONT}`; g.fillText(X.who, 190, MY + MH + 50);
+      if (lost) { g.fillStyle = '#FF6B6B'; g.font = `800 40px ${FONT}`; g.fillText(X.lost2, 190, MY + MH + 108); }
+      else { g.fillStyle = '#FFE9A8'; g.font = `600 30px ${FONT}`; g.fillText(`${X.last}: ${cur.label}`, 190, MY + MH + 98); g.fillStyle = '#FF8A8A'; g.font = `600 24px ${FONT}`; g.fillText(`${X.count}: ${n} ${X.hops}`, 190, MY + MH + 138); }
+    },
+    vpnflow: (g, p, th, t, lt) => {   // how a VPN works, a diagram that builds up in the order the narration says it. p: { vpnAt (the private road grows between device and site), encAt (packets get wrapped: amber + lock), srvAt (the VPN server appears in the middle), siteAt (the site shows only the server address), spyAt (a WiFi spy / ad tracker appears), texts }
+      const cl = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v)), ease = (u) => u * u * (3 - 2 * u);
+      const X = { title: 'CARA KERJA VPN', dev: 'PERANGKAT', srv: 'SERVER VPN', site: 'SITUS', off: 'TANPA VPN: data terbuka, alamat aslimu terlihat', road: 'VPN = jalan tol pribadi untuk datamu', enc: 'Datamu dibungkus dulu (dienkripsi)', via: 'Lalu lewat server VPN, baru ke internet', seen: 'Situs hanya melihat alamat SERVER VPN', spy: 'PENYADAP WIFI', read: 'DATA TERBACA', unread: 'TIDAK TERBACA', real: 'ALAMAT ASLI', hidden: 'TERSEMBUNYI', saw: 'YANG DILIHAT: SERVER', ...(p.texts || {}) };
+      const vpnAt = p.vpnAt ?? 1, encAt = p.encAt ?? 1e9, srvAt = p.srvAt ?? 1e9, siteAt = p.siteAt ?? 1e9, spyAt = p.spyAt;
+      const vOn = lt >= vpnAt, eOn = lt >= encAt, sOn = lt >= srvAt, tOn = lt >= siteAt;
+      const tp = ease(cl((lt - vpnAt) / 0.7)), sp = ease(cl((lt - srvAt) / 0.5)), pop = (t0) => 1 + 0.18 * Math.sin(cl((lt - t0) / 0.35) * Math.PI);
+      const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      g.fillStyle = '#0A1226'; g.fillRect(0, 0, 1024, 640);
+      g.fillStyle = '#0B1330'; g.fillRect(0, 0, 1024, 50); g.fillStyle = '#CFE0FF'; g.font = `700 24px ${FONT}`; g.textAlign = 'left'; g.fillText(X.title, 28, 33);
+      const DX = 130, SX = 512, WX = 894, Y = 300;
+      const node = (x, label, col, icon, a = 1, sc = 1) => { g.save(); g.globalAlpha = a; g.translate(x, Y); g.scale(sc, sc); g.translate(-x, -Y); g.fillStyle = '#121C3B'; g.strokeStyle = col; g.lineWidth = 4; rr(x - 78, Y - 70, 156, 140, 22); g.fill(); g.stroke(); g.fillStyle = col; icon(x); g.fillStyle = '#CFE0FF'; g.font = `700 22px ${FONT}`; g.textAlign = 'center'; g.fillText(label, x, Y + 106); g.restore(); };
+      node(DX, X.dev, '#6FA8FF', (x) => { g.fillRect(x - 38, Y - 36, 76, 48); g.fillRect(x - 52, Y + 18, 104, 8); });
+      node(WX, X.site, '#7CE0A0', (x) => { g.lineWidth = 5; g.strokeStyle = '#7CE0A0'; g.beginPath(); g.arc(x, Y - 4, 36, 0, 6.283); g.stroke(); g.beginPath(); g.ellipse(x, Y - 4, 16, 36, 0, 0, 6.283); g.stroke(); g.beginPath(); g.moveTo(x - 36, Y - 4); g.lineTo(x + 36, Y - 4); g.stroke(); });
+      if (sOn) node(SX, X.srv, '#FFC24D', (x) => { g.fillRect(x - 36, Y - 40, 72, 24); g.fillRect(x - 36, Y - 8, 72, 24); g.fillRect(x - 36, Y + 24, 72, 18); g.fillStyle = '#121C3B'; g.beginPath(); g.arc(x + 22, Y - 28, 4, 0, 6.283); g.fill(); g.beginPath(); g.arc(x + 22, Y + 4, 4, 0, 6.283); g.fill(); }, sp, pop(srvAt));
+      const pk = (x0, x1, enc, count, speed) => { for (let i = 0; i < count; i++) { const f = (lt * speed + i / count) % 1, x = x0 + (x1 - x0) * f; g.fillStyle = enc ? '#FFC24D' : '#7CE0A0'; rr(x - 11, Y - 11, 22, 22, 5); g.fill(); if (enc) { g.fillStyle = '#121C3B'; g.font = `800 16px ${FONT}`; g.textAlign = 'center'; g.fillText('#', x, Y + 6); } } };
+      const lock = (lx, ly) => { g.fillStyle = '#FFC24D'; rr(lx - 17, ly, 34, 28, 6); g.fill(); g.strokeStyle = '#FFC24D'; g.lineWidth = 5; g.beginPath(); g.arc(lx, ly, 11, Math.PI, 0); g.stroke(); };
+      const x1 = DX + 80, xEnd = sOn ? SX - 80 : WX - 80;
+      if (!vOn) { g.strokeStyle = '#3B4F82'; g.lineWidth = 6; g.beginPath(); g.moveTo(x1, Y); g.lineTo(WX - 80, Y); g.stroke(); pk(x1 + 20, WX - 100, false, 5, 0.5); }
+      else {
+        if (sOn) { g.strokeStyle = '#33406E'; g.lineWidth = 6; g.beginPath(); g.moveTo(SX + 80, Y); g.lineTo(WX - 80, Y); g.stroke(); pk(SX + 100, WX - 100, false, 3, 0.55); }
+        g.fillStyle = eOn ? 'rgba(255,194,77,0.16)' : 'rgba(111,168,255,0.14)'; g.strokeStyle = eOn ? '#FFC24D' : '#6FA8FF'; g.lineWidth = 3; rr(x1, Y - 26, Math.max(1, (xEnd - x1) * tp), 52, 26); g.fill(); g.stroke();
+        if (tp > 0.95) { pk(x1 + 20, xEnd - 20, eOn, 4, 0.6); if (eOn) { const a = ease(cl((lt - encAt) / 0.3)); g.globalAlpha = a; lock((x1 + xEnd) / 2, Y - 60); g.globalAlpha = 1; } }
+      }
+      if (spyAt !== undefined && lt >= spyAt) {
+        const ea = ease(cl((lt - spyAt) / 0.4)), ex = (DX + SX) / 2, ey = 140; g.globalAlpha = ea; g.fillStyle = '#2A1420'; g.strokeStyle = '#FF6B6B'; g.lineWidth = 3; g.beginPath(); g.ellipse(ex, ey, 46, 26, 0, 0, 6.283); g.fill(); g.stroke(); g.fillStyle = '#FF6B6B'; g.beginPath(); g.arc(ex, ey, 12, 0, 6.283); g.fill();
+        g.font = `700 20px ${FONT}`; g.textAlign = 'center'; g.fillText(X.spy, ex, ey - 38); g.fillStyle = eOn ? '#FF8A8A' : '#7CE0A0'; g.font = `800 24px ${FONT}`; g.fillText(eOn ? X.unread : X.read, ex, ey + 58); g.globalAlpha = 1;
+      }
+      // the address badges: the real address next to the device, hidden once the VPN server is in the way; the site sees only the server
+      g.font = `700 18px ${FONT}`; g.textAlign = 'center';
+      g.fillStyle = sOn ? '#6B7488' : '#FF8A8A'; g.fillText(sOn ? `${X.real}: ${X.hidden}` : X.real, DX, Y - 92);
+      if (tOn) { const a = ease(cl((lt - siteAt) / 0.4)); g.globalAlpha = a; g.fillStyle = '#FFC24D'; rr(WX - 100, Y - 128, 200, 32, 8); g.fill(); g.fillStyle = '#121C3B'; g.font = `800 17px ${FONT}`; g.fillText(X.saw, WX, Y - 106); g.globalAlpha = 1; }
+      g.fillStyle = '#0B1330'; g.fillRect(0, 500, 1024, 140); g.fillStyle = eOn ? '#FFC24D' : '#7E91BE'; g.fillRect(0, 500, 1024, 3);
+      const cap = tOn ? X.seen : sOn ? X.via : eOn ? X.enc : vOn ? X.road : X.off;
+      g.fillStyle = vOn ? '#FFE9A8' : '#B9C7E8'; g.font = `700 32px ${FONT}`; g.textAlign = 'center'; g.fillText(cap, 512, 572); g.textAlign = 'left';
     },
     autobrowser: (g, p, th, t, lt) => {   // a browser where an AI agent does the clicking: left = the steps of a setup (p.steps [{ at (s since page start), by: 'ai'|'you', text }]) with a cursor that goes to each step and ticks it; 'you' steps flash an amber "KAMU KLIK" badge; right = the agent side panel with the PDF chip that drops in at p.pdfAt. p: { title, url, panel, pdf, pdfAt, steps, texts }
       const cl = (x) => Math.max(0, Math.min(1, x)), ease = (x) => 1 - Math.pow(1 - x, 3);
