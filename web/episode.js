@@ -78,7 +78,7 @@ const pages = EP.pages || { idle: { type: 'code', theme: 'dark', lines: ['> ...'
 const worldMod = await import(`${BASE}/worlds/${WORLD_ID}/world.js`);
 const NEON = EP.neon || (q.has('neon') ? { text: 'NEON' } : null);   // a neon sign on a building outside (the preview: &neon=<seconds since it switches on, negative = off>)
 const studio = await worldMod.createWorld(scene, {
-  neon: NEON, keys: !!EP.keys, counter: EP.counter || null, siren: EP.siren ? { ...EP.siren, at: T(EP.siren.at) } : null, duel: EP.duel ? { ...EP.duel, breakAt: EP.duel.breakAt !== undefined ? T(EP.duel.breakAt) : undefined } : null, banner: EP.banner ? { ...EP.banner, alarmAt: EP.banner.alarmAt !== undefined ? T(EP.banner.alarmAt) : undefined } : null,
+  neon: NEON, keys: !!EP.keys, counter: EP.counter || null, siren: EP.siren ? { ...EP.siren, at: T(EP.siren.at) } : null, duel: EP.duel ? { ...EP.duel, breakAt: EP.duel.breakAt !== undefined ? T(EP.duel.breakAt) : undefined } : null, cameos: EP.cameos ? EP.cameos.map((c) => ({ ...c, at: T(c.at) })) : null, banner: EP.banner ? { ...EP.banner, alarmAt: EP.banner.alarmAt !== undefined ? T(EP.banner.alarmAt) : undefined } : null,
   base: BASE, bg: q.get('bg') || sc.bg, light: q.get('light') || sc.light || 'rembrandt',
   pages, phone: EP.phone, wall: EP.wall || [], props: EP.props || [], outside: EP.outside, episode: EP,
 });

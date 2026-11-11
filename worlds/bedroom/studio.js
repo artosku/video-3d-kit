@@ -237,18 +237,20 @@ export async function createStudio(scene, cfg = {}) {
       }
       const R = 22; g.fillStyle = lost ? '#6B7488' : '#FF4D4D'; g.beginPath(); g.arc(pos[0], pos[1], R + 4, 0, 6.283); g.fill();
       g.save(); g.beginPath(); g.arc(pos[0], pos[1], R, 0, 6.283); g.clip(); g.drawImage(av, pos[0] - R, pos[1] - R, 2 * R, 2 * R); if (lost) { g.fillStyle = 'rgba(30,34,48,0.6)'; g.fillRect(pos[0] - R, pos[1] - R, 2 * R, 2 * R); } g.restore();
-      if (!lost) { g.font = `800 20px ${FONT}`; const tw = g.measureText(cur.label).width, lx = Math.max(6, Math.min(1018 - tw - 20, pos[0] - tw / 2 - 10)), ly = pos[1] + 32; g.fillStyle = 'rgba(8,17,42,0.85)'; g.fillRect(lx, ly - 18, tw + 20, 28); g.fillStyle = '#FFE9A8'; g.textAlign = 'left'; g.fillText(cur.label, lx + 10, ly + 3); }
+      if (!lost) { g.font = `800 24px ${FONT}`; const tw = g.measureText(cur.label).width, lx = Math.max(6, Math.min(1018 - tw - 20, pos[0] - tw / 2 - 10)), ly = pos[1] + 32; g.fillStyle = 'rgba(8,17,42,0.9)'; g.fillRect(lx, ly - 21, tw + 20, 33); g.fillStyle = '#E9CF86'; g.textAlign = 'left'; g.fillText(cur.label, lx + 10, ly + 3); }
       g.restore();
+      if (p.alert) { g.fillStyle = `rgba(255,40,40,${0.10 + 0.10 * Math.sin(lt * 10)})`; g.fillRect(0, MY, W, MH); }
       const sx = ((lt * 140) % (W + 200)) - 100; const gr = g.createLinearGradient(sx - 60, 0, sx, 0); gr.addColorStop(0, 'rgba(90,160,255,0)'); gr.addColorStop(1, 'rgba(90,160,255,0.14)'); g.fillStyle = gr; g.fillRect(sx - 60, MY, 60, MH);
       g.fillStyle = '#0B1330'; g.fillRect(0, 0, W, MY); g.fillStyle = lost ? '#8A93A8' : '#FF4D4D'; g.globalAlpha = lost ? 1 : 0.55 + 0.45 * Math.sin(lt * 9); g.beginPath(); g.arc(30, MY / 2, 8, 0, 6.283); g.fill(); g.globalAlpha = 1;
-      g.fillStyle = '#CFE0FF'; g.font = `700 24px ${FONT}`; g.textAlign = 'left'; g.fillText(X.title, 52, MY / 2 + 8);
-      g.textAlign = 'right'; g.fillStyle = lost ? '#FF8A8A' : '#FFC24D'; g.fillText(lost ? X.lost : X.head, W - 24, MY / 2 + 8); g.textAlign = 'left';
+      g.fillStyle = '#B7C9F0'; g.font = `800 28px ${FONT}`; g.textAlign = 'left'; g.fillText(X.title, 52, MY / 2 + 10);
+      g.textAlign = 'right'; g.fillStyle = lost || p.alert ? '#FF8A8A' : '#FFC24D'; g.font = `800 28px ${FONT}`; g.fillText(lost ? X.lost : X.head, W - 24, MY / 2 + 10); g.textAlign = 'left';
+      if (p.alert) { g.strokeStyle = `rgba(255,70,70,${0.55 + 0.35 * Math.sin(lt * 10)})`; g.lineWidth = 8; g.strokeRect(4, 4, W - 8, H - 8); }
       g.fillStyle = '#0B1330'; g.fillRect(0, MY + MH, W, H - MY - MH); g.fillStyle = 'rgba(255,80,80,0.5)'; g.fillRect(0, MY + MH, W, 3);
       const cx = 100, cy = MY + MH + 95, CR = 58; g.fillStyle = lost ? '#6B7488' : '#FF4D4D'; g.beginPath(); g.arc(cx, cy, CR + 5, 0, 6.283); g.fill();
       g.save(); g.beginPath(); g.arc(cx, cy, CR, 0, 6.283); g.clip(); g.drawImage(av, cx - CR, cy - CR, 2 * CR, 2 * CR); if (lost) { g.fillStyle = 'rgba(30,34,48,0.6)'; g.fillRect(cx - CR, cy - CR, 2 * CR, 2 * CR); } g.restore();
-      g.fillStyle = '#FFFFFF'; g.font = `800 30px ${FONT}`; g.fillText(X.who, 190, MY + MH + 50);
-      if (lost) { g.fillStyle = '#FF6B6B'; g.font = `800 40px ${FONT}`; g.fillText(X.lost2, 190, MY + MH + 108); }
-      else { g.fillStyle = '#FFE9A8'; g.font = `600 30px ${FONT}`; g.fillText(`${X.last}: ${cur.label}`, 190, MY + MH + 98); g.fillStyle = '#FF8A8A'; g.font = `600 24px ${FONT}`; g.fillText(`${X.count}: ${n} ${X.hops}`, 190, MY + MH + 138); }
+      g.fillStyle = '#B4C4E8'; g.font = `700 30px ${FONT}`; g.fillText(X.who, 190, MY + MH + 50);
+      if (lost) { g.fillStyle = '#F07A7A'; g.font = `800 42px ${FONT}`; g.fillText(X.lost2, 190, MY + MH + 112); }
+      else { g.fillStyle = '#E9CF86'; g.font = `700 34px ${FONT}`; g.fillText(`${X.last}: ${cur.label}`, 190, MY + MH + 102); g.fillStyle = '#F29A9A'; g.font = `700 28px ${FONT}`; g.fillText(`${X.count}: ${n} ${X.hops}`, 190, MY + MH + 143); }
     },
     vpnflow: (g, p, th, t, lt) => {   // how a VPN works, a diagram that builds up in the order the narration says it. p: { vpnAt (the private road grows between device and site), encAt (packets get wrapped: amber + lock), srvAt (the VPN server appears in the middle), siteAt (the site shows only the server address), spyAt (a WiFi spy / ad tracker appears), texts }
       const cl = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v)), ease = (u) => u * u * (3 - 2 * u);
@@ -1069,6 +1071,24 @@ export async function createStudio(scene, cfg = {}) {
     });
   }
 
+  // ---------------------------------------------------------------- cameos (cfg.cameos): a small round face that jumps in an arc across the sky outside the window, now and then (an easter egg). cameos: [{ at (s, resolved by episode.js), from: [x, y], to: [x, y], dur (s, default 0.8), z (default -17), size (default 1.3), arc (default 1.6), opacity (default 0.8), src (png, default assets/images/grandpa_avatar.png) }]
+  if (cfg.cameos && cfg.cameos.length) {
+    const imgC = await loadImage(`${base}/${cfg.cameos[0].src || 'assets/images/grandpa_avatar.png'}`);
+    const cv = document.createElement('canvas'); cv.width = cv.height = 192; const cx2 = cv.getContext('2d');
+    cx2.beginPath(); cx2.arc(96, 96, 90, 0, 6.283); cx2.fillStyle = '#16224A'; cx2.fill(); cx2.save(); cx2.beginPath(); cx2.arc(96, 96, 84, 0, 6.283); cx2.clip(); cx2.drawImage(imgC, 12, 12, 168, 168); cx2.restore(); cx2.lineWidth = 8; cx2.strokeStyle = '#E8E4F0'; cx2.beginPath(); cx2.arc(96, 96, 88, 0, 6.283); cx2.stroke();
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+    const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false, fog: false })); spr.visible = false; OUT.add(spr);
+    updaters.push((t) => {
+      let on = false;
+      for (const c of cfg.cameos) {
+        const dur = c.dur ?? 0.8, u = (t - c.at) / dur; if (u < 0 || u > 1) continue;
+        const e = u * u * (3 - 2 * u), a = c.arc ?? 1.6;
+        spr.position.set(c.from[0] + (c.to[0] - c.from[0]) * e, c.from[1] + (c.to[1] - c.from[1]) * e + Math.sin(Math.PI * u) * a, c.z ?? -17);
+        spr.scale.setScalar(c.size ?? 1.3); spr.material.opacity = (c.opacity ?? 0.8) * Math.min(1, u * 6, (1 - u) * 6); spr.material.rotation = (u - 0.5) * 0.6; on = true; break;
+      }
+      spr.visible = on;
+    });
+  }
   // ---------------------------------------------------------------- a printed cloth banner (style 'fabric', image + bump from the episode) tied to the face of a building outside: a real wall that receives light, ropes and grommets, folds that sway in the wind, two floodlamps on the roof that really light it
   if (cfg.banner && cfg.banner.style === 'fabric') {
     const bc = cfg.banner, g = new THREE.Group(); g.position.set(bc.x ?? -1.2, 0, bc.z ?? -23); OUT.add(g);
