@@ -35,3 +35,12 @@ The rule: after each episode, write what went wrong or what the user corrected h
 ## Workflow with the user
 - Script first, wait for OK; ACC the stills before the full render; show ONE test still when moving something outside the window.
 - Always give full absolute Windows paths. Do not push the kit to GitHub until the user says so. Copy finals to `G:\My Drive\Artosku-Videos\3D\Potrait\`.
+
+## Sound and music: what worked in ep17 (copy this recipe)
+- SFX per beat (earshot names): `es_hover_tick_detent` on every map hop (only until the diagram appears), `es_pro_zip_up` when the screen switches to the diagram, `es_toggle_latch` on "dienkripsi" (lock), `es_shimmer_m1` on the server step, `es_pro_pop_bloop` on "pantas lokasinya loncat", `es_pro_notify_ding_1930` / `es_pro_pop_chirp` / `es_ui_pop_blip` for the WiFi spy and ad-tracker pop-ups. One small sound per visual change, never two at once, always right on the frame the picture changes.
+- No sfx on the ending screens: let the music, then the siren, carry them.
+- Music: calm kalimba arpeggio, `rms` 330 so the voices stay clear; sections follow the story (intro, groove while the map hops, explain thinner and an octave lower, tense before the twist, resolve). It must stop BEFORE the siren (`--cut` = siren time - 0.4).
+- Ending sequence order that worked: siren starts (SIR) -> alarm screen turns red with a light event -> camera-fall effect + whoosh + thud at SIR + 6.1 -> tvoff post effect -> 2 s black. Meme-style sounds (thud from ep06) are fine to reuse.
+- Meme voice clips are mixed louder (level 1.9) so they land over the music.
+- Loudness check after `video`: about -16 LUFS, peak under -1 dB (`ffmpeg -i <mp4> -af ebur128=peak=true -f null -`). Ep17 v7: -16.6 LUFS.
+- Honest limit: I cannot hear the result. After the mix, say which sounds I placed and ask the user to listen for: too loud, wrong moment, too many at once. Record their answers here.
