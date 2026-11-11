@@ -1243,7 +1243,7 @@ export async function createStudio(scene, cfg = {}) {
     if (bc.alarmAt !== undefined) updaters.push((t) => {
       const s2 = t - bc.alarmAt, dark = bc.night ?? 0.05, lit = bc.lit ?? 1.0, L = lvl(s2) * (s2 > 1 ? 1 + 0.05 * Math.sin(s2 * 7) : 1);
       mat.color.setScalar(dark + (lit - dark) * L); spill.material.opacity = 0.55 * Math.min(1, L);
-      const on = s2 >= 0.4 && ((s2 - 0.4) % 1.0) < 0.5; beacons.forEach((b3) => { b3.visible = on; });
+      const on = !bc.noBeacons && s2 >= 0.4 && ((s2 - 0.4) % 1.0) < 0.5; beacons.forEach((b3) => { b3.visible = on; });   // bc.noBeacons: true = no blinking red lights
     });
   }
 
