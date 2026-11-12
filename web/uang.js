@@ -63,14 +63,24 @@ const HUD = new THREE.Group(); camera.add(HUD);
 const HD = 3.2, HH = 2 * HD * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), HW = HH * (W / H);
 function hudPlane(w, h, cw, ch, fn) { const T = tex(cw, ch, fn); const p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: T.t, transparent: true, toneMapped: false, depthTest: false })); p.renderOrder = 10; p.position.z = -HD; HUD.add(p); p.userData = T; return p; }
 const nomP = hudPlane(HW * 0.94, HW * 0.26, 1024, 288, () => {}); nomP.position.y = HH * 0.36;
-const lblP = hudPlane(HW * 0.9, HW * 0.2, 1024, 224, () => {}); lblP.position.y = -HH * 0.38;
+const lblP = hudPlane(HW * 0.94, HW * 0.36, 1024, 400, () => {}); lblP.position.y = -HH * 0.33;
 const tagP = hudPlane(HW * 0.3, HW * 0.3, 256, 256, () => {}); tagP.position.set(HW * 0.3, HH * 0.24, 0);
-const hookP = hudPlane(HW * 0.94, HW * 0.62, 1024, 640, (g) => {});
-{ const { g, c } = hookP.userData; g.clearRect(0, 0, c.width, c.height); g.fillStyle = 'rgba(27,27,47,0.88)'; g.beginPath(); g.roundRect(20, 20, 984, 600, 56); g.fill(); g.lineWidth = 10; g.strokeStyle = '#FFD84D'; g.stroke();
+const hookP = hudPlane(HW * 0.94, HW * 0.62, 1024, 640, () => {});
+const HOOK_LINES = [['UANG Rp2.000', 150, 130, '#FFD84D', 0.0], ['kalau ×5 terus-terusan', 330, 92, '#FFFFFF', 3], ['bisa kebeli apa?', 490, 112, '#FF6B5A', 5]];   // text, y, size, colour, beat (in beats from the start) it appears on
+function drawHook(t) {
+  const { g, c } = hookP.userData; g.clearRect(0, 0, c.width, c.height); g.fillStyle = 'rgba(27,27,47,0.9)'; g.beginPath(); g.roundRect(20, 20, 984, 600, 56); g.fill(); g.lineWidth = 10; g.strokeStyle = '#FFD84D'; g.stroke();
   g.textAlign = 'center'; g.textBaseline = 'middle';
-  const line = (txt, y, size, col) => { g.font = `900 ${size}px 'Arial Black', Impact, sans-serif`; const f = Math.min(size, size * 900 / g.measureText(txt).width); g.font = `900 ${f}px 'Arial Black', Impact, sans-serif`; g.fillStyle = col; g.fillText(txt, 512, y); };
-  line('UANG Rp2.000', 150, 130, '#FFD84D'); line('kalau ×5 terus-terusan', 330, 92, '#FFFFFF'); line('bisa kebeli apa?', 490, 112, '#FF6B5A'); hookP.userData.t.needsUpdate = true; }
-hookP.position.y = HH * 0.27; hookP.visible = false;
+  for (const [txt, y, size, col, beat] of HOOK_LINES) { const a = clamp((t - B(0, beat)) / 0.16); if (a <= 0) continue; g.globalAlpha = a; g.font = `900 ${size}px 'Arial Black', Impact, sans-serif`; const f = Math.min(size, size * 900 / g.measureText(txt).width); g.font = `900 ${f}px 'Arial Black', Impact, sans-serif`; g.fillStyle = col; g.fillText(txt, 512, y + (1 - a) * 24); }
+  g.globalAlpha = 1; hookP.userData.t.needsUpdate = true;
+}
+const fmP = hudPlane(HW * 0.94, HW * 0.13, 1024, 140, () => {});
+function drawFormula(a, b) {
+  const { g, c } = fmP.userData; g.clearRect(0, 0, c.width, c.height); g.textAlign = 'center'; g.textBaseline = 'middle'; const parts = [[`${fmt(a)}`, '#FFFFFF'], [' × 5 = ', '#FFD84D'], [`${fmt(b)}`, '#FF8A5C']];
+  let fs = 62; g.font = `900 ${fs}px 'Arial Black', Impact, sans-serif`; let tot = parts.reduce((x, p) => x + g.measureText(p[0]).width, 0); if (tot > 940) { fs = Math.floor(fs * 940 / tot); g.font = `900 ${fs}px 'Arial Black', Impact, sans-serif`; tot = parts.reduce((x, p) => x + g.measureText(p[0]).width, 0); } let x = 512 - tot / 2; g.textAlign = 'left'; g.lineJoin = 'round'; g.lineWidth = 16; g.strokeStyle = '#1B1B2F';
+  for (const [tx, col] of parts) { g.strokeText(tx, x, 72); g.fillStyle = col; g.fillText(tx, x, 72); x += g.measureText(tx).width; }
+  fmP.userData.t.needsUpdate = true;
+}
+hookP.position.y = HH * 0.27; hookP.visible = false; fmP.position.y = HH * 0.265; fmP.visible = false;
 const fmt = (v) => 'Rp ' + Math.round(v).toLocaleString('id-ID');
 function drawNominal(v, glow, hot) {
   const { g, c } = nomP.userData; g.clearRect(0, 0, c.width, c.height);
@@ -80,10 +90,11 @@ function drawNominal(v, glow, hot) {
   g.shadowColor = hot ? '#FF5A3D' : '#FFD84D'; g.shadowBlur = 26 * glow; g.fillStyle = hot ? '#FFF2D6' : '#FFD84D'; g.fillText(s, 512, 150); g.shadowBlur = 0;
   nomP.userData.t.needsUpdate = true;
 }
-function drawLabel(s, a) {
-  const { g, c } = lblP.userData; g.clearRect(0, 0, c.width, c.height); if (!s || a <= 0) { lblP.userData.t.needsUpdate = true; return; }
-  g.globalAlpha = a; g.textAlign = 'center'; g.textBaseline = 'middle'; let f = 96; g.font = `900 ${f}px 'Arial Black', Impact, sans-serif`; f = Math.min(96, f * 900 / g.measureText(s).width); g.font = `900 ${f}px 'Arial Black', Impact, sans-serif`;
-  g.lineJoin = 'round'; g.lineWidth = 22; g.strokeStyle = '#1B1B2F'; g.strokeText(s, 512, 112); g.fillStyle = '#FFFFFF'; g.fillText(s, 512, 112); g.globalAlpha = 1;
+function drawLabel(sc, a) {
+  const { g, c } = lblP.userData; g.clearRect(0, 0, c.width, c.height); if (!sc || a <= 0) { lblP.userData.t.needsUpdate = true; return; }
+  g.globalAlpha = a; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+  const line = (txt, y, size, col, sw) => { g.font = `900 ${size}px 'Arial Black', Impact, sans-serif`; const f = Math.min(size, size * 960 / g.measureText(txt).width); g.font = `900 ${f}px 'Arial Black', Impact, sans-serif`; g.lineWidth = sw; g.strokeStyle = '#1B1B2F'; g.strokeText(txt, 512, y); g.fillStyle = col; g.fillText(txt, 512, y); };
+  line('Kamu bisa beli', 70, 64, '#FFFFFF', 16); line(sc.item.toUpperCase(), 180, 118, '#FFD84D', 26); line(sc.fact, 306, 52, '#D7E3FF', 14); g.globalAlpha = 1;
   lblP.userData.t.needsUpdate = true;
 }
 function drawTag(txt) {
@@ -252,9 +263,9 @@ function stepFrame(f) {
   let sxk = 0, syk = 0; { const s = t - shakeT; if (s >= 0 && s < 0.7) { const a = shakeAmp * Math.exp(-5 * s); sxk = Math.sin(s * 70) * a; syk = Math.cos(s * 83) * a * 0.7; } }
   camera.position.set(camP.x + sxk, camP.y + syk, dist); camera.lookAt(0, camP.ly, 0); camera.fov = camP.fov; camera.updateProjectionMatrix();
   // ----- hud
-  const HOOK_END = B(1, 0); const inHook = id === 's1' && t < HOOK_END; hookP.visible = inHook; if (inHook) hookP.scale.setScalar(Math.max(0.01, pop(t / 0.35)) * (1 + 0.012 * Math.sin(t * 9))); nomP.visible = !inHook; lblP.visible = !inHook;
-  const nm = nominalAt(t); drawNominal(nm.v, nm.glow, nm.k < 1); const uN = id === 's1' ? t - HOOK_END : u; const sNom = 1 + 0.18 * Math.exp(-9 * Math.max(0, uN)) * Math.cos(Math.max(0, uN) * 20); nomP.scale.setScalar(Math.max(0.5, sNom));
-  drawLabel(sc.label, clamp((id === 's1' ? t - HOOK_END : u) / 0.12) * (1 - clamp((t - (sc.t1 - 0.1)) / 0.1)));
+  const HOOK_END = SC[0].t0; const inHook = t < HOOK_END; hookP.visible = inHook; if (inHook) { drawHook(t); hookP.scale.setScalar(Math.max(0.01, pop(t / 0.35)) * (1 - 0.9 * clamp((t - (HOOK_END - 0.2)) / 0.2))); } nomP.visible = !inHook; lblP.visible = !inHook; fmP.visible = !inHook;
+  const nm = nominalAt(t); drawNominal(nm.v, nm.glow, nm.k < 1); const uN = u; const sNom = 1 + 0.18 * Math.exp(-9 * Math.max(0, uN)) * Math.cos(Math.max(0, uN) * 20); nomP.scale.setScalar(Math.max(0.5, sNom));
+  drawLabel(sc, clamp((u - 0.2) / 0.15) * (1 - clamp((t - (sc.t1 - 0.1)) / 0.1))); if (!inHook && fmP.userData.lastScene !== sc.id) { fmP.userData.lastScene = sc.id; drawFormula(sc.nominal, sc.nominal * 5); }
   { const tu = u - 0.0; if (tu >= 0 && tu < 0.9 && sc !== SC[0]) { drawTag('×5'); tagP.scale.setScalar(Math.max(0.01, pop(tu / 0.3))); tagP.visible = true; } else { tagP.visible = false; } }
   // environment that is always alive: a car crossing far behind, the skyline drifting, steam from the cart, skid marks after the sprint
   car.visible = id !== 's3'; car.position.set(((t * 3.2 + 6) % 26) - 13, 0, -6.5); far.position.x = -0.12 * t;
