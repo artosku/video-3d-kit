@@ -20,13 +20,27 @@ def load(name):
     return x.astype(np.float64)
 def put(name, t, g=0.5, pan=0.0):
     x = load(name); x = x / (np.abs(x).max() + 1e-9); add(buf, x, t, g, pan=pan)
-for hb, nm in [(0.5, 'es_pro_pop_bloop'), (2.0, 'es_ui_pop_blip'), (3.5, 'es_pro_pop_chirp')]: put(nm, off + hb * beat, 0.5)   # the two hook lines appear on beats 0.5 and 3.5
+put('es_ui_pop_blip', 0.02, 0.5)   # the card itself pops in at t=0 (scale 0 -> 1 over 0.35 s)
+for hb, nm in [(0.5, 'es_pro_pop_bloop'), (2.0, 'es_pro_pop_chirp')]: put(nm, off + hb * beat, 0.55)   # the hook has two appearances, on beats 0.5 (bill + Rp 2.000 + x5 line) and 2.0 (the question): one pop each, exactly on the beat
+
+def fire(n):
+    """code-made ignition: a rising 'fwoomp' of filtered noise + a few crackles; hotter (louder, longer) with the power n"""
+    rng = np.random.default_rng(7 + n); L = int(SR * (0.7 + 0.15 * n)); t = np.arange(L) / SR
+    x = rng.standard_normal(L); y = np.zeros(L); a = 0.0
+    for k in range(L):   # one-pole lowpass whose cutoff opens quickly then closes
+        c = 0.02 + 0.5 * np.exp(-((t[k] - 0.07) / 0.08) ** 2) ; a += c * (x[k] - a); y[k] = a
+    env = np.minimum(1, t / 0.035) * np.exp(-3.2 * t / (1 + 0.1 * n)); y = y * env
+    for _ in range(6 + 3 * n):   # crackles
+        i0 = int(rng.uniform(0.08, 0.6 + 0.1 * n) * SR); w = int(0.004 * SR)
+        if i0 + w < L: y[i0:i0 + w] += rng.standard_normal(w) * np.exp(-np.arange(w) / (0.0012 * SR)) * rng.uniform(0.3, 1.0)
+    return y / (np.abs(y).max() + 1e-9)
 for i, s in enumerate(T['scenes']):
     t0 = off + s['bar'] * 4 * beat; hit = off + (s['bar'] + s['bars'] / 2) * 4 * beat
     # the number rolls: a fast rising run of clicks over 0.28 s, then a pop on the item
     if i:
         for k in range(9): add(buf, click(1.6 + 0.12 * k, 0.5), t0 + 0.03 * k, 0.12 + 0.01 * k, pan=0.2)   # the number rolls (not on the first purchase)
     put('es_pro_pop_bloop', t0 + 0.02, 0.55); put('es_ui_pop_blip', t0 + 0.12, 0.4)   # the x5 tag and the item pop
+    # (no fire sound: the exponent no longer burns)
     if i: put('es_whoosh_fast_tight', t0 - 0.12, 0.35)                                   # a cut into the new scene
     id = s['id']
     if id == 's1': put('es_drip_bloop', hit + 0.02, 0.6); add(buf, thump(0.5, 60), hit, 0.35); put('es_toggle_latch', hit + 0.28, 0.45)
@@ -35,10 +49,23 @@ for i, s in enumerate(T['scenes']):
         add(buf, thump(0.9, 45), hit, 0.6); put('es_toggle_latch', hit + 0.02, 0.6); put('es_shimmer_m1', hit + 0.1, 0.6)
         for k in range(3): put('es_hover_tick_detent', hit + 0.14 * k, 0.5)   # the lamps switch on one by one
         put('es_pro_notify_ding_1930', hit + 0.5, 0.45)
+    if id == 's4': put('es_whoosh_fast_tight', t0 + 0.12, 0.3); put('es_pro_impact_short', t0 + 0.55, 0.3); add(buf, thump(0.5, 70), t0 + 0.55, 0.25)   # the shoes fall and ayam catches them
     if id == 's4': put('es_whoosh_fast_whistle', hit + 0.02, 0.6); add(buf, thump(0.7, 50), hit, 0.45); put('es_whoosh_big_jet', hit + 0.9, 0.5); put('es_pro_impact_short', hit + 1.5, 0.4)
     if id == 's5':
         put('es_fit_bell_small_bell', hit - 0.02, 0.6); put('es_fit_bell_small_bell', hit + 0.2, 0.5); put('es_whoosh_fast_crisp', hit + 0.1, 0.55); add(buf, thump(0.5, 55), hit + 0.55, 0.3)
         put('es_whoosh_fast_tight', hit + 1.0, 0.5); put('es_pro_impact_short', hit + 1.6, 0.4)
+    # --- scenes n5 .. n22 + outro: one signature sound on the hit, plus a thump that grows with the power
+    if id not in ('s1', 's2', 's3', 's4', 's5'):
+        k = int(id[1:]) - 1
+        add(buf, thump(0.5 + min(0.4, 0.02 * k), 60 - min(15, k)), hit, 0.3 + min(0.2, 0.01 * k))
+        sig = {'s6': ['es_toggle_latch'], 's7': ['es_whoosh_fast_whistle'], 's8': ['es_pro_impact_short', 'es_fit_bell_small_bell'], 's9': ['es_pro_impact_short'], 's10': ['es_whoosh_big_gust'],
+               's11': ['es_shimmer_m1'], 's12': ['es_drip_bloop'], 's13': ['es_pro_pop_chirp'], 's14': ['es_whoosh_big_jet', 'es_pro_impact_short'], 's15': ['es_toggle_latch'], 's16': ['es_shimmer_m1'],
+               's17': ['es_whoosh_fast_crisp'], 's18': ['es_drip_bloop', 'es_pro_pop_chirp'], 's19': ['es_pro_impact_short'], 's20': ['es_pro_notify_ding_1930', 'es_shimmer_m1'], 's21': ['es_fit_bell_small_bell'],
+               's22': ['es_shimmer_m1'], 's23': ['es_pro_impact_short', 'es_shimmer_m1', 'es_pro_notify_ding_1930'], 's24': ['es_shimmer_m1']}
+        for j, nm in enumerate(sig.get(id, [])): put(nm, hit + 0.03 + 0.12 * j, 0.5)
+        if id == 's14': put('es_whoosh_big_jet', t0 + 0.2, 0.3)
+        if id == 's24':
+            put('es_pro_pop_bloop', t0 + 0.1, 0.4); put('es_pro_pop_bloop', t0 + 1.2, 0.5); put('es_pro_notify_ding_1930', t0 + 2.4, 0.5)
 n = int(dur * SR); out = buf[:n]; pk = np.abs(out).max()
 if pk > 0.9: out = out * 0.9 / pk
 dst = ROOT / 'out' / slug / 'sfx.wav'; dst.parent.mkdir(parents=True, exist_ok=True); sf.write(dst, out.astype(np.float32), SR); print('sfx ->', dst)

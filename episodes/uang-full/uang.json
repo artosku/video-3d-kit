@@ -1,0 +1,182 @@
+{
+ "bpm": 138.0,
+ "offset": 0.06,
+ "total": 52.234,
+ "fadeOut": 0.8,
+ "scenes": [
+  {
+   "id": "s1",
+   "nominal": 2000,
+   "bar": 2.0,
+   "bars": 2,
+   "item": "1 gorengan"
+  },
+  {
+   "id": "s2",
+   "nominal": 10000,
+   "bar": 4.0,
+   "bars": 2,
+   "item": "1 liter Pertalite"
+  },
+  {
+   "id": "s3",
+   "nominal": 50000,
+   "bar": 6.0,
+   "bars": 2,
+   "item": "listrik ±35 kWh"
+  },
+  {
+   "id": "s4",
+   "nominal": 250000,
+   "bar": 8.0,
+   "bars": 2,
+   "item": "1 sepatu lokal"
+  },
+  {
+   "id": "s5",
+   "nominal": 1250000,
+   "bar": 10.0,
+   "bars": 2,
+   "item": "1 sepeda"
+  },
+  {
+   "id": "s6",
+   "nominal": 6250000,
+   "bar": 12.0,
+   "bars": 1,
+   "item": "1 laptop pelajar"
+  },
+  {
+   "id": "s7",
+   "nominal": 31250000,
+   "bar": 13.0,
+   "bars": 1,
+   "item": "1 motor matic"
+  },
+  {
+   "id": "s8",
+   "nominal": 156250000,
+   "bar": 14.0,
+   "bars": 1,
+   "item": "1 mobil murah"
+  },
+  {
+   "id": "s9",
+   "nominal": 781250000,
+   "bar": 15.0,
+   "bars": 1,
+   "item": "1 rusun subsidi"
+  },
+  {
+   "id": "s10",
+   "nominal": 3906250000,
+   "bar": 16.0,
+   "bars": 1,
+   "item": "1 helikopter bekas"
+  },
+  {
+   "id": "s11",
+   "nominal": 19531250000,
+   "bar": 17.0,
+   "bars": 0.5,
+   "item": "±7,7 kg emas batangan"
+  },
+  {
+   "id": "s12",
+   "nominal": 97656250000,
+   "bar": 17.5,
+   "bars": 0.5,
+   "item": "±49 dapur MBG"
+  },
+  {
+   "id": "s13",
+   "nominal": 488281250000,
+   "bar": 18.0,
+   "bars": 1,
+   "item": "½ hari anggaran MBG"
+  },
+  {
+   "id": "s14",
+   "nominal": 2441406250000,
+   "bar": 19.0,
+   "bars": 2,
+   "item": "1 peluncuran roket"
+  },
+  {
+   "id": "s15",
+   "nominal": 12207031250000,
+   "bar": 21.0,
+   "bars": 0.5,
+   "item": "1 pabrik mobil listrik BYD"
+  },
+  {
+   "id": "s16",
+   "nominal": 61035156250000,
+   "bar": 21.5,
+   "bars": 0.5,
+   "item": "1 satelit internet"
+  },
+  {
+   "id": "s17",
+   "nominal": 305175781250000,
+   "bar": 22.0,
+   "bars": 0.5,
+   "item": "1 kereta cepat"
+  },
+  {
+   "id": "s18",
+   "nominal": 1525878906250000,
+   "bar": 22.5,
+   "bars": 0.5,
+   "item": "es teh buat semua orang RI"
+  },
+  {
+   "id": "s19",
+   "nominal": 7629394531250000,
+   "bar": 23.0,
+   "bars": 1,
+   "item": "seluruh APBN 2026"
+  },
+  {
+   "id": "s20",
+   "nominal": 38146972656250000,
+   "bar": 24.0,
+   "bars": 1,
+   "item": "lunasi utang negara"
+  },
+  {
+   "id": "s21",
+   "nominal": 190734863281250000,
+   "bar": 25.0,
+   "bars": 1,
+   "item": "kuliah S1 gratis semua orang RI"
+  },
+  {
+   "id": "s22",
+   "nominal": 953674316406250000,
+   "bar": 26.0,
+   "bars": 1,
+   "item": "1 HP burgundy tiap orang di bumi"
+  },
+  {
+   "id": "s23",
+   "nominal": 4768371582031250000,
+   "bar": 27.0,
+   "bars": 1,
+   "item": "beli dunia dan seisinya"
+  },
+  {
+   "id": "s24",
+   "nominal": 4768371582031250000,
+   "bar": 28.0,
+   "bars": 2,
+   "item": ""
+  }
+ ],
+ "music": {
+  "file": "C:/Users/andi.pramana/.video-3d-kit/out/uang-full/music_cut.wav",
+  "start": 0,
+  "gain": 0.5
+ },
+ "hookBars": 2
+}
