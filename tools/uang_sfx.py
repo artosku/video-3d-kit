@@ -20,11 +20,12 @@ def load(name):
     return x.astype(np.float64)
 def put(name, t, g=0.5, pan=0.0):
     x = load(name); x = x / (np.abs(x).max() + 1e-9); add(buf, x, t, g, pan=pan)
-for hb, nm in [(0.5, 'es_pro_pop_bloop'), (3.5, 'es_pro_pop_chirp')]: put(nm, off + hb * beat, 0.5)   # the two hook lines appear on beats 0.5 and 3.5
+for hb, nm in [(0.5, 'es_pro_pop_bloop'), (2.0, 'es_ui_pop_blip'), (3.5, 'es_pro_pop_chirp')]: put(nm, off + hb * beat, 0.5)   # the two hook lines appear on beats 0.5 and 3.5
 for i, s in enumerate(T['scenes']):
     t0 = off + s['bar'] * 4 * beat; hit = off + (s['bar'] + s['bars'] / 2) * 4 * beat
     # the number rolls: a fast rising run of clicks over 0.28 s, then a pop on the item
-    for k in range(9): add(buf, click(1.6 + 0.12 * k, 0.5), t0 + 0.03 * k, 0.12 + 0.01 * k, pan=0.2)
+    if i:
+        for k in range(9): add(buf, click(1.6 + 0.12 * k, 0.5), t0 + 0.03 * k, 0.12 + 0.01 * k, pan=0.2)   # the number rolls (not on the first purchase)
     put('es_pro_pop_bloop', t0 + 0.02, 0.55); put('es_ui_pop_blip', t0 + 0.12, 0.4)   # the x5 tag and the item pop
     if i: put('es_whoosh_fast_tight', t0 - 0.12, 0.35)                                   # a cut into the new scene
     id = s['id']

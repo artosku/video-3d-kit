@@ -73,12 +73,14 @@ function hudPlane(w, h, cw, ch, fn) { const T = tex(cw, ch, fn); const p = new T
 const nomP = hudPlane(HW * 0.6, HW * 0.17, 1024, 288, () => {}); nomP.position.y = HH * 0.335; nomP.position.x = -HW * 0.08;
 const lblP = hudPlane(HW * 0.62, HW * 0.1, 1024, 160, () => {}); lblP.position.y = -HH * 0.105; lblP.position.x = -HW * 0.08;
 const tagP = hudPlane(HW * 0.16, HW * 0.16, 256, 256, () => {}); tagP.position.set(HW * 0.3, HH * 0.335, 0);
-const hookP = hudPlane(HW * 0.78, HW * 0.2, 1024, 270, () => {});
-const HOOK_LINES = [['kalau ×5 terus-terusan', 88, 84, '#FFFFFF', 0.5], ['bisa kebeli apa?', 190, 100, '#FF6B5A', 3.5]];   // text, y, size, colour, beat (in beats from the start) it appears on
+const hookP = hudPlane(HW * 0.8, HW * 0.58, 1024, 742, () => {});
 function drawHook(t) {
-  const { g, c } = hookP.userData; g.clearRect(0, 0, c.width, c.height); g.fillStyle = 'rgba(27,27,47,0.9)'; g.beginPath(); g.roundRect(20, 20, 984, 230, 50); g.fill(); g.lineWidth = 10; g.strokeStyle = '#FFD84D'; g.stroke();
+  const { g, c } = hookP.userData; g.clearRect(0, 0, c.width, c.height); g.fillStyle = 'rgba(27,27,47,0.92)'; g.beginPath(); g.roundRect(20, 20, 984, 702, 60); g.fill(); g.lineWidth = 10; g.strokeStyle = '#FFD84D'; g.stroke();
   g.textAlign = 'center'; g.textBaseline = 'middle';
-  for (const [txt, y, size, col, beat] of HOOK_LINES) { const a = clamp((t - B(0, beat)) / 0.16); if (a <= 0) continue; g.globalAlpha = a; g.font = `900 ${size}px 'Arial Black', Impact, sans-serif`; const f = Math.min(size, size * 900 / g.measureText(txt).width); g.font = `900 ${f}px 'Arial Black', Impact, sans-serif`; g.fillStyle = col; g.fillText(txt, 512, y + (1 - a) * 24); }
+  let a = clamp((t - B(0, 0.5)) / 0.16);   // the amount, in a box of its own
+  if (a > 0) { g.globalAlpha = a; g.fillStyle = 'rgba(255,216,77,0.16)'; g.beginPath(); g.roundRect(170, 70 + (1 - a) * 20, 684, 220, 36); g.fill(); g.lineWidth = 12; g.strokeStyle = '#FFD84D'; g.stroke(); g.font = "900 124px 'Arial Black', Impact, sans-serif"; g.fillStyle = '#FFD84D'; g.fillText('Rp 2.000', 512, 182 + (1 - a) * 20); }
+  const line = (txt, y, size, col, beat) => { const k = clamp((t - B(0, beat)) / 0.16); if (k <= 0) return; g.globalAlpha = k; g.font = `900 ${size}px 'Arial Black', Impact, sans-serif`; const f = Math.min(size, size * 900 / g.measureText(txt).width); g.font = `900 ${f}px 'Arial Black', Impact, sans-serif`; g.fillStyle = col; g.fillText(txt, 512, y + (1 - k) * 24); };
+  line('kalau di ×5 terus-terusan', 400, 84, '#FFFFFF', 2.0); line('bisa kebeli apa aja?', 560, 100, '#FF6B5A', 3.5);
   g.globalAlpha = 1; hookP.userData.t.needsUpdate = true;
 }
 const fmP = hudPlane(HW * 0.6, HW * 0.08, 1024, 140, () => {});
@@ -88,7 +90,7 @@ function drawFormula(a, b) {
   for (const [tx, col] of parts) { g.strokeText(tx, x, 72); g.fillStyle = col; g.fillText(tx, x, 72); x += g.measureText(tx).width; }
   fmP.userData.t.needsUpdate = true;
 }
-hookP.position.y = -HH * 0.105; hookP.position.x = -HW * 0.06; hookP.visible = false; fmP.position.y = HH * 0.275; fmP.position.x = -HW * 0.08; fmP.visible = false;
+hookP.position.y = HH * 0.06; hookP.position.x = -HW * 0.06; hookP.visible = false; fmP.position.y = HH * 0.275; fmP.position.x = -HW * 0.08; fmP.visible = false;
 const fmt = (v) => 'Rp ' + Math.round(v).toLocaleString('id-ID');
 function drawNominal(v, glow, hot) {
   const { g, c } = nomP.userData; g.clearRect(0, 0, c.width, c.height);
@@ -279,13 +281,13 @@ function stepFrame(f) {
   let sxk = 0, syk = 0; { const s = t - shakeT; if (s >= 0 && s < 0.7) { const a = shakeAmp * Math.exp(-5 * s); sxk = Math.sin(s * 70) * a; syk = Math.cos(s * 83) * a * 0.7; } }
   camera.position.set(camP.x + sxk, camP.y + syk, dist); camera.lookAt(0, camP.ly, 0); camera.fov = camP.fov; camera.updateProjectionMatrix();
   // ----- hud
-  const HOOK_END = SC[0].t0; const inHook = t < HOOK_END; hookP.visible = inHook; if (inHook) { drawHook(t); hookP.scale.setScalar(Math.max(0.01, pop(t / 0.35)) * (1 - 0.9 * clamp((t - (HOOK_END - 0.2)) / 0.2))); } nomP.visible = true; lblP.visible = !inHook; fmP.visible = !inHook;
+  const HOOK_END = SC[0].t0; const inHook = t < HOOK_END; hookP.visible = inHook; if (inHook) { drawHook(t); hookP.scale.setScalar(Math.max(0.01, pop(t / 0.35)) * (1 - 0.9 * clamp((t - (HOOK_END - 0.2)) / 0.2))); } nomP.visible = !inHook; lblP.visible = !inHook; fmP.visible = !inHook && SC.indexOf(sc) >= 1; for (const k of Object.keys(S)) S[k].visible = !inHook && k === id; ayam.group.visible = !inHook; car.visible = !inHook && id !== 's3';
   const nm = nominalAt(t); drawNominal(nm.v, nm.glow, nm.k < 1); const uN = u; const sNom = 1 + 0.18 * Math.exp(-9 * Math.max(0, uN)) * Math.cos(Math.max(0, uN) * 20); nomP.scale.setScalar(Math.max(0.5, sNom));
-  drawLabel(sc, clamp((u - 0.2) / 0.15) * (1 - clamp((t - (sc.t1 - 0.1)) / 0.1))); if (!inHook && fmP.userData.lastScene !== sc.id) { fmP.userData.lastScene = sc.id; drawFormula(sc.nominal, sc.nominal * 5); }
+  drawLabel(sc, clamp((u - 0.2) / 0.15) * (1 - clamp((t - (sc.t1 - 0.1)) / 0.1))); if (!inHook && fmP.userData.lastScene !== sc.id) { fmP.userData.lastScene = sc.id; const ix = SC.indexOf(sc); if (ix >= 1) drawFormula(SC[ix - 1].nominal, sc.nominal); }
   { const tu = u - 0.0; if (tu >= 0 && tu < 0.9 && sc !== SC[0]) { drawTag('×5'); tagP.scale.setScalar(Math.max(0.01, pop(tu / 0.3))); tagP.visible = true; } else { tagP.visible = false; } }
-  { const nu = (t - SC[0].t0) / 0.4; note.visible = t < SC[0].t0 + 0.4; const fl = clamp(nu); note.position.set(lerp(0.85, 1.2, easeOut(fl)), lerp(1.7, 1.3, easeOut(fl)) + 0.06 * Math.sin(t * 4), lerp(1.2, -2.2, easeOut(fl))); note.scale.setScalar(Math.max(0.001, (0.8 * pop(t / 0.3)) * (1 - fl * 0.85))); note.rotation.set(0, Math.sin(t * 2.4) * 0.2, Math.sin(t * 3) * 0.06 + fl * 1.5); }
+  { const nu = t - SC[0].t0; note.visible = nu >= 0 && nu < 0.5; const fl = clamp((nu - 0.2) / 0.28); note.position.set(lerp(0.85, 1.2, easeOut(fl)), lerp(1.7, 1.3, easeOut(fl)) + 0.06 * Math.sin(t * 4), lerp(1.2, -2.2, easeOut(fl))); note.scale.setScalar(Math.max(0.001, 0.8 * pop(nu / 0.2) * (1 - fl * 0.85))); note.rotation.set(0, Math.sin(t * 2.4) * 0.2, Math.sin(t * 3) * 0.06 + fl * 1.5); }
   // environment that is always alive: a car crossing far behind, the skyline drifting, steam from the cart, skid marks after the sprint
-  car.visible = id !== 's3'; car.position.set(((t * 3.2 + 6) % 26) - 13, 0, -6.5); far.position.x = -0.12 * t;
+  car.visible = !inHook && id !== 's3'; car.position.set(((t * 3.2 + 6) % 26) - 13, 0, -6.5); far.position.x = -0.12 * t;
   skid.visible = id === 's4' && uh > 0.05; if (skid.visible) { const k = easeOut(uh / 0.5); skid.scale.set(Math.max(0.01, 6.5 * k), 1, 1); skid.position.x = HX - 3.0 * k; skid.rotation.z = 0; }
   if (id === 's1' || id === 's2') for (let k = 0; k < 8; k++) { const tb = sc.t0 + k * BEAT * 1; cue(`${id}steam${k}`, t >= tb ? 1 : -1, () => burst(tb, id === 's1' ? [2.0, 2.5, -3.0] : [1.0, 0.6, 1.0], 5, id === 's1' ? '#FFFFFF' : '#B6FFD0', 0.5, id === 's1' ? 0.28 : 0.2, { g: -0.3, up: 1.4, life: 1.5, spread: 0.3 })); }
   updParticles(t);
@@ -304,7 +306,7 @@ function hit(id, sc, t) {   // the answer of the world (once per scene)
   if (id === 's5') { burst(h, [0.85, 1.7, 1.6], 40, ['#FF3D5A', '#2FCB68', '#FFB020', '#3D8BFF', '#C65BFF'], 6, 0.14, { g: 2, life: 1.4 }); shake(h, 0.28); }
 }
 // a scene's previous number (for the roll)
-SC.forEach((s, i) => { s.prevNominal = i ? SC[i - 1].nominal : s.nominal / 5; });
+SC.forEach((s, i) => { s.prevNominal = i ? SC[i - 1].nominal : s.nominal; });
 
 window.uang = { stepFrame, ayam, scene, camera, SC, TOTAL };
 const frames = Math.ceil(TOTAL * FPS);
