@@ -65,6 +65,12 @@ function hudPlane(w, h, cw, ch, fn) { const T = tex(cw, ch, fn); const p = new T
 const nomP = hudPlane(HW * 0.94, HW * 0.26, 1024, 288, () => {}); nomP.position.y = HH * 0.36;
 const lblP = hudPlane(HW * 0.9, HW * 0.2, 1024, 224, () => {}); lblP.position.y = -HH * 0.38;
 const tagP = hudPlane(HW * 0.3, HW * 0.3, 256, 256, () => {}); tagP.position.set(HW * 0.3, HH * 0.24, 0);
+const hookP = hudPlane(HW * 0.94, HW * 0.62, 1024, 640, (g) => {});
+{ const { g, c } = hookP.userData; g.clearRect(0, 0, c.width, c.height); g.fillStyle = 'rgba(27,27,47,0.88)'; g.beginPath(); g.roundRect(20, 20, 984, 600, 56); g.fill(); g.lineWidth = 10; g.strokeStyle = '#FFD84D'; g.stroke();
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  const line = (txt, y, size, col) => { g.font = `900 ${size}px 'Arial Black', Impact, sans-serif`; const f = Math.min(size, size * 900 / g.measureText(txt).width); g.font = `900 ${f}px 'Arial Black', Impact, sans-serif`; g.fillStyle = col; g.fillText(txt, 512, y); };
+  line('UANG Rp2.000', 150, 130, '#FFD84D'); line('kalau ×5 terus-terusan', 330, 92, '#FFFFFF'); line('bisa kebeli apa?', 490, 112, '#FF6B5A'); hookP.userData.t.needsUpdate = true; }
+hookP.position.y = HH * 0.27; hookP.visible = false;
 const fmt = (v) => 'Rp ' + Math.round(v).toLocaleString('id-ID');
 function drawNominal(v, glow, hot) {
   const { g, c } = nomP.userData; g.clearRect(0, 0, c.width, c.height);
@@ -163,6 +169,9 @@ function build() {
     for (let i = 0; i < 26; i++) { const T = tex(256, 128, (c, w, h) => { c.fillStyle = cols[i % 5]; c.beginPath(); c.roundRect(6, 6, w - 12, h - 12, 28); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(54, 64, 26, 0, 6.283); c.fill(); c.fillRect(100, 40, 110, 14); c.fillRect(100, 70, 76, 14); }); const p = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.6), new THREE.MeshBasicMaterial({ map: T.t, transparent: true, toneMapped: false })); p.castShadow = false; p.visible = false; scene.add(p); g.userData.notes.push(p); } }
 }
 build();
+const car = new THREE.Group(); scene.add(car);
+{ mesh(new THREE.BoxGeometry(2.4, 0.7, 1.1), mat('#E84D5C'), 0, 0.55, 0, car); mesh(new THREE.BoxGeometry(1.3, 0.55, 1.0), mat('#CFE8FF', { roughness: 0.2 }), -0.1, 1.15, 0, car); for (const x of [-0.8, 0.8]) { const w = mesh(new THREE.CylinderGeometry(0.3, 0.3, 1.2, 14), mat('#1B1B2F'), x, 0.3, 0, car); w.rotation.x = Math.PI / 2; } }
+const skid = mesh(new THREE.PlaneGeometry(1, 0.35), mat('#2B2B33'), -3.2, 0.02, 1.0); skid.rotation.x = -Math.PI / 2; skid.castShadow = false; skid.visible = false;
 
 // ---- the story, scene by scene. A scene = TL.scenes[i]: { id, nominal, label, bar, bars }. The BIG hit is at beat 0 of its second half ("the kick").
 const SC = TL.scenes.map((s) => ({ ...s, t0: B(s.bar), t1: B(s.bar + s.bars), hit: B(s.bar + s.bars / 2), mid: B(s.bar, 2) }));
@@ -243,9 +252,14 @@ function stepFrame(f) {
   let sxk = 0, syk = 0; { const s = t - shakeT; if (s >= 0 && s < 0.7) { const a = shakeAmp * Math.exp(-5 * s); sxk = Math.sin(s * 70) * a; syk = Math.cos(s * 83) * a * 0.7; } }
   camera.position.set(camP.x + sxk, camP.y + syk, dist); camera.lookAt(0, camP.ly, 0); camera.fov = camP.fov; camera.updateProjectionMatrix();
   // ----- hud
-  const nm = nominalAt(t); drawNominal(nm.v, nm.glow, nm.k < 1); const sNom = 1 + 0.18 * Math.exp(-9 * u) * Math.cos(u * 20); nomP.scale.setScalar(Math.max(0.5, sNom));
-  drawLabel(sc.label, clamp(u / 0.12) * (1 - clamp((t - (sc.t1 - 0.1)) / 0.1)));
+  const HOOK_END = B(1, 0); const inHook = id === 's1' && t < HOOK_END; hookP.visible = inHook; if (inHook) hookP.scale.setScalar(Math.max(0.01, pop(t / 0.35)) * (1 + 0.012 * Math.sin(t * 9))); nomP.visible = !inHook; lblP.visible = !inHook;
+  const nm = nominalAt(t); drawNominal(nm.v, nm.glow, nm.k < 1); const uN = id === 's1' ? t - HOOK_END : u; const sNom = 1 + 0.18 * Math.exp(-9 * Math.max(0, uN)) * Math.cos(Math.max(0, uN) * 20); nomP.scale.setScalar(Math.max(0.5, sNom));
+  drawLabel(sc.label, clamp((id === 's1' ? t - HOOK_END : u) / 0.12) * (1 - clamp((t - (sc.t1 - 0.1)) / 0.1)));
   { const tu = u - 0.0; if (tu >= 0 && tu < 0.9 && sc !== SC[0]) { drawTag('×5'); tagP.scale.setScalar(Math.max(0.01, pop(tu / 0.3))); tagP.visible = true; } else { tagP.visible = false; } }
+  // environment that is always alive: a car crossing far behind, the skyline drifting, steam from the cart, skid marks after the sprint
+  car.visible = id !== 's3'; car.position.set(((t * 3.2 + 6) % 26) - 13, 0, -6.5); far.position.x = -0.12 * t;
+  skid.visible = id === 's4' && uh > 0.05; if (skid.visible) { const k = easeOut(uh / 0.5); skid.scale.set(Math.max(0.01, 6.5 * k), 1, 1); skid.position.x = HX - 3.0 * k; skid.rotation.z = 0; }
+  if (id === 's1' || id === 's2') for (let k = 0; k < 8; k++) { const tb = sc.t0 + k * BEAT * 1; cue(`${id}steam${k}`, t >= tb ? 1 : -1, () => burst(tb, id === 's1' ? [2.0, 2.5, -3.0] : [1.0, 0.6, 1.0], 5, id === 's1' ? '#FFFFFF' : '#B6FFD0', 0.5, id === 's1' ? 0.28 : 0.2, { g: -0.3, up: 1.4, life: 1.5, spread: 0.3 })); }
   updParticles(t);
   // flash overlay via exposure bump
   const fu = (t - flashT) / flashDur; renderer.toneMappingExposure = 1.15 + (fu >= 0 && fu < 1 ? flashAmp * (1 - fu) * 3 : 0);
