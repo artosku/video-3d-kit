@@ -44,3 +44,9 @@ The rule: after each episode, write what went wrong or what the user corrected h
 - Meme voice clips are mixed louder (level 1.9) so they land over the music.
 - Loudness check after `video`: about -16 LUFS, peak under -1 dB (`ffmpeg -i <mp4> -af ebur128=peak=true -f null -`). Ep17 v7: -16.6 LUFS.
 - Honest limit: I cannot hear the result. After the mix, say which sounds I placed and ask the user to listen for: too loud, wrong moment, too many at once. Record their answers here.
+
+## "Uang x5" (no dialogue, beat-driven video; web/uang.js + tools/uang.py + tools/uang_sfx.py)
+- A video with no script: `episodes/<slug>/uang.json` (bpm, offset, scenes[{id,nominal,label,bar,bars}], music{file,start,gain}). `python tools/uang.py stills|video <slug>`; sounds from `tools/uang_sfx.py` (run with the lemo python). Frame = pure function of t, scene boundaries on downbeats, the "hit" on the first beat of a scene's second half.
+- Measure the user's music first: tempo from spectral-flux autocorrelation, beat phase per 30 s (check drift), energy per beat to find the drop. tiki-tiki.mp3 = 138 BPM, first beat 0.06 s, drop at 10.49 s (bar 6), quiet dip 4.8-6.6 s.
+- Prices on screen must be real (check with a search, show "sekitar"); no category twice in a row early on (food, fuel, cinema, shoes, phone).
+- Put the thing bought BESIDE the character (ayam left, item right), never in front of the face. The user's music is loud: mix it at gain 0.5 and `loudnorm=I=-14:TP=-1.5`.

@@ -186,14 +186,14 @@ def _wait(path, timeout, proc=None):
     return False
 
 
-def shot(name, query="bg=quiet", size="540,960"):
+def shot(name, query="bg=quiet", size="540,960", page="episode.html"):
     f = OUT / "shots" / name
     for attempt in range(3):   # a busy machine (a build running next to it) can make Chrome miss the deadline once: try again
         ensure_server()
         f.parent.mkdir(parents=True, exist_ok=True)
         f.unlink(missing_ok=True)
         gpu = use_gpu() and attempt < 2   # the last try always uses software, in case the GPU is the problem
-        p, prof = _chrome(f"http://localhost:{PORT}/web/episode.html?shot=1&name={name}&{query}", size, gpu)
+        p, prof = _chrome(f"http://localhost:{PORT}/web/{page}?shot=1&name={name}&{query}", size, gpu)
         ok = _wait(f, 150, p)
         _kill_tree(p)
         shutil.rmtree(prof, ignore_errors=True)
@@ -202,7 +202,7 @@ def shot(name, query="bg=quiet", size="540,960"):
     sys.exit(f"no screenshot for {name} (query: {query})")
 
 
-def capture(slug, a, b, size="720,1280"):
+def capture(slug, a, b, size="720,1280", page="episode.html"):
     ensure_server()
     d = OUT / slug / "frames"
     d.mkdir(parents=True, exist_ok=True)
@@ -210,7 +210,7 @@ def capture(slug, a, b, size="720,1280"):
     done.unlink(missing_ok=True)
     ok = False
     for gpu in ([True, False] if use_gpu() else [False]):   # a GPU that fails falls back to software for this chunk
-        p, prof = _chrome(f"http://localhost:{PORT}/web/episode.html?ep={slug}&capture=1&from={a}&to={b}", size, gpu)
+        p, prof = _chrome(f"http://localhost:{PORT}/web/{page}?ep={slug}&capture=1&from={a}&to={b}", size, gpu)
         ok = _wait(done, 7200, p)
         _kill_tree(p)
         shutil.rmtree(prof, ignore_errors=True)
