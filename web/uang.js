@@ -132,6 +132,26 @@ function drawOut(t, t0) {
   outP.userData.t.needsUpdate = true;
 }
 const fmP = hudPlane(PW, PW * 220 / 1024, 1024, 220, () => {});
+// ---- "struk belanja": the card that tells what this step buys (item, unit price, how many fit, what is left). Counts up at the hit.
+const RCP = {};   // (the receipt card was dropped: too much text; each scene shows its item and count instead)
+const rcpP = hudPlane(HW * 0.9, HW * 0.9 * 300 / 1024, 1024, 300, () => {}); rcpP.position.set(-HW * 0.02, -HH * 0.285, -HD); rcpP.visible = false;
+function drawRcp(id, u, uh) {
+  const R = RCP[id]; rcpP.visible = !!R && u > 0.1; if (!rcpP.visible) return;
+  const { g, c } = rcpP.userData; g.clearRect(0, 0, c.width, c.height); const F = "'Bahnschrift', 'Segoe UI', sans-serif"; g.textBaseline = 'middle';
+  const fit = (tx, sz, mw, w = 700) => { g.font = `${w} ${sz}px ${F}`; return Math.min(sz, sz * mw / g.measureText(tx).width); };
+  g.fillStyle = 'rgba(16,18,40,0.93)'; g.beginPath(); g.roundRect(8, 8, 1008, 284, 40); g.fill(); g.lineWidth = 8; g.strokeStyle = '#FFD84D'; g.stroke();
+  const after = uh > 0, q = after ? clamp(uh / 0.5) : 0, shown = after ? Math.max(1, Math.round(R.cnt * easeOut(q))) : 0;
+  g.textAlign = 'left'; g.fillStyle = '#FFFFFF'; g.font = `700 ${fit(R.name, 44, 560)}px ${F}`; g.fillText(R.name, 38, 52);
+  const up = `${R.unit} ${R.per}`.trim(); g.textAlign = 'right'; g.fillStyle = '#FFD84D'; g.font = `700 ${fit(up, 44, 380)}px ${F}`; g.fillText(up, 986, 52);
+  const txt = !after ? 'BISA BELI BERAPA?' : (q >= 1 && R.big ? R.big : `BISA BELI ×${shown}`);
+  g.save(); g.translate(512, 128); const pk = after ? 1 + 0.16 * Math.exp(-9 * uh) : 1; g.scale(pk, pk); g.textAlign = 'center'; g.font = `800 ${fit(txt, 88, 940, 800)}px ${F}`; g.fillStyle = after ? '#6CFF9A' : '#A9B1C6'; g.shadowColor = after ? 'rgba(108,255,154,0.6)' : 'rgba(0,0,0,0)'; g.shadowBlur = after ? 22 : 0; g.fillText(txt, 0, 0); g.restore();
+  const segs = Math.ceil(R.n), bw = 940 / segs;
+  for (let i = 0; i < segs; i++) { const x = 40 + i * bw + 3, w = bw - 6; g.fillStyle = '#2B3050'; g.beginPath(); g.roundRect(x, 190, w, 40, 10); g.fill();
+    if (i < shown) { g.fillStyle = i % 2 ? '#FFD84D' : '#F2B134'; g.beginPath(); g.roundRect(x, 190, w, 40, 10); g.fill(); }
+    else if (after && i === R.cnt && q >= 1) { g.fillStyle = '#6F7AA0'; g.beginPath(); g.roundRect(x, 190, w * (R.n - R.cnt), 40, 10); g.fill(); } }
+  g.textAlign = 'center'; g.font = `700 32px ${F}`; g.fillStyle = after && q >= 1 ? '#CFE8FF' : '#8B93AD'; g.fillText(after && q >= 1 ? `sisa uang ${R.left}` : 'harga satuan vs uang kamu', 512, 262);
+  rcpP.userData.t.needsUpdate = true;
+}
 const FIRE = ['#FFC83D', '#FFC83D', '#FFB020', '#FF8A1F', '#FF5A1A', '#FF2A12'];
 function flame(g, cx, by, h, wd, ph, col) {   // one flickering teardrop flame (drawn normally, under the digit)
   const sw = Math.sin(ph * 0.8) * wd * 0.5, gr = g.createLinearGradient(0, by, 0, by - h); gr.addColorStop(0, 'rgba(255,240,150,0.98)'); gr.addColorStop(0.45, col); gr.addColorStop(1, 'rgba(255,50,10,0)');
@@ -323,13 +343,23 @@ for (const k of Object.keys(CASHN)) { const c = buildCash(CASHN[k]); c.scale.set
 
 const XM = makeX({ THREE, mesh, mat, bas, tex, signBoard, scene, clamp, ease, easeOut, easeIn, lerp, pop, HX: -0.95, noteFace, sky, ground, far, applyLight, skyTex });
 const X = XM.X, world = XM.world;
-for (const id of Object.keys(X)) { const g = new THREE.Group(); scene.add(g); S[id] = g; X[id].build(g); g.visible = false; const n = Number(id.slice(1)) - 1; if (n >= 5 && n <= 22) { const c = XM.buildPile(n); c.position.set(0.4, 0, 5.3); c.rotation.y = 0.15; g.add(c); cashG[id] = c; } }
+for (const id of Object.keys(X)) { const g = new THREE.Group(); scene.add(g); S[id] = g; g.userData.hideBoard = /^s(1[4-9]|2[0-3])$/.test(id); X[id].build(g); g.visible = false; const n = Number(id.slice(1)) - 1; if (n >= 5 && n <= 22) { const c = XM.buildPile(n); c.position.set(-0.6, 0, 3.2); c.scale.setScalar(0.5); c.rotation.y = 0.15; g.add(c); cashG[id] = c; } }
 const car = new THREE.Group(); scene.add(car);
 { mesh(new THREE.BoxGeometry(2.4, 0.7, 1.1), mat('#E84D5C'), 0, 0.55, 0, car); mesh(new THREE.BoxGeometry(1.3, 0.55, 1.0), mat('#CFE8FF', { roughness: 0.2 }), -0.1, 1.15, 0, car); for (const x of [-0.8, 0.8]) { const w = mesh(new THREE.CylinderGeometry(0.3, 0.3, 1.2, 14), mat('#1B1B2F'), x, 0.3, 0, car); w.rotation.x = Math.PI / 2; } }
 const skid = mesh(new THREE.PlaneGeometry(1, 0.35), mat('#2B2B33'), -3.2, 0.02, 1.0); skid.rotation.x = -Math.PI / 2; skid.castShadow = false; skid.visible = false;
 
 // ---- the story, scene by scene. A scene = TL.scenes[i]: { id, nominal, label, bar, bars }. The BIG hit is at beat 0 of its second half ("the kick").
-const SC = TL.scenes.map((s) => ({ ...s, t0: B(s.bar), t1: B(s.bar + s.bars), hit: B(s.bar + s.bars / 2), mid: B(s.bar, 2) }));
+// ---- the scale ladder: the further the story goes, the smaller the chicken (a ruler) and the bigger the world (items are scaled about the chicken, the camera backs off)
+const LAD = { s: [[0, 0.72], [4, 0.55], [9, 0.46], [13, 0.38], [17, 0.32], [22, 0.28]], d: [[0, 13.5], [4, 14.5], [9, 17], [13, 21], [17, 26], [22, 34]], k: [[0, 1], [4, 1], [9, 1.35], [13, 1.9], [17, 2.6], [22, 3.6]] };
+const lad = (arr, n) => { if (n <= arr[0][0]) return arr[0][1]; for (let i = 1; i < arr.length; i++) if (n <= arr[i][0]) { const [a, va] = arr[i - 1], [b, vb] = arr[i]; return va + (vb - va) * (n - a) / (b - a); } return arr[arr.length - 1][1]; };
+const ACC = {};
+{ const mk = (n) => { const g = new THREE.Group(); g.visible = false; ayam.group.add(g); ACC[n] = g; return g; };
+  const h = mk('helmet'); { const glass = new THREE.Mesh(new THREE.SphereGeometry(1.08, 28, 20), new THREE.MeshStandardMaterial({ color: '#CFE8FF', transparent: true, opacity: 0.2, roughness: 0.1, depthWrite: false })); glass.position.set(0, 1.0, 0.02); h.add(glass); const ring = mesh(new THREE.TorusGeometry(0.8, 0.09, 10, 28), mat('#9AA3B5', { roughness: 0.5 }), 0, 0.28, 0, h); ring.rotation.x = Math.PI / 2; ring.castShadow = false; }
+  const j = mk('jet'); { for (const x of [-0.26, 0.26]) { mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.7, 14), mat('#9AA3B5', { roughness: 0.5 }), x, 0.85, -0.82, j); const nz = mesh(new THREE.CylinderGeometry(0.1, 0.17, 0.14, 12), mat('#4A5160'), x, 0.43, -0.82, j); const fl = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.6, 10), new THREE.MeshBasicMaterial({ color: '#FFB84D', toneMapped: false })); fl.position.set(x, 0.1, -0.82); fl.rotation.x = Math.PI; j.add(fl); j.userData['f' + (x > 0 ? 1 : 0)] = fl; } }
+  const c = mk('chef'); { mesh(new THREE.CylinderGeometry(0.46, 0.4, 0.38, 16), mat('#FFFFFF'), 0, 1.98, 0.05, c); for (const [x, z] of [[-0.28, 0], [0.28, 0], [0, 0.26], [0, -0.2], [0, 0.05]]) mesh(new THREE.SphereGeometry(0.3, 12, 10), mat('#FFFFFF'), x, 2.32, z + 0.05, c); }
+  const p = mk('cap'); { mesh(new THREE.BoxGeometry(0.95, 0.06, 0.95), mat('#1B1B2F'), 0, 2.16, 0.05, p); mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.16, 14), mat('#1B1B2F'), 0, 2.07, 0.05, p); mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.4, 6), mat('#F6C431'), 0.42, 2.0, 0.42, p); } }
+const ACCS = { s12: ['chef'], s21: ['cap'], s23: ['helmet', 'jet'], s24: ['helmet', 'jet'] };
+const SC = TL.scenes.map((s) => ({ ...s, t0: B(s.bar), t1: B(s.bar + s.bars), hit: B(s.hitBar ?? (s.bar + s.bars / 2)), mid: B(s.bar, 2) }));
 const MOOD_OF = { s1: 'day', s2: 'day', s3: 'dark', s4: 'day', s5: 'day' };   // dark ONLY for the power cut in s3 (lights up after the token); every other scene is bright   // s1-s2 same place = same light; s3 power cut at night; s4-s5 stay at night (continues)
 const FACE = { s1: ['determined', 'delighted'], s2: ['squint', 'panic'], s3: ['neutral', 'surprised'], s4: ['determined', 'laugh'], s5: ['neutral', 'surprised'] };
 const cueDone = new Set();
@@ -351,6 +381,7 @@ let curScene = null;
 function stepFrame(f) {
   const t = f / FPS; ayam.update(1 / FPS);
   const sc = sceneAt(t), id = sc.id, u = t - sc.t0, uh = t - sc.hit;
+  const nI = Math.max(0, SC.indexOf(sc)), kk = X[id] ? lad(LAD.k, nI) : 1, AS = lad(LAD.s, nI), DD = lad(LAD.d, nI);
   if (sc !== curScene) {   // a new scene begins on the downbeat: flash, the number rolls, the face changes
     curScene = sc; for (const k of Object.keys(S)) S[k].visible = k === id;
     const mk = MOOD_OF[id] || 'day'; sky.material.map = skyTex[mk]; ground.material.color.set(MOODS[mk][2]); applyLight(mk); far.visible = mk !== 'dark';
@@ -406,11 +437,15 @@ function stepFrame(f) {
     if (uh > 0) { ax = 0.15 * Math.exp(-3 * uh); sx = 1 + 0.03 * Math.sin(uh * 30) * Math.exp(-uh); }
     
   }
+  const inHookEarly = t < SC[0].t0;
   let xr = {};
-  if (X[id]) { xr = X[id].anim(u, uh, S[id], pop(u / 0.32), t) || {}; ay = xr.ay !== undefined ? xr.ay : 0.05 * Math.abs(Math.sin(u * 6)) + (uh > 0 ? 0.1 * Math.exp(-5 * uh) * Math.abs(Math.sin(uh * 16)) : 0); if (uh > 0 && id !== 's14') { sy = 1 + 0.06 * Math.exp(-6 * uh) * Math.cos(uh * 20); sx = 2 - sy; } world.set(id, u, uh, t, xr); }
+  if (X[id]) { S[id].userData.kk = kk; xr = X[id].anim(u, uh, S[id], pop(u / 0.32), t) || {}; ax = xr.ax || 0; az = xr.az || 0; ay = xr.ay !== undefined ? xr.ay : 0.05 * Math.abs(Math.sin(u * 6)) + (uh > 0 ? 0.1 * Math.exp(-5 * uh) * Math.abs(Math.sin(uh * 16)) : 0); if (uh > 0 && id !== 's14') { sy = 1 + 0.06 * Math.exp(-6 * uh) * Math.cos(uh * 20); sx = 2 - sy; } world.set(id, u, uh, t, xr, kk, HX); S[id].scale.setScalar(kk); S[id].position.set(HX * (1 - kk), 0, 0); }
+  for (const k of Object.keys(ACC)) ACC[k].visible = !inHookEarly && (ACCS[id] || []).includes(k);
+  if (ACC.jet.visible) { const fl = 0.7 + 0.5 * Math.abs(Math.sin(t * 38)); ACC.jet.userData.f0.scale.set(1, fl, 1); ACC.jet.userData.f1.scale.set(1, 0.7 + 0.5 * Math.abs(Math.sin(t * 38 + 1.7)), 1); }
   { const bp = Math.exp(-9 * ((((t - OFF) % BEAT) + BEAT) % BEAT)); sy *= 1 + 0.035 * bp; sx *= 1 - 0.015 * bp; }
-  g.position.set(HX + ax, ay, az); g.rotation.z = rz; g.rotation.y = ry; g.scale.set(sx, sy, 1);
-  ayam.lookAt?.(0, 0.1); // eyes toward the camera
+  { const pre = clamp((t - (sc.hit - BEAT)) / BEAT); if (pre > 0 && t < sc.hit) { sy *= 1 - 0.11 * pre * pre; sx *= 1 + 0.05 * pre * pre; } }   // anticipation: it crouches before the hit
+  g.position.set(HX + ax * kk, ay * kk, az * kk); g.rotation.z = rz; g.rotation.y = ry; g.scale.set(sx * AS, sy * AS, AS);
+  ayam.lookAt?.(X[id] ? 0.6 : 0, 0.1); // eyes toward the item
   // ----- camera: slow push-in per scene, kick on the hit
   const push = clamp(u / (sc.t1 - sc.t0)), Z0 = camP.z;
   const cam = { x: 0, y: camP.y, z: Z0, lx: 0, ly: camP.ly, fov: camP.fov, roll: 0 };
@@ -419,7 +454,11 @@ function stepFrame(f) {
   if (id === 's3') { const p = uh > 0 ? easeOut(uh / 0.7) : 0; cam.z = Z0 - 0.8 + 3.0 * p; cam.y = camP.y + 1.0 * p; cam.fov = 32 + 4 * p; }
   if (id === 's4') { cam.z = Z0 - 1.2 * easeOut(push); if (uh > 0 && uh < 1.0) { const p = clamp(uh / 0.5); cam.x = -2.6 * easeOut(p) * (uh < 0.6 ? 1 : 1 - clamp((uh - 0.6) / 0.4)); cam.fov = 34 + 3 * Math.sin(Math.min(1, uh) * Math.PI); } }
   if (id === 's5') { const bxp = items.s5.position.x; cam.x = uh > 0 ? clamp(bxp * 0.5, -3.2, 1.5) * 0.7 : 0.2 * push; cam.lx = cam.x; cam.z = Z0 - 1.5 * easeOut(push); cam.roll = uh > 0 && uh < 0.9 ? -0.05 : 0; }
-  if (X[id]) { cam.z = Z0 - 1.0 * easeOut(push); cam.y = camP.y + (xr.camY || 0); cam.ly = camP.ly + (xr.camLy || 0); if (uh > 0 && uh < 0.3) cam.fov = 34 + 2 * Math.sin(uh / 0.3 * Math.PI); }
+  if (X[id]) {   // default shot: wide establishing, a slow arc and push until the hit, a kick on the hit, a small pull-back after it. A scene can add offsets (dx, dy, dz, dlx, dly, fov, roll) in its anim result.
+    const dur = sc.t1 - sc.t0, pre = easeOut(clamp(u / Math.max(0.1, sc.hit - sc.t0))), post = uh > 0 ? easeOut(clamp(uh / Math.max(0.1, sc.t1 - sc.hit))) : 0, arc = clamp(u / dur) - 0.5;
+    const lx = HX + 1.2 * kk, ly = 1.3 * kk;
+    cam.x = lx + arc * 1.8 * kk + (xr.dx || 0); cam.z = DD * (1.1 - 0.1 * pre + 0.05 * post) + (xr.dz || 0); cam.y = 1.6 * kk + 0.3 * kk * pre + (xr.dy || 0); cam.lx = lx + (xr.dlx || 0); cam.ly = ly - 0.7 + (xr.dly || 0);
+    cam.fov = 34 + (uh > 0 && uh < 0.3 ? 2.5 * Math.sin(uh / 0.3 * Math.PI) : 0) + (xr.fov || 0); cam.roll = xr.roll || 0; }
   let sxk = 0, syk = 0; { const s = t - shakeT; if (s >= 0 && s < 0.7) { const a = shakeAmp * Math.exp(-5 * s); sxk = Math.sin(s * 70) * a; syk = Math.cos(s * 83) * a * 0.7; } }
   camera.position.set(cam.x + sxk, cam.y + syk, cam.z); camera.lookAt(cam.lx, cam.ly + 0.7, 0); camera.rotateZ(cam.roll); camera.fov = cam.fov; camera.updateProjectionMatrix();
   { const on = (id === 's4' && uh > 0 && uh < 1.0) || (id === 's5' && uh > 0 && uh < 0.95); streaks.forEach((m, i2) => { m.visible = on; if (!on) return; const k = (t * 11 + i2 * 0.37) % 2.4; m.position.x = (k - 1.2) * HW; m.position.y = (((i2 * 0.6180339) % 1) - 0.5) * HH * 0.8; m.scale.x = 0.6 + 0.8 * ((i2 * 0.31) % 1); }); }
@@ -431,13 +470,16 @@ function stepFrame(f) {
     const giant = !inHook && ix >= 2 && tt >= 0 && tt < LAND; expP.visible = giant;
     if (giant) { drawGiant(ix, tt); const ep = fmP.userData.expPos || { x: 300, cy: 160 }, k = easeIn(clamp((tt - 0.78) / (LAND - 0.78))), pp = easeOut(clamp(tt / 0.14)), sc2 = lerp(1, 0.1, k), K = PW / 1024;
       const tx = fmP.position.x - PW / 2 + ep.x * K, ty = fmP.position.y + (110 - ep.cy) * K, sx = -HW * 0.02, sy = HH * 0.1; expP.position.set(lerp(sx, tx, k), lerp(sy, ty, k), -HD); expP.scale.setScalar(Math.max(0.01, sc2 * (0.4 + 0.6 * pp))); }  }
+  drawRcp(id, u, uh);
   { const tu = u - 0.0; if (tu >= 0 && tu < 0.9 && sc !== SC[0] && id !== 's24') { drawTag('×5'); tagP.scale.setScalar(Math.max(0.01, pop(tu / 0.3))); tagP.visible = true; } else { tagP.visible = false; } }
   { const nu = t - SC[0].t0; note.visible = nu >= 0 && nu < 0.5; const fl = clamp((nu - 0.2) / 0.28); note.position.set(lerp(0.85, 1.2, easeOut(fl)), lerp(1.7, 1.3, easeOut(fl)) + 0.06 * Math.sin(t * 4), lerp(1.2, -2.2, easeOut(fl))); note.scale.setScalar(Math.max(0.001, 0.8 * pop(nu / 0.2) * (1 - fl * 0.85))); note.rotation.set(0, Math.sin(t * 2.4) * 0.2, Math.sin(t * 3) * 0.06 + fl * 1.5); }
-  crowd.forEach((f, i2) => { const d = f.userData; const x = ((((t * d.sp * d.dir + d.off) % 24) + 24) % 24) - 12; f.position.set(x, 0.05 * Math.abs(Math.sin(t * 9 + i2)) + (uh > 0 && uh < 0.7 ? 0.28 * Math.abs(Math.sin(uh * 14 + i2)) : 0), d.z); f.visible = !inHook && (id !== 's3' || uh > 0.2) && (!X[id] || (X[id].mood === 'day' && id !== 's10')); });
+  crowd.forEach((f, i2) => { const d = f.userData; const x = ((((t * d.sp * d.dir + d.off) % 24) + 24) % 24) - 12; f.position.set(x, 0.05 * Math.abs(Math.sin(t * 9 + i2)) + (uh > 0 && uh < 0.7 ? 0.28 * Math.abs(Math.sin(uh * 14 + i2)) : 0), d.z); f.visible = !inHook && (id !== 's3' || uh > 0.2) && (!X[id] || (X[id].mood === 'day' && id !== 's10' && !X[id].noCrowd)); });
   // environment that is always alive: a car crossing far behind, the skyline drifting, steam from the cart, skid marks after the sprint
   car.visible = !inHook && id !== 's3' && !X[id]; car.position.set(((t * 3.2 + 6) % 26) - 13, 0, -6.5); far.position.x = -0.12 * t;
   skid.visible = id === 's4' && uh > 0.05; if (skid.visible) { const k = easeOut(uh / 0.5); skid.scale.set(Math.max(0.01, 6.5 * k), 1, 1); skid.position.x = HX - 3.0 * k; skid.rotation.z = 0; }
   if (id === 's1' || id === 's2') for (let k = 0; k < 8; k++) { const tb = sc.t0 + k * BEAT * 1; cue(`${id}steam${k}`, t >= tb ? 1 : -1, () => burst(tb, id === 's1' ? [2.0, 2.5, -3.0] : [1.0, 0.6, 1.0], 5, id === 's1' ? '#FFFFFF' : '#B6FFD0', 0.5, id === 's1' ? 0.28 : 0.2, { g: -0.3, up: 1.4, life: 1.5, spread: 0.3 })); }
+  if (kk > 1.001) { for (const L of [key, rim]) { L.position.multiplyScalar(kk); L.intensity *= kk * kk; } fillL.position.multiplyScalar(kk); fillL.intensity *= kk * kk; key.shadow.camera.far = 40 * kk; key.shadow.camera.updateProjectionMatrix(); key.target.position.set(HX + 0.95 * kk - 0.5, 1.2 * kk, 0); rim.target.position.set(HX + 0.95 * kk - 0.5, 1.4 * kk, 0); }
+  bokeh.uniforms.aperture.value = 0.0016 / Math.max(1, kk);
   updParticles(t);
   // flash overlay via exposure bump
   const fu = (t - flashT) / flashDur; renderer.toneMappingExposure = 1.15 + (fu >= 0 && fu < 1 ? flashAmp * (1 - fu) * 3 : 0);
@@ -448,7 +490,7 @@ const registered = new Set();
 function hit(id, sc, t) {   // the answer of the world (once per scene)
   { const cg = cashG[id]; if (cg) { const cu = clamp((t - sc.t0 - 0.15) / 0.3); cg.visible = t >= SC[0].t0 && cu > 0; cg.scale.y = cg.userData.sy = 1; const bs = (cg.userData.base ||= cg.scale.x); cg.scale.setScalar(bs * (cu < 1 ? easeOut(cu) * 1.1 : 1 + 0.08 * Math.exp(-6 * Math.max(0, t - sc.hit)) * Math.sin(Math.max(0, t - sc.hit) * 30))); } }
   const h = sc.hit; const A = { s1: 'nod', s2: 'panic', s3: 'wings_up', s4: 'cheer', s5: 'jolt' }; ayam.act(A[id] || X[id].act, 0.9);
-  if (X[id]) { const b = X[id].burst; burst(h, b.p, b.n, b.c, b.s, b.z, { life: 1.1, g: b.g ?? 9 }); if (X[id].shake) shake(h, X[id].shake); flash(h, 0.12, 0.1); }
+  if (X[id]) { const b = X[id].burst; { const k2 = lad(LAD.k, SC.indexOf(sc)); burst(h, [HX + k2 * (b.p[0] - HX), b.p[1] * k2, b.p[2] * k2], b.n, b.c, b.s * k2, b.z * k2, { life: 1.1, g: (b.g ?? 9) * k2 }); } if (X[id].shake) shake(h, X[id].shake); flash(h, 0.12, 0.1); }
   if (id === 's1') { burst(h, [HX + 0.4, 1.4, 1.4], 26, ['#FFC83D', '#E0952E', '#FFF3C4'], 4.2, 0.12, { life: 1.0 }); shake(h, 0.05); }
   if (id === 's2') { burst(h, [0.9, 0.7, 1.0], 28, ['#3DD672', '#B6FFD0', '#2FCB68'], 4.0, 0.14, { life: 1.2, g: 10 }); shake(h, 0.12); }
   if (id === 's3') { burst(h, [0.85, 1.5, 1.4], 26, ['#FFE9A8', '#FFFFFF', '#6CFF9A'], 4.5, 0.12, { g: 3, life: 1.2 }); shake(h, 0.1); flash(h, 0.15, 0.12); }

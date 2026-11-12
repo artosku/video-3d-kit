@@ -18,7 +18,7 @@ def stills(slug, size='540,960'):
     T = tl(slug); beat = 60 / T['bpm']; names = []
     times = []
     for s in T['scenes']:
-        t0 = T['offset'] + s['bar'] * 4 * beat; hit = T['offset'] + (s['bar'] + s['bars'] / 2) * 4 * beat
+        t0 = T['offset'] + s['bar'] * 4 * beat; hit = T['offset'] + s.get('hitBar', s['bar'] + s['bars'] / 2) * 4 * beat
         times += [round(t0 + 1.0 * beat, 2), round(hit + 0.35, 2)]
     for i, t in enumerate(times):
         n = f'{slug}_{i:02d}.png'; browser.shot(n, f'ep={slug}&t={t}&name={n}', size, 'uang.html'); names.append(OUT / 'shots' / n)

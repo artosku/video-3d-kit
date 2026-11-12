@@ -1,7 +1,7 @@
 {
  "bpm": 138.0,
  "offset": 0.06,
- "total": 52.234,
+ "total": 81.799,
  "fadeOut": 0.8,
  "scenes": [
   {
@@ -78,97 +78,99 @@
    "id": "s11",
    "nominal": 19531250000,
    "bar": 17.0,
-   "bars": 0.5,
+   "bars": 2,
    "item": "±7,7 kg emas batangan"
   },
   {
    "id": "s12",
    "nominal": 97656250000,
-   "bar": 17.5,
-   "bars": 0.5,
+   "bar": 19.0,
+   "bars": 2,
    "item": "±49 dapur MBG"
   },
   {
    "id": "s13",
    "nominal": 488281250000,
-   "bar": 18.0,
-   "bars": 1,
+   "bar": 21.0,
+   "bars": 2,
    "item": "½ hari anggaran MBG"
   },
   {
    "id": "s14",
    "nominal": 2441406250000,
-   "bar": 19.0,
-   "bars": 2,
-   "item": "1 peluncuran roket"
+   "bar": 23.0,
+   "bars": 3,
+   "item": "1 peluncuran roket",
+   "hitBar": 25
   },
   {
    "id": "s15",
    "nominal": 12207031250000,
-   "bar": 21.0,
-   "bars": 0.5,
-   "item": "1 pabrik mobil listrik BYD"
+   "bar": 26.0,
+   "bars": 2,
+   "item": "1 pabrik mobil listrik"
   },
   {
    "id": "s16",
    "nominal": 61035156250000,
-   "bar": 21.5,
-   "bars": 0.5,
-   "item": "1 satelit internet"
+   "bar": 28.0,
+   "bars": 2,
+   "item": "7 satelit internet"
   },
   {
    "id": "s17",
    "nominal": 305175781250000,
-   "bar": 22.0,
-   "bars": 0.5,
-   "item": "1 kereta cepat"
+   "bar": 30.0,
+   "bars": 2,
+   "item": "2 kereta cepat"
   },
   {
    "id": "s18",
    "nominal": 1525878906250000,
-   "bar": 22.5,
-   "bars": 0.5,
+   "bar": 32.0,
+   "bars": 2,
    "item": "es teh buat semua orang RI"
   },
   {
    "id": "s19",
    "nominal": 7629394531250000,
-   "bar": 23.0,
-   "bars": 1,
-   "item": "seluruh APBN 2026"
+   "bar": 34.0,
+   "bars": 2,
+   "item": "seluruh APBN, 2 tahun"
   },
   {
    "id": "s20",
    "nominal": 38146972656250000,
-   "bar": 24.0,
-   "bars": 1,
+   "bar": 36.0,
+   "bars": 2,
    "item": "lunasi utang negara"
   },
   {
    "id": "s21",
    "nominal": 190734863281250000,
-   "bar": 25.0,
-   "bars": 1,
+   "bar": 38.0,
+   "bars": 2,
    "item": "kuliah S1 gratis semua orang RI"
   },
   {
    "id": "s22",
    "nominal": 953674316406250000,
-   "bar": 26.0,
-   "bars": 1,
+   "bar": 40.0,
+   "bars": 2,
    "item": "1 HP burgundy tiap orang di bumi"
   },
   {
    "id": "s23",
    "nominal": 4768371582031250000,
-   "bar": 27.0,
-   "bars": 1,
-   "item": "beli dunia dan seisinya"
+   "bar": 42.0,
+   "bars": 3,
+   "item": "beli dunia dan seisinya",
+   "hitBar": 43
   },
   {
    "id": "s24",
    "nominal": 4768371582031250000,
-   "bar": 28.0,
+   "bar": 45.0,
    "bars": 2,
    "item": ""
   }

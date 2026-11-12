@@ -35,7 +35,7 @@ def fire(n):
         if i0 + w < L: y[i0:i0 + w] += rng.standard_normal(w) * np.exp(-np.arange(w) / (0.0012 * SR)) * rng.uniform(0.3, 1.0)
     return y / (np.abs(y).max() + 1e-9)
 for i, s in enumerate(T['scenes']):
-    t0 = off + s['bar'] * 4 * beat; hit = off + (s['bar'] + s['bars'] / 2) * 4 * beat
+    t0 = off + s['bar'] * 4 * beat; hit = off + (s.get('hitBar', s['bar'] + s['bars'] / 2)) * 4 * beat
     # the number rolls: a fast rising run of clicks over 0.28 s, then a pop on the item
     if i:
         for k in range(9): add(buf, click(1.6 + 0.12 * k, 0.5), t0 + 0.03 * k, 0.12 + 0.01 * k, pan=0.2)   # the number rolls (not on the first purchase)

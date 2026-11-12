@@ -53,3 +53,9 @@ Copy previews to `C:\Users\andi.pramana\Videos\video-3d\` with a version number,
 - Run a long render in the background; do not poll. Confirm with `ffprobe` (duration) after it.
 - The GPU: one worker only. Chrome is forced to the NVIDIA GPU by a per-app registry preference (see memory).
 - The money pile, signs and the HUD must be looked at in stills before every render.
+
+## 8. Lessons from uang ×5 v8 (late-scene redesign)
+- Scene = one real place + one hero picture + at most two text items; avoid "everything is in space" after the climax. Use real maps (`web/maps.js`, `mapBoard(parent,'ID'|'W',width,x,y,z,panel)` draws provinces/continents on a canvas plane and can light them one by one; `landPts` gives points on land for dots).
+- Scale ladder (`LAD` in uang.js): chicken 0.72→0.28, camera distance 13.5→34, item scale about the chicken 1→3.6. A scene can return camera offsets `dx, dlx, dy, dly, dz` and chicken offsets `ax, az, ay` from its `anim`.
+- Four phases per scene: setup, anticipation (chicken crouches, camera moves), HIT on the beat, reaction. The chicken walks/hops to the action (ribbon, chain) and holds the tool (giant scissors, bolt cutter).
+- Verify with frames of the final MP4 (see lessons.md: transparent material bug).

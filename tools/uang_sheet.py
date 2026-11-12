@@ -12,7 +12,7 @@ when = float(sys.argv[3]) if len(sys.argv) > 3 else 0.3; tag = sys.argv[4] if le
 T = json.loads((ROOT / 'episodes' / slug / 'uang.json').read_text(encoding='utf-8')); beat = 60 / T['bpm']; names = []
 for s in T['scenes']:
     if s['id'] not in want: continue
-    t = round(T['offset'] + (s['bar'] + s['bars'] / 2) * 4 * beat + when, 2); n = f"{slug}_{s['id']}_{tag}.png"
+    t = round(T['offset'] + s.get('hitBar', s['bar'] + s['bars'] / 2) * 4 * beat + when, 2); n = f"{slug}_{s['id']}_{tag}.png"
     browser.shot(n, f'ep={slug}&t={t}&name={n}', '540,960', 'uang.html'); names.append(OUT / 'shots' / n)
 if len(names) == 1: print('single shot ->', names[0]); sys.exit()
 cols = min(5, len(names)); ins = []

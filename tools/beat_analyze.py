@@ -40,6 +40,15 @@ def analyze(path, bpm_range=(110, 175), first=None):
     w = flux > 0.3
     if w.sum() > 10: off += float(np.median(ph[w])) * beat - 0.012   # 0.012 s = half the stft window (the peak shows after the onset)
     off = float(off % beat)
+    # the kick sits on beats 0 and 2 (and the snare on 1 and 3), so the comb cannot tell which beat is the bar line: choose the phase (0..3 beats) where the energy jumps most at the bar starts (drops start on a bar line)
+    def _jump(o):
+        tot = 0.0
+        for b in range(0, int((len(x) / sr - o) / bar_s)):
+            t0 = o + b * bar_s; i0 = int(t0 * sr); w = int(0.2 * sr)
+            if i0 - w < 0 or i0 + w > len(x): continue
+            tot += max(0.0, float(np.sqrt(np.mean(x[i0:i0 + w] ** 2)) - np.sqrt(np.mean(x[i0 - w:i0] ** 2))))
+        return tot
+    off = float(max((off + k * beat for k in range(4)), key=_jump)); off = off % bar_s if off >= bar_s else off
     nbars = int((len(x) / sr - off) / bar_s)
     rms = np.array([np.sqrt(np.mean(x[int((off + i * beat) * sr):int((off + (i + 1) * beat) * sr)] ** 2)) if int((off + (i + 1) * beat) * sr) <= len(x) else 0 for i in range(nbars * 4)]).reshape(nbars, 4) * 100
     en = rms.mean(1)
