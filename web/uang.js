@@ -27,7 +27,7 @@ const camera = new THREE.PerspectiveCamera(34, W / H, 0.1, 200); scene.add(camer
 const rigMod = await import(`${BASE}/characters/ayam/rig.js`);
 const mul = (a) => () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const ayam = rigMod.create(renderer, { rand: mul(11), W, H, config: CFG });
-ayam.group.scale.setScalar(0.85); scene.add(ayam.group);
+ayam.group.scale.setScalar(0.72); scene.add(ayam.group);
 
 // ---- helpers
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -40,6 +40,14 @@ const bas = (c, o = {}) => new THREE.MeshBasicMaterial({ color: c, toneMapped: f
 const mesh = (g, m, x = 0, y = 0, z = 0, p) => { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); o.castShadow = true; o.receiveShadow = true; (p || scene).add(o); return o; };
 const tex = (w, h, fn) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); fn(g, w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return { t, c, g }; };
 const gradTex = (a, b) => tex(2, 256, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, a); gr.addColorStop(1, b); g.fillStyle = gr; g.fillRect(0, 0, w, h); }).t;
+
+// a small shop sign / price board in the world: lines = [[text, px, colour], ...]
+function signBoard(lines, w = 1.9, h = 0.62, bg = '#FFF8E6', border = '#1B1B2F') {
+  const cw = 512, ch = Math.round(512 * h / w);
+  const T = tex(cw, ch, (g, W2, H2) => { g.fillStyle = bg; g.beginPath(); g.roundRect(4, 4, W2 - 8, H2 - 8, 26); g.fill(); g.lineWidth = 8; g.strokeStyle = border; g.stroke(); g.textAlign = 'center'; g.textBaseline = 'middle';
+    const n = lines.length; lines.forEach(([txt, px, col], i) => { g.font = `900 ${px}px 'Arial Black', Impact, sans-serif`; const f = Math.min(px, px * (W2 - 50) / g.measureText(txt).width); g.font = `900 ${f}px 'Arial Black', Impact, sans-serif`; g.fillStyle = col; g.fillText(txt, W2 / 2, H2 * (i + 0.5) / n + 2); }); });
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: T.t, toneMapped: false })); m.castShadow = false; return m;
+}
 
 // ---- lights
 scene.add(new THREE.HemisphereLight('#FFF4E0', '#9AA0B8', 1.25));
@@ -62,25 +70,25 @@ const skyTex = {}; for (const [k, v] of Object.entries(MOODS)) skyTex[k] = gradT
 const HUD = new THREE.Group(); camera.add(HUD);
 const HD = 3.2, HH = 2 * HD * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), HW = HH * (W / H);
 function hudPlane(w, h, cw, ch, fn) { const T = tex(cw, ch, fn); const p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: T.t, transparent: true, toneMapped: false, depthTest: false })); p.renderOrder = 10; p.position.z = -HD; HUD.add(p); p.userData = T; return p; }
-const nomP = hudPlane(HW * 0.94, HW * 0.26, 1024, 288, () => {}); nomP.position.y = HH * 0.36;
-const lblP = hudPlane(HW * 0.94, HW * 0.36, 1024, 400, () => {}); lblP.position.y = -HH * 0.33;
-const tagP = hudPlane(HW * 0.3, HW * 0.3, 256, 256, () => {}); tagP.position.set(HW * 0.3, HH * 0.24, 0);
-const hookP = hudPlane(HW * 0.94, HW * 0.62, 1024, 640, () => {});
-const HOOK_LINES = [['UANG Rp2.000', 150, 130, '#FFD84D', 0.0], ['kalau ×5 terus-terusan', 330, 92, '#FFFFFF', 3], ['bisa kebeli apa?', 490, 112, '#FF6B5A', 5]];   // text, y, size, colour, beat (in beats from the start) it appears on
+const nomP = hudPlane(HW * 0.6, HW * 0.17, 1024, 288, () => {}); nomP.position.y = HH * 0.335; nomP.position.x = -HW * 0.08;
+const lblP = hudPlane(HW * 0.62, HW * 0.1, 1024, 160, () => {}); lblP.position.y = -HH * 0.105; lblP.position.x = -HW * 0.08;
+const tagP = hudPlane(HW * 0.16, HW * 0.16, 256, 256, () => {}); tagP.position.set(HW * 0.3, HH * 0.335, 0);
+const hookP = hudPlane(HW * 0.78, HW * 0.2, 1024, 270, () => {});
+const HOOK_LINES = [['kalau ×5 terus-terusan', 88, 84, '#FFFFFF', 0.5], ['bisa kebeli apa?', 190, 100, '#FF6B5A', 3.5]];   // text, y, size, colour, beat (in beats from the start) it appears on
 function drawHook(t) {
-  const { g, c } = hookP.userData; g.clearRect(0, 0, c.width, c.height); g.fillStyle = 'rgba(27,27,47,0.9)'; g.beginPath(); g.roundRect(20, 20, 984, 600, 56); g.fill(); g.lineWidth = 10; g.strokeStyle = '#FFD84D'; g.stroke();
+  const { g, c } = hookP.userData; g.clearRect(0, 0, c.width, c.height); g.fillStyle = 'rgba(27,27,47,0.9)'; g.beginPath(); g.roundRect(20, 20, 984, 230, 50); g.fill(); g.lineWidth = 10; g.strokeStyle = '#FFD84D'; g.stroke();
   g.textAlign = 'center'; g.textBaseline = 'middle';
   for (const [txt, y, size, col, beat] of HOOK_LINES) { const a = clamp((t - B(0, beat)) / 0.16); if (a <= 0) continue; g.globalAlpha = a; g.font = `900 ${size}px 'Arial Black', Impact, sans-serif`; const f = Math.min(size, size * 900 / g.measureText(txt).width); g.font = `900 ${f}px 'Arial Black', Impact, sans-serif`; g.fillStyle = col; g.fillText(txt, 512, y + (1 - a) * 24); }
   g.globalAlpha = 1; hookP.userData.t.needsUpdate = true;
 }
-const fmP = hudPlane(HW * 0.94, HW * 0.13, 1024, 140, () => {});
+const fmP = hudPlane(HW * 0.6, HW * 0.08, 1024, 140, () => {});
 function drawFormula(a, b) {
   const { g, c } = fmP.userData; g.clearRect(0, 0, c.width, c.height); g.textAlign = 'center'; g.textBaseline = 'middle'; const parts = [[`${fmt(a)}`, '#FFFFFF'], [' × 5 = ', '#FFD84D'], [`${fmt(b)}`, '#FF8A5C']];
   let fs = 62; g.font = `900 ${fs}px 'Arial Black', Impact, sans-serif`; let tot = parts.reduce((x, p) => x + g.measureText(p[0]).width, 0); if (tot > 940) { fs = Math.floor(fs * 940 / tot); g.font = `900 ${fs}px 'Arial Black', Impact, sans-serif`; tot = parts.reduce((x, p) => x + g.measureText(p[0]).width, 0); } let x = 512 - tot / 2; g.textAlign = 'left'; g.lineJoin = 'round'; g.lineWidth = 16; g.strokeStyle = '#1B1B2F';
   for (const [tx, col] of parts) { g.strokeText(tx, x, 72); g.fillStyle = col; g.fillText(tx, x, 72); x += g.measureText(tx).width; }
   fmP.userData.t.needsUpdate = true;
 }
-hookP.position.y = HH * 0.27; hookP.visible = false; fmP.position.y = HH * 0.265; fmP.visible = false;
+hookP.position.y = -HH * 0.105; hookP.position.x = -HW * 0.06; hookP.visible = false; fmP.position.y = HH * 0.275; fmP.position.x = -HW * 0.08; fmP.visible = false;
 const fmt = (v) => 'Rp ' + Math.round(v).toLocaleString('id-ID');
 function drawNominal(v, glow, hot) {
   const { g, c } = nomP.userData; g.clearRect(0, 0, c.width, c.height);
@@ -92,9 +100,8 @@ function drawNominal(v, glow, hot) {
 }
 function drawLabel(sc, a) {
   const { g, c } = lblP.userData; g.clearRect(0, 0, c.width, c.height); if (!sc || a <= 0) { lblP.userData.t.needsUpdate = true; return; }
-  g.globalAlpha = a; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
-  const line = (txt, y, size, col, sw) => { g.font = `900 ${size}px 'Arial Black', Impact, sans-serif`; const f = Math.min(size, size * 960 / g.measureText(txt).width); g.font = `900 ${f}px 'Arial Black', Impact, sans-serif`; g.lineWidth = sw; g.strokeStyle = '#1B1B2F'; g.strokeText(txt, 512, y); g.fillStyle = col; g.fillText(txt, 512, y); };
-  line('Kamu bisa beli', 70, 64, '#FFFFFF', 16); line(sc.item.toUpperCase(), 180, 118, '#FFD84D', 26); line(sc.fact, 306, 52, '#D7E3FF', 14); g.globalAlpha = 1;
+  g.globalAlpha = a; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round'; const txt = 'Kamu bisa beli ' + sc.item;
+  g.font = "900 70px 'Arial Black', Impact, sans-serif"; const f = Math.min(70, 70 * 980 / g.measureText(txt).width); g.font = `900 ${f}px 'Arial Black', Impact, sans-serif`; g.lineWidth = 18; g.strokeStyle = '#1B1B2F'; g.strokeText(txt, 512, 80); g.fillStyle = '#FFFFFF'; g.fillText(txt, 512, 80); g.globalAlpha = 1;
   lblP.userData.t.needsUpdate = true;
 }
 function drawTag(txt) {
@@ -128,7 +135,7 @@ function updParticles(t) {
 
 // ---- the five sets. Each is built once and shown only inside its own time window.
 const S = {};
-const stall = (parent, x, z) => {   // a small food cart
+const stall = (parent, x, z, sign) => {   // a small food cart
   const g = new THREE.Group(); g.position.set(x, 0, z); parent.add(g);
   mesh(new THREE.BoxGeometry(2.4, 1.1, 1.2), mat('#9A6B43'), 0, 0.55, 0, g);
   mesh(new THREE.BoxGeometry(2.3, 0.7, 1.1), mat('#BFE3F2', { transparent: true, opacity: 0.55, roughness: 0.1 }), 0, 1.5, 0, g);
@@ -136,13 +143,14 @@ const stall = (parent, x, z) => {   // a small food cart
   for (const px of [-1.2, 1.2]) mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.2, 8), mat('#6B4A2B'), px, 1.6, 0.6, g);
   for (let i = 0; i < 6; i++) { const f = mesh(new THREE.SphereGeometry(0.17, 10, 8), mat('#D98A2B'), -0.8 + i * 0.32, 1.28, 0.1, g); f.scale.set(1.2, 0.8, 1); }
   mesh(new THREE.BoxGeometry(2.5, 0.08, 1.3), mat('#7A5230'), 0, 1.12, 0, g);
+  if (sign) { const sb = signBoard(sign, 2.1, 0.66); sb.position.set(0, 1.95, 0.84); g.add(sb); }
   return g;
 };
 const items = {};   // hero props, by scene id
 
 function build() {
   // ---------- S1: gorengan (bakwan) at a cart
-  { const g = new THREE.Group(); scene.add(g); S.s1 = g; g.userData.cart = stall(g, 2.0, -3.0);
+  { const g = new THREE.Group(); scene.add(g); S.s1 = g; g.userData.cart = stall(g, 1.15, -3.0, [['GORENGAN', 78, '#B3261E'], ['Rp2.000 / biji', 56, '#1B1B2F']]);
     const bw = new THREE.Group(); g.add(bw); mesh(new THREE.SphereGeometry(0.62, 18, 14), mat('#E0952E', { roughness: 0.5 }), 0, 0, 0, bw).scale.set(1.25, 0.82, 1);
     for (let i = 0; i < 9; i++) { const m = mesh(new THREE.SphereGeometry(0.16, 8, 6), mat(['#F4C15D', '#C77A1E', '#8FBF4D'][i % 3], { roughness: 0.6 }), -0.55 + (i % 5) * 0.28, 0.14 + (i % 3) * 0.1, 0.5 - (i % 2) * 0.1, bw); }
     items.s1 = bw; g.userData.bite = 0; }
@@ -155,19 +163,23 @@ function build() {
     const lab = tex(256, 128, (c, w, h) => { c.fillStyle = '#FFF'; c.fillRect(0, 0, w, h); c.fillStyle = '#1B8F44'; c.font = "900 62px 'Arial Black'"; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('1 L', w / 2, h / 2); }).t;
     const lp = mesh(new THREE.PlaneGeometry(0.6, 0.3), new THREE.MeshBasicMaterial({ map: lab, toneMapped: false }), 0, -0.1, 0.43, bt); lp.castShadow = false;
     const pud = mesh(new THREE.CircleGeometry(1, 40), mat('#2FCB68', { transparent: true, opacity: 0.8, roughness: 0.15 }), 0, 0.02, 0.5, g); pud.rotation.x = -Math.PI / 2; pud.castShadow = false; g.userData.pud = pud;
-    stall(g, 2.1, -3.2); items.s2 = bt; }
+    { const pump = new THREE.Group(); pump.position.set(1.25, 0, -1.6); g.add(pump); mesh(new THREE.BoxGeometry(0.95, 1.9, 0.6), mat('#E24B4B'), 0, 0.95, 0, pump); mesh(new THREE.BoxGeometry(0.75, 0.5, 0.05), mat('#1B1B2F'), 0, 1.35, 0.32, pump); mesh(new THREE.BoxGeometry(1.05, 0.14, 0.7), mat('#FFFFFF'), 0, 1.97, 0, pump);
+      const hose = mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.0, 8), mat('#1B1B2F'), 0.55, 0.9, 0.2, pump); hose.rotation.z = 0.15;
+      const sb = signBoard([['PERTALITE', 64, '#1B8F44'], ['Rp10.000 / liter', 52, '#1B1B2F']], 1.7, 0.6); sb.position.set(-0.1, 2.3, 0.2); pump.add(sb); }
+    items.s2 = bt; }
   // ---------- S3: tiket bioskop + a cinema screen that floods the scene with light
   { const g = new THREE.Group(); scene.add(g); S.s3 = g;
     const scr = mesh(new THREE.PlaneGeometry(9, 5.4), new THREE.MeshBasicMaterial({ color: '#CFE8FF', toneMapped: false }), 0, 3.4, -6.5, g); scr.castShadow = false; g.userData.scr = scr;
     for (let i = 0; i < 3; i++) for (let j = -2; j <= 2; j++) { const s = mesh(new THREE.BoxGeometry(0.9, 0.9, 0.7), mat('#8B1E2D'), j * 1.7, 0.45, -1.6 - i * 1.6, g); mesh(new THREE.BoxGeometry(0.9, 0.9, 0.2), mat('#6E1522'), j * 1.7, 1.1, -1.9 - i * 1.6, g); }
     const tk = new THREE.Group(); g.add(tk);
-    const face = tex(512, 256, (c, w, h) => { c.fillStyle = '#F7E7A9'; c.fillRect(0, 0, w, h); c.strokeStyle = '#A87A12'; c.lineWidth = 10; c.strokeRect(10, 10, w - 20, h - 20); c.fillStyle = '#7A1620'; c.font = "900 92px 'Arial Black'"; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('TIKET', w / 2, 92); c.font = "900 46px 'Arial Black'"; c.fillStyle = '#1B1B2F'; c.fillText('1 ORANG', w / 2, 168); c.fillStyle = '#A87A12'; for (let y = 22; y < h - 10; y += 22) c.fillRect(w - 76, y, 4, 12); }).t;
+    const face = tex(512, 256, (c, w, h) => { c.fillStyle = '#F7E7A9'; c.fillRect(0, 0, w, h); c.strokeStyle = '#A87A12'; c.lineWidth = 10; c.strokeRect(10, 10, w - 20, h - 20); c.fillStyle = '#7A1620'; c.font = "900 92px 'Arial Black'"; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('TIKET', w / 2, 80); c.font = "900 40px 'Arial Black'"; c.fillStyle = '#1B1B2F'; c.fillText('1 ORANG', w / 2, 148); c.font = "900 52px 'Arial Black'"; c.fillStyle = '#B3261E'; c.fillText('Rp35.000', w / 2, 208); c.fillStyle = '#A87A12'; for (let y = 22; y < h - 10; y += 22) c.fillRect(w - 76, y, 4, 12); }).t;
     const tp = mesh(new THREE.BoxGeometry(1.8, 0.9, 0.04), [mat('#F7E7A9'), mat('#F7E7A9'), mat('#F7E7A9'), mat('#F7E7A9'), new THREE.MeshBasicMaterial({ map: face, toneMapped: false }), mat('#E9D58A')], 0, 0, 0, tk); tp.castShadow = false;
     items.s3 = tk; g.userData.beam = new THREE.PointLight('#CFE8FF', 0, 30, 1.2); g.userData.beam.position.set(0, 3.2, -3); g.add(g.userData.beam); }
   // ---------- S4: sepatu (a pair of sneakers) + a road for the sprint
   { const g = new THREE.Group(); scene.add(g); S.s4 = g;
     const shoe = (x) => { const s = new THREE.Group(); s.position.x = x; g.add(s); mesh(new THREE.BoxGeometry(0.62, 0.16, 1.5), mat('#F4F4F4'), 0, 0.08, 0, s); const up = mesh(new THREE.SphereGeometry(0.4, 14, 10), mat('#FF3D5A'), 0, 0.3, 0.18, s); up.scale.set(0.85, 0.62, 1.25); mesh(new THREE.BoxGeometry(0.46, 0.05, 0.5), mat('#FFFFFF'), 0, 0.5, 0.2, s); return s; };
     const L = shoe(-0.45), R = shoe(0.45); items.s4 = [L, R];
+    { const sb = signBoard([['SEPATU LOKAL', 56, '#B3261E'], ['Rp80rb - 300rb', 52, '#1B1B2F']], 1.6, 0.58); sb.position.set(0.95, 1.0, 0.8); g.add(sb); mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.0, 8), mat('#6B4A2B'), 0.95, 0.5, 0.78, g); }
     for (let i = 0; i < 14; i++) { const m = mesh(new THREE.BoxGeometry(0.1, 0.02, 1.5), mat('#FFFFFF'), 0, 0.012, -i * 3 + 3, g); m.castShadow = false; g.userData['dash' + i] = m; } }
   // ---------- S5: HP (a phone that spews notifications)
   { const g = new THREE.Group(); scene.add(g); S.s5 = g;
@@ -175,11 +187,15 @@ function build() {
     mesh(new THREE.BoxGeometry(1.0, 2.0, 0.12), mat('#1B1D2A', { roughness: 0.3 }), 0, 0, 0, ph);
     const sc = tex(256, 512, (c, w, h) => { const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#5B8CFF'); gr.addColorStop(1, '#C65BFF'); c.fillStyle = gr; c.fillRect(0, 0, w, h); c.fillStyle = 'rgba(255,255,255,.9)'; c.font = "900 64px 'Arial Black'"; c.textAlign = 'center'; c.fillText('12:00', w / 2, 120); }).t;
     const sp = mesh(new THREE.PlaneGeometry(0.88, 1.84), new THREE.MeshBasicMaterial({ map: sc, toneMapped: false }), 0, 0, 0.07, ph); sp.castShadow = false;
+    { const sb = signBoard([['HP ENTRY LEVEL', 44, '#2B4BD0'], ['Rp1,1 - 1,2 jt', 56, '#B3261E']], 1.3, 0.56); sb.position.set(0, -1.35, 0.1); ph.add(sb); }
     items.s5 = ph; g.userData.notes = [];
     const cols = ['#FF3D5A', '#2FCB68', '#FFB020', '#3D8BFF', '#C65BFF'];
     for (let i = 0; i < 26; i++) { const T = tex(256, 128, (c, w, h) => { c.fillStyle = cols[i % 5]; c.beginPath(); c.roundRect(6, 6, w - 12, h - 12, 28); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(54, 64, 26, 0, 6.283); c.fill(); c.fillRect(100, 40, 110, 14); c.fillRect(100, 70, 76, 14); }); const p = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.6), new THREE.MeshBasicMaterial({ map: T.t, transparent: true, toneMapped: false })); p.castShadow = false; p.visible = false; scene.add(p); g.userData.notes.push(p); } }
 }
 build();
+const note = new THREE.Group(); scene.add(note);
+{ const face = tex(640, 300, (g, w, h) => { const gr = g.createLinearGradient(0, 0, w, h); gr.addColorStop(0, '#B5BCC6'); gr.addColorStop(1, '#8F98A6'); g.fillStyle = gr; g.fillRect(0, 0, w, h); g.strokeStyle = '#5E6674'; g.lineWidth = 10; g.strokeRect(14, 14, w - 28, h - 28); g.fillStyle = 'rgba(255,255,255,0.25)'; g.beginPath(); g.arc(w - 150, h / 2, 90, 0, 6.283); g.fill(); g.fillStyle = '#2B3340'; g.font = "900 130px 'Arial Black'"; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('2.000', 250, h / 2 - 20); g.font = "900 40px 'Arial Black'"; g.fillText('DUA RIBU RUPIAH', 280, h - 60); }).t;
+  const m = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.8, 0.03), [mat('#8F98A6'), mat('#8F98A6'), mat('#8F98A6'), mat('#8F98A6'), new THREE.MeshBasicMaterial({ map: face, toneMapped: false }), mat('#8F98A6')]); m.castShadow = false; note.add(m); }
 const car = new THREE.Group(); scene.add(car);
 { mesh(new THREE.BoxGeometry(2.4, 0.7, 1.1), mat('#E84D5C'), 0, 0.55, 0, car); mesh(new THREE.BoxGeometry(1.3, 0.55, 1.0), mat('#CFE8FF', { roughness: 0.2 }), -0.1, 1.15, 0, car); for (const x of [-0.8, 0.8]) { const w = mesh(new THREE.CylinderGeometry(0.3, 0.3, 1.2, 14), mat('#1B1B2F'), x, 0.3, 0, car); w.rotation.x = Math.PI / 2; } }
 const skid = mesh(new THREE.PlaneGeometry(1, 0.35), mat('#2B2B33'), -3.2, 0.02, 1.0); skid.rotation.x = -Math.PI / 2; skid.castShadow = false; skid.visible = false;
@@ -202,7 +218,7 @@ function nominalAt(t) {   // rolls from the previous number to this one right af
   return { v: val, k, glow: 0.4 + 1.2 * (1 - k) };
 }
 
-const HX = -0.85;   // ayam stands left, the thing it buys on the right
+const HX = -0.95;   // ayam stands left, the thing it buys on the right
 let curScene = null;
 function stepFrame(f) {
   const t = f / FPS; ayam.update(1 / FPS);
@@ -220,24 +236,24 @@ function stepFrame(f) {
   if (t >= sc.hit) cue(K + 'hit', 1, () => { ayam.setExpression(FACE[id][1], 6); hit(id, sc, t); });
   // ----- ayam transform and props
   const g = ayam.group; let ax = 0, ay = 0, az = 0, rz = 0, ry = 0, sx = 1, sy = 1;
-  const camP = { x: 0, y: 1.9, z: 13.5, ly: 1.55, fov: 34 };
+  const camP = { x: 0, y: 1.5, z: 13.5, ly: 0.65, fov: 34 };
   const popIn = pop(u / 0.32);
   if (id === 's1') {
     const bw = items.s1; const prog = clamp((uh) / 0.5);
-    { const fly = uh > 0 ? easeOut(uh / 0.3) : 0; bw.position.set(lerp(1.2, HX + 0.15, fly), lerp(1.7 + 0.08 * Math.sin(u * 5), 1.35, fly), 1.2); bw.scale.setScalar(Math.max(0.001, popIn) * 0.8 * (uh > 0.3 ? Math.max(0.001, 1 - (uh - 0.3) / 0.3) : 1)); bw.rotation.z = Math.sin(u * 4) * 0.08; }
+    { const fly = uh > 0 ? easeOut(uh / 0.3) : 0; bw.position.set(lerp(0.85, HX + 0.15, fly), lerp(1.7 + 0.08 * Math.sin(u * 5), 1.35, fly), 1.2); bw.scale.setScalar(Math.max(0.001, popIn) * 0.8 * (uh > 0.3 ? Math.max(0.001, 1 - (uh - 0.3) / 0.3) : 1)); bw.rotation.z = Math.sin(u * 4) * 0.08; }
     ay = 0.06 * Math.abs(Math.sin(u * 6)); if (uh > 0) { sy = 1 - 0.12 * Math.exp(-6 * uh) * Math.cos(uh * 18); sx = 2 - sy; }
     S.s1.userData.cart.rotation.z = uh > 0 ? 0.08 * Math.exp(-4 * uh) * Math.sin(uh * 26) : 0; S.s1.userData.cart.position.y = uh > 0 ? 0.25 * Math.exp(-5 * uh) * Math.abs(Math.sin(uh * 16)) : 0;
   } else if (id === 's2') {
     const bt = items.s2, liq = S.s2.userData.liq, pud = S.s2.userData.pud;
     const tip = uh > 0 ? ease(uh / 0.35) : 0;
-    bt.position.set(1.25 - 0.5 * tip, lerp(1.2 + 0.1 * Math.sin(u * 5), 0.5, tip), 1.0); bt.scale.setScalar(Math.max(0.001, popIn)); bt.rotation.z = -1.5 * tip + 0.05 * Math.sin(u * 7);
+    bt.position.set(0.85 - 0.4 * tip, lerp(1.2 + 0.1 * Math.sin(u * 5), 0.5, tip), 1.0); bt.scale.setScalar(Math.max(0.001, popIn)); bt.rotation.z = -1.5 * tip + 0.05 * Math.sin(u * 7);
     liq.scale.y = uh > 0 ? Math.max(0.05, 1 - ease(uh / 1.2) * 0.9) : 1;
     pud.scale.setScalar(uh > 0.2 ? 0.1 + easeOut((uh - 0.2) / 1.2) * 2.3 : 0.001); pud.position.set(0.3, 0.02, 1.0);
     if (uh > 0.25) { const sl = clamp((uh - 0.25) / 0.8); ax = 0.5 * sl * Math.exp(-2.2 * sl); rz = -0.55 * Math.sin(sl * 3.14) * (1 - sl * 0.2); ay = 0.5 * Math.sin(clamp(sl) * 3.14) * (1 - sl); }
     else ay = 0.05 * Math.abs(Math.sin(u * 6));
   } else if (id === 's3') {
     const tk = items.s3, scr = S.s3.userData.scr, bm = S.s3.userData.beam;
-    tk.position.set(1.15 - (uh > 0 ? 1.5 * ease(uh / 0.4) : 0), 2.2 + 0.07 * Math.sin(u * 4) - (uh > 0 ? 0.6 * ease(uh / 0.4) : 0), 1.2); tk.scale.setScalar(Math.max(0.001, popIn) * 0.78 * (uh > 0 ? 1 + 0.15 * ease(uh / 0.4) : 1)); tk.rotation.set(0, Math.sin(u * 2.6) * 0.25, Math.sin(u * 3) * 0.07);
+    tk.position.set(0.8 - (uh > 0 ? 1.4 * ease(uh / 0.4) : 0), 1.85 + 0.07 * Math.sin(u * 4) - (uh > 0 ? 0.5 * ease(uh / 0.4) : 0), 1.2); tk.scale.setScalar(Math.max(0.001, popIn) * 0.78 * (uh > 0 ? 1 + 0.15 * ease(uh / 0.4) : 1)); tk.rotation.set(0, Math.sin(u * 2.6) * 0.25, Math.sin(u * 3) * 0.07);
     const on = uh > 0 ? easeOut(uh / 0.25) : 0; scr.material.color.setScalar(0.25 + 0.75 * on); bm.intensity = 90 * on; const lvl = 0.18 + on * 2.6; sun.intensity = lvl;
     if (uh > 0) { ax = -0.35 * Math.exp(-2.4 * uh); sy = 1 + 0.06 * Math.exp(-5 * uh) * Math.cos(uh * 22); }
   } else if (id === 's4') {
@@ -248,7 +264,7 @@ function stepFrame(f) {
     else { L.visible = R.visible = true; ay = 0; }
   } else if (id === 's5') {
     const ph = items.s5, notes = S.s5.userData.notes;
-    ph.position.set(1.15, 2.0 + 0.05 * Math.sin(u * 4), 1.4); ph.scale.setScalar(Math.max(0.001, popIn) * 0.85 * (uh > 0 ? 1 + 0.4 * ease(uh / 0.5) : 1)); ph.rotation.set(0, Math.sin(u * 3) * 0.2, 0);
+    ph.position.set(0.85, 1.7 + 0.05 * Math.sin(u * 4), 1.4); ph.scale.setScalar(Math.max(0.001, popIn) * 0.85 * (uh > 0 ? 1 + 0.4 * ease(uh / 0.5) : 1)); ph.rotation.set(0, Math.sin(u * 3) * 0.2, 0);
     notes.forEach((p, i) => {
       const dt = uh - i * 0.045; if (dt < 0 || uh < 0) { p.visible = false; return; }
       const ang = (i * 2.399) % 6.283, r = easeOut(dt / 0.9) * (1.2 + (i % 5) * 0.55); p.visible = true;
@@ -263,10 +279,11 @@ function stepFrame(f) {
   let sxk = 0, syk = 0; { const s = t - shakeT; if (s >= 0 && s < 0.7) { const a = shakeAmp * Math.exp(-5 * s); sxk = Math.sin(s * 70) * a; syk = Math.cos(s * 83) * a * 0.7; } }
   camera.position.set(camP.x + sxk, camP.y + syk, dist); camera.lookAt(0, camP.ly, 0); camera.fov = camP.fov; camera.updateProjectionMatrix();
   // ----- hud
-  const HOOK_END = SC[0].t0; const inHook = t < HOOK_END; hookP.visible = inHook; if (inHook) { drawHook(t); hookP.scale.setScalar(Math.max(0.01, pop(t / 0.35)) * (1 - 0.9 * clamp((t - (HOOK_END - 0.2)) / 0.2))); } nomP.visible = !inHook; lblP.visible = !inHook; fmP.visible = !inHook;
+  const HOOK_END = SC[0].t0; const inHook = t < HOOK_END; hookP.visible = inHook; if (inHook) { drawHook(t); hookP.scale.setScalar(Math.max(0.01, pop(t / 0.35)) * (1 - 0.9 * clamp((t - (HOOK_END - 0.2)) / 0.2))); } nomP.visible = true; lblP.visible = !inHook; fmP.visible = !inHook;
   const nm = nominalAt(t); drawNominal(nm.v, nm.glow, nm.k < 1); const uN = u; const sNom = 1 + 0.18 * Math.exp(-9 * Math.max(0, uN)) * Math.cos(Math.max(0, uN) * 20); nomP.scale.setScalar(Math.max(0.5, sNom));
   drawLabel(sc, clamp((u - 0.2) / 0.15) * (1 - clamp((t - (sc.t1 - 0.1)) / 0.1))); if (!inHook && fmP.userData.lastScene !== sc.id) { fmP.userData.lastScene = sc.id; drawFormula(sc.nominal, sc.nominal * 5); }
   { const tu = u - 0.0; if (tu >= 0 && tu < 0.9 && sc !== SC[0]) { drawTag('×5'); tagP.scale.setScalar(Math.max(0.01, pop(tu / 0.3))); tagP.visible = true; } else { tagP.visible = false; } }
+  { const nu = (t - SC[0].t0) / 0.4; note.visible = t < SC[0].t0 + 0.4; const fl = clamp(nu); note.position.set(lerp(0.85, 1.2, easeOut(fl)), lerp(1.7, 1.3, easeOut(fl)) + 0.06 * Math.sin(t * 4), lerp(1.2, -2.2, easeOut(fl))); note.scale.setScalar(Math.max(0.001, (0.8 * pop(t / 0.3)) * (1 - fl * 0.85))); note.rotation.set(0, Math.sin(t * 2.4) * 0.2, Math.sin(t * 3) * 0.06 + fl * 1.5); }
   // environment that is always alive: a car crossing far behind, the skyline drifting, steam from the cart, skid marks after the sprint
   car.visible = id !== 's3'; car.position.set(((t * 3.2 + 6) % 26) - 13, 0, -6.5); far.position.x = -0.12 * t;
   skid.visible = id === 's4' && uh > 0.05; if (skid.visible) { const k = easeOut(uh / 0.5); skid.scale.set(Math.max(0.01, 6.5 * k), 1, 1); skid.position.x = HX - 3.0 * k; skid.rotation.z = 0; }
@@ -284,7 +301,7 @@ function hit(id, sc, t) {   // the answer of the world (once per scene)
   if (id === 's2') { burst(h, [0.9, 0.7, 1.0], 28, ['#3DD672', '#B6FFD0', '#2FCB68'], 4.0, 0.14, { life: 1.2, g: 10 }); shake(h, 0.12); }
   if (id === 's3') { burst(h, [0, 2.5, -3], 18, ['#FFFFFF', '#CFE8FF'], 5, 0.12, { g: 1, life: 1.2 }); shake(h, 0.18); }
   if (id === 's4') { burst(h, [HX, 0.2, 0.9], 40, ['#E8D7B8', '#CDBA95', '#F5EDDC'], 5.5, 0.28, { g: 3, life: 1.2, up: 0.25 }); shake(h, 0.22); }
-  if (id === 's5') { burst(h, [1.15, 2.0, 1.6], 40, ['#FF3D5A', '#2FCB68', '#FFB020', '#3D8BFF', '#C65BFF'], 6, 0.14, { g: 2, life: 1.4 }); shake(h, 0.28); }
+  if (id === 's5') { burst(h, [0.85, 1.7, 1.6], 40, ['#FF3D5A', '#2FCB68', '#FFB020', '#3D8BFF', '#C65BFF'], 6, 0.14, { g: 2, life: 1.4 }); shake(h, 0.28); }
 }
 // a scene's previous number (for the roll)
 SC.forEach((s, i) => { s.prevNominal = i ? SC[i - 1].nominal : s.nominal / 5; });
