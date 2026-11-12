@@ -31,11 +31,14 @@ for i, s in enumerate(T['scenes']):
     id = s['id']
     if id == 's1': put('es_drip_bloop', hit + 0.02, 0.6); add(buf, thump(0.5, 60), hit, 0.35); put('es_toggle_latch', hit + 0.28, 0.45)
     if id == 's2': put('es_drip_drop', hit + 0.05, 0.6); put('es_drip_bloop', hit + 0.28, 0.5); put('es_whoosh_big_gust', hit + 0.1, 0.25); add(buf, thump(0.6, 55), hit, 0.35)
-    if id == 's3': add(buf, thump(0.9, 45), hit, 0.75); put('es_shimmer_m1', hit + 0.02, 0.7); put('es_pro_impact_short', hit, 0.45)
+    if id == 's3':
+        add(buf, thump(0.9, 45), hit, 0.6); put('es_toggle_latch', hit + 0.02, 0.6); put('es_shimmer_m1', hit + 0.1, 0.6)
+        for k in range(3): put('es_hover_tick_detent', hit + 0.14 * k, 0.5)   # the lamps switch on one by one
+        put('es_pro_notify_ding_1930', hit + 0.5, 0.45)
     if id == 's4': put('es_whoosh_fast_whistle', hit + 0.02, 0.6); add(buf, thump(0.7, 50), hit, 0.45); put('es_whoosh_big_jet', hit + 0.9, 0.5); put('es_pro_impact_short', hit + 1.5, 0.4)
     if id == 's5':
-        add(buf, thump(0.9, 48), hit, 0.65)
-        for k, nm in enumerate(['es_pro_notify_ding_1930', 'es_pro_notify_ding_2296', 'es_pro_pop_chirp', 'es_pro_notify_ding_1930', 'es_pro_pop_double', 'es_pro_notify_ding_2296']): put(nm, hit + 0.05 + 0.12 * k, 0.45, pan=-0.5 + 0.2 * k)
+        put('es_fit_bell_small_bell', hit - 0.02, 0.6); put('es_fit_bell_small_bell', hit + 0.2, 0.5); put('es_whoosh_fast_crisp', hit + 0.1, 0.55); add(buf, thump(0.5, 55), hit + 0.55, 0.3)
+        put('es_whoosh_fast_tight', hit + 1.0, 0.5); put('es_pro_impact_short', hit + 1.6, 0.4)
 n = int(dur * SR); out = buf[:n]; pk = np.abs(out).max()
 if pk > 0.9: out = out * 0.9 / pk
 dst = ROOT / 'out' / slug / 'sfx.wav'; dst.parent.mkdir(parents=True, exist_ok=True); sf.write(dst, out.astype(np.float32), SR); print('sfx ->', dst)

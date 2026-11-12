@@ -1,0 +1,49 @@
+{
+ "bpm": 138.0,
+ "offset": 0.06,
+ "total": 22.669,
+ "fadeOut": 0.8,
+ "scenes": [
+  {
+   "id": "s1",
+   "nominal": 2000,
+   "bar": 2,
+   "bars": 2,
+   "item": "1 gorengan"
+  },
+  {
+   "id": "s2",
+   "nominal": 10000,
+   "bar": 4,
+   "bars": 2,
+   "item": "1 liter Pertalite"
+  },
+  {
+   "id": "s3",
+   "nominal": 50000,
+   "bar": 6,
+   "bars": 2,
+   "item": "1 token listrik"
+  },
+  {
+   "id": "s4",
+   "nominal": 250000,
+   "bar": 8,
+   "bars": 2,
+   "item": "1 sepatu lokal"
+  },
+  {
+   "id": "s5",
+   "nominal": 1250000,
+   "bar": 10,
+   "bars": 2,
+   "item": "1 sepeda"
+  }
+ ],
+ "music": {
+  "file": "C:/Users/andi.pramana/Downloads/tiki-tiki.mp3",
+  "start": 0,
+  "gain": 0.5
+ },
+ "hookBars": 2
+}

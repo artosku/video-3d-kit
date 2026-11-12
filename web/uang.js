@@ -169,30 +169,32 @@ function build() {
       const hose = mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.0, 8), mat('#1B1B2F'), 0.55, 0.9, 0.2, pump); hose.rotation.z = 0.15;
       const sb = signBoard([['PERTALITE', 64, '#1B8F44'], ['Rp10.000 / liter', 52, '#1B1B2F']], 1.7, 0.6); sb.position.set(-0.1, 2.3, 0.2); pump.add(sb); }
     items.s2 = bt; }
-  // ---------- S3: tiket bioskop + a cinema screen that floods the scene with light
+  // ---------- S3: token listrik (Rp50.000): a meter box on a pole; the street lamps and the skyline light up when it is paid
   { const g = new THREE.Group(); scene.add(g); S.s3 = g;
-    const scr = mesh(new THREE.PlaneGeometry(9, 5.4), new THREE.MeshBasicMaterial({ color: '#CFE8FF', toneMapped: false }), 0, 3.4, -6.5, g); scr.castShadow = false; g.userData.scr = scr;
-    for (let i = 0; i < 3; i++) for (let j = -2; j <= 2; j++) { const s = mesh(new THREE.BoxGeometry(0.9, 0.9, 0.7), mat('#8B1E2D'), j * 1.7, 0.45, -1.6 - i * 1.6, g); mesh(new THREE.BoxGeometry(0.9, 0.9, 0.2), mat('#6E1522'), j * 1.7, 1.1, -1.9 - i * 1.6, g); }
-    const tk = new THREE.Group(); g.add(tk);
-    const face = tex(512, 256, (c, w, h) => { c.fillStyle = '#F7E7A9'; c.fillRect(0, 0, w, h); c.strokeStyle = '#A87A12'; c.lineWidth = 10; c.strokeRect(10, 10, w - 20, h - 20); c.fillStyle = '#7A1620'; c.font = "900 92px 'Arial Black'"; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('TIKET', w / 2, 80); c.font = "900 40px 'Arial Black'"; c.fillStyle = '#1B1B2F'; c.fillText('1 ORANG', w / 2, 148); c.font = "900 52px 'Arial Black'"; c.fillStyle = '#B3261E'; c.fillText('Rp35.000', w / 2, 208); c.fillStyle = '#A87A12'; for (let y = 22; y < h - 10; y += 22) c.fillRect(w - 76, y, 4, 12); }).t;
-    const tp = mesh(new THREE.BoxGeometry(1.8, 0.9, 0.04), [mat('#F7E7A9'), mat('#F7E7A9'), mat('#F7E7A9'), mat('#F7E7A9'), new THREE.MeshBasicMaterial({ map: face, toneMapped: false }), mat('#E9D58A')], 0, 0, 0, tk); tp.castShadow = false;
-    items.s3 = tk; g.userData.beam = new THREE.PointLight('#CFE8FF', 0, 30, 1.2); g.userData.beam.position.set(0, 3.2, -3); g.add(g.userData.beam); }
+    const mb = new THREE.Group(); g.add(mb);
+    mesh(new THREE.BoxGeometry(0.95, 1.2, 0.35), mat('#C9CED8', { roughness: 0.5 }), 0, 0, 0, mb); mesh(new THREE.BoxGeometry(0.75, 0.38, 0.05), mat('#102018'), 0, 0.3, 0.2, mb);
+    const dsp = tex(256, 96, (c, w, h) => { c.fillStyle = '#0B1A12'; c.fillRect(0, 0, w, h); c.fillStyle = '#6CFF9A'; c.font = "900 56px 'Arial Black'"; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('50.000', w / 2, h / 2 + 2); }).t;
+    const dp = mesh(new THREE.PlaneGeometry(0.7, 0.3), new THREE.MeshBasicMaterial({ map: dsp, toneMapped: false }), 0, 0.3, 0.23, mb); dp.castShadow = false;
+    for (let i = 0; i < 4; i++) mesh(new THREE.BoxGeometry(0.16, 0.1, 0.05), mat('#4A5160'), -0.3 + i * 0.2, -0.25, 0.2, mb);
+    { const sb = signBoard([['TOKEN LISTRIK', 46, '#B3261E'], ['Rp50.000', 62, '#1B1B2F']], 1.7, 0.62); sb.position.set(0, 0.92, 0.1); mb.add(sb); }
+    items.s3 = mb; const lamps = [];
+    for (const lx of [-2.3, 0.2, 2.6]) { mesh(new THREE.CylinderGeometry(0.06, 0.08, 3.6, 8), mat('#2A2F3C'), lx, 1.8, -3.2, g); const bulb = mesh(new THREE.SphereGeometry(0.22, 12, 10), bas('#FFE9A8'), lx + 0.35, 3.6, -3.2, g); bulb.visible = false; mesh(new THREE.BoxGeometry(0.8, 0.08, 0.08), mat('#2A2F3C'), lx + 0.18, 3.62, -3.2, g); const light = new THREE.PointLight('#FFD9A0', 0, 16, 1.4); light.position.set(lx + 0.35, 3.3, -2.6); g.add(light); lamps.push({ bulb, light }); }
+    g.userData.lamps = lamps; }
   // ---------- S4: sepatu (a pair of sneakers) + a road for the sprint
   { const g = new THREE.Group(); scene.add(g); S.s4 = g;
     const shoe = (x) => { const s = new THREE.Group(); s.position.x = x; g.add(s); mesh(new THREE.BoxGeometry(0.62, 0.16, 1.5), mat('#F4F4F4'), 0, 0.08, 0, s); const up = mesh(new THREE.SphereGeometry(0.4, 14, 10), mat('#FF3D5A'), 0, 0.3, 0.18, s); up.scale.set(0.85, 0.62, 1.25); mesh(new THREE.BoxGeometry(0.46, 0.05, 0.5), mat('#FFFFFF'), 0, 0.5, 0.2, s); return s; };
     const L = shoe(-0.45), R = shoe(0.45); items.s4 = [L, R];
-    { const sb = signBoard([['SEPATU LOKAL', 56, '#B3261E'], ['Rp80rb - 300rb', 52, '#1B1B2F']], 1.6, 0.58); sb.position.set(0.95, 1.0, 0.8); g.add(sb); mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.0, 8), mat('#6B4A2B'), 0.95, 0.5, 0.78, g); }
+    { const sb = signBoard([['SEPATU LOKAL', 56, '#B3261E'], ['Rp250.000', 62, '#1B1B2F']], 1.6, 0.58); sb.position.set(0.95, 1.0, 0.8); g.add(sb); mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.0, 8), mat('#6B4A2B'), 0.95, 0.5, 0.78, g); }
     for (let i = 0; i < 14; i++) { const m = mesh(new THREE.BoxGeometry(0.1, 0.02, 1.5), mat('#FFFFFF'), 0, 0.012, -i * 3 + 3, g); m.castShadow = false; g.userData['dash' + i] = m; } }
-  // ---------- S5: HP (a phone that spews notifications)
+  // ---------- S5: sepeda (Rp1.250.000): it rides across the frame, spins its bell, comes back and skids to a stop
   { const g = new THREE.Group(); scene.add(g); S.s5 = g;
-    const ph = new THREE.Group(); g.add(ph);
-    mesh(new THREE.BoxGeometry(1.0, 2.0, 0.12), mat('#1B1D2A', { roughness: 0.3 }), 0, 0, 0, ph);
-    const sc = tex(256, 512, (c, w, h) => { const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#5B8CFF'); gr.addColorStop(1, '#C65BFF'); c.fillStyle = gr; c.fillRect(0, 0, w, h); c.fillStyle = 'rgba(255,255,255,.9)'; c.font = "900 64px 'Arial Black'"; c.textAlign = 'center'; c.fillText('12:00', w / 2, 120); }).t;
-    const sp = mesh(new THREE.PlaneGeometry(0.88, 1.84), new THREE.MeshBasicMaterial({ map: sc, toneMapped: false }), 0, 0, 0.07, ph); sp.castShadow = false;
-    { const sb = signBoard([['HP ENTRY LEVEL', 44, '#2B4BD0'], ['Rp1,1 - 1,2 jt', 56, '#B3261E']], 1.3, 0.56); sb.position.set(0, -1.35, 0.1); ph.add(sb); }
-    items.s5 = ph; g.userData.notes = [];
-    const cols = ['#FF3D5A', '#2FCB68', '#FFB020', '#3D8BFF', '#C65BFF'];
-    for (let i = 0; i < 26; i++) { const T = tex(256, 128, (c, w, h) => { c.fillStyle = cols[i % 5]; c.beginPath(); c.roundRect(6, 6, w - 12, h - 12, 28); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(54, 64, 26, 0, 6.283); c.fill(); c.fillRect(100, 40, 110, 14); c.fillRect(100, 70, 76, 14); }); const p = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.6), new THREE.MeshBasicMaterial({ map: T.t, transparent: true, toneMapped: false })); p.castShadow = false; p.visible = false; scene.add(p); g.userData.notes.push(p); } }
+    const bk = new THREE.Group(); g.add(bk); g.userData.wheels = [];
+    const bar = (a, b, r, c) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy); const m = mesh(new THREE.CylinderGeometry(r, r, L, 8), mat(c), (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, 0, bk); m.rotation.z = Math.atan2(dx, -dy) * -1 + Math.PI; m.rotation.z = -Math.atan2(dx, dy); return m; };
+    for (const x of [-0.8, 0.8]) { const w = new THREE.Group(); w.position.set(x, 0.55, 0); bk.add(w); mesh(new THREE.TorusGeometry(0.55, 0.06, 10, 30), mat('#1B1B2F'), 0, 0, 0, w); mesh(new THREE.SphereGeometry(0.09, 10, 8), mat('#C9CED8'), 0, 0, 0, w); for (let k = 0; k < 6; k++) { const sp = mesh(new THREE.BoxGeometry(1.04, 0.018, 0.018), mat('#C9CED8'), 0, 0, 0, w); sp.rotation.z = k * Math.PI / 6; } g.userData.wheels.push(w); }
+    const red = '#E53935'; bar([-0.8, 0.55], [-0.15, 1.15], 0.05, red); bar([-0.15, 1.15], [0.62, 1.15], 0.05, red); bar([0.62, 1.15], [0.8, 0.55], 0.05, red); bar([-0.8, 0.55], [0.1, 0.55], 0.05, red); bar([0.1, 0.55], [-0.15, 1.15], 0.05, red); bar([0.1, 0.55], [0.62, 1.15], 0.05, red);
+    bar([0.62, 1.15], [0.55, 1.5], 0.04, '#222'); mesh(new THREE.BoxGeometry(0.1, 0.05, 0.6), mat('#222'), 0.55, 1.52, 0, bk); mesh(new THREE.BoxGeometry(0.42, 0.09, 0.2), mat('#222'), -0.2, 1.28, 0, bk);
+    const bell = mesh(new THREE.SphereGeometry(0.07, 10, 8), mat('#F5C518'), 0.55, 1.6, 0.15, bk);
+    items.s5 = bk; { const sb = signBoard([['SEPEDA', 52, '#B3261E'], ['Rp1.250.000', 56, '#1B1B2F']], 1.6, 0.58); sb.position.set(0.85, 1.95, 1.3); g.add(sb); g.userData.sign = sb; } }
 }
 build();
 const note = new THREE.Group(); scene.add(note);
@@ -204,8 +206,8 @@ const skid = mesh(new THREE.PlaneGeometry(1, 0.35), mat('#2B2B33'), -3.2, 0.02, 
 
 // ---- the story, scene by scene. A scene = TL.scenes[i]: { id, nominal, label, bar, bars }. The BIG hit is at beat 0 of its second half ("the kick").
 const SC = TL.scenes.map((s) => ({ ...s, t0: B(s.bar), t1: B(s.bar + s.bars), hit: B(s.bar + s.bars / 2), mid: B(s.bar, 2) }));
-const MOOD_OF = { s1: 'day', s2: 'gold', s3: 'dark', s4: 'day', s5: 'neon' };
-const FACE = { s1: ['determined', 'delighted'], s2: ['squint', 'panic'], s3: ['neutral', 'shocked'], s4: ['determined', 'laugh'], s5: ['neutral', 'surprised'] };
+const MOOD_OF = { s1: 'day', s2: 'gold', s3: 'dark', s4: 'day', s5: 'day' };
+const FACE = { s1: ['determined', 'delighted'], s2: ['squint', 'panic'], s3: ['neutral', 'surprised'], s4: ['determined', 'laugh'], s5: ['neutral', 'surprised'] };
 const cueDone = new Set();
 function cue(id, t, fn) { if (t >= 0 && !cueDone.has(id)) { cueDone.add(id); fn(); } }
 let shakeAmp = 0, shakeT = -9, flashT = -9, flashDur = 0.12, flashAmp = 0.5;
@@ -254,10 +256,11 @@ function stepFrame(f) {
     if (uh > 0.25) { const sl = clamp((uh - 0.25) / 0.8); ax = 0.5 * sl * Math.exp(-2.2 * sl); rz = -0.55 * Math.sin(sl * 3.14) * (1 - sl * 0.2); ay = 0.5 * Math.sin(clamp(sl) * 3.14) * (1 - sl); }
     else ay = 0.05 * Math.abs(Math.sin(u * 6));
   } else if (id === 's3') {
-    const tk = items.s3, scr = S.s3.userData.scr, bm = S.s3.userData.beam;
-    tk.position.set(0.8 - (uh > 0 ? 1.4 * ease(uh / 0.4) : 0), 1.85 + 0.07 * Math.sin(u * 4) - (uh > 0 ? 0.5 * ease(uh / 0.4) : 0), 1.2); tk.scale.setScalar(Math.max(0.001, popIn) * 0.78 * (uh > 0 ? 1 + 0.15 * ease(uh / 0.4) : 1)); tk.rotation.set(0, Math.sin(u * 2.6) * 0.25, Math.sin(u * 3) * 0.07);
-    const on = uh > 0 ? easeOut(uh / 0.25) : 0; scr.material.color.setScalar(0.25 + 0.75 * on); bm.intensity = 90 * on; const lvl = 0.18 + on * 2.6; sun.intensity = lvl;
-    if (uh > 0) { ax = -0.35 * Math.exp(-2.4 * uh); sy = 1 + 0.06 * Math.exp(-5 * uh) * Math.cos(uh * 22); }
+    const mb = items.s3, lamps = S.s3.userData.lamps; const on = uh > 0 ? easeOut(uh / 0.4) : 0;
+    mb.position.set(0.85, 1.05 + 0.06 * Math.sin(u * 4), 1.2); mb.scale.setScalar(Math.max(0.001, popIn) * 0.95 * (uh > 0 ? 1 + 0.1 * Math.exp(-6 * uh) * Math.cos(uh * 24) : 1)); mb.rotation.y = Math.sin(u * 2.6) * 0.18;
+    lamps.forEach((l, i2) => { const lit = uh > i2 * 0.14; l.bulb.visible = lit; l.light.intensity = lit ? 38 : 0; });
+    sky.material.map = on > 0.05 ? skyTex.night : skyTex.dark; ground.material.color.set(on > 0.05 ? MOODS.night[2] : MOODS.dark[2]); far.visible = on > 0.05; sun.intensity = lerp(0.35, 1.5, on);
+    if (uh > 0) { ay = 0.1 * Math.exp(-5 * uh) * Math.abs(Math.sin(uh * 16)); sy = 1 + 0.05 * Math.exp(-6 * uh) * Math.cos(uh * 20); sx = 2 - sy; } else ay = 0.04 * Math.abs(Math.sin(u * 6));
   } else if (id === 's4') {
     const [L, R] = items.s4; const run = uh > 0 ? uh : 0;
     L.position.set(HX - 0.45, 0.0, 1.3); R.position.set(HX + 0.45, 0.0, 1.3);
@@ -265,14 +268,13 @@ function stepFrame(f) {
     if (run > 0) { L.visible = R.visible = false; const out = run < 0.5 ? -Math.pow(run / 0.5, 2.2) * 6.5 : (run < 0.95 ? -6.5 : 6.5 * Math.pow(1 - clamp((run - 0.95) / 0.55), 2)); ax = out; ry = run < 0.95 ? -0.9 : 0.0; rz = 0.12 * Math.sin(run * 44) * (run < 1.5 ? 1 : 0); ay = run < 1.5 ? 0.2 * Math.abs(Math.sin(run * 36)) : 0; if (run > 1.5) { sy = 1 + 0.08 * Math.exp(-8 * (run - 1.5)) * Math.cos((run - 1.5) * 24); } }
     else { L.visible = R.visible = true; ay = 0; }
   } else if (id === 's5') {
-    const ph = items.s5, notes = S.s5.userData.notes;
-    ph.position.set(0.85, 1.7 + 0.05 * Math.sin(u * 4), 1.4); ph.scale.setScalar(Math.max(0.001, popIn) * 0.85 * (uh > 0 ? 1 + 0.4 * ease(uh / 0.5) : 1)); ph.rotation.set(0, Math.sin(u * 3) * 0.2, 0);
-    notes.forEach((p, i) => {
-      const dt = uh - i * 0.045; if (dt < 0 || uh < 0) { p.visible = false; return; }
-      const ang = (i * 2.399) % 6.283, r = easeOut(dt / 0.9) * (1.2 + (i % 5) * 0.55); p.visible = true;
-      p.position.set(ph.position.x + Math.cos(ang) * r * 0.9 - 0.2 * r, ph.position.y + Math.sin(ang) * r * 0.9, 1.8 + dt * 3.5); p.scale.setScalar(0.5 + dt * 1.4); p.rotation.z = (i % 2 ? 1 : -1) * dt * 0.8;
-    });
-    if (uh > 0) { camP.fov = 34 - 4 * easeOut(uh / 1.2); ay = 0.05 * Math.abs(Math.sin(u * 40)); sx = 1 + 0.03 * Math.sin(uh * 50) * Math.exp(-uh); } else ay = 0.04 * Math.abs(Math.sin(u * 6));
+    const bk = items.s5, wh = S.s5.userData.wheels; let bx = 0.85, spin = 0;
+    if (uh > 0) { if (uh < 0.8) bx = 0.85 - 7.2 * Math.pow(uh / 0.8, 2); else if (uh < 1.0) bx = -6.5; else bx = lerp(6.5, 0.85, easeOut(clamp((uh - 1.0) / 0.65))); }
+    bk.position.set(bx, 0, 1.7 - (uh > 0 && uh < 0.9 ? 0.5 : 0)); bk.scale.setScalar(Math.max(0.001, popIn) * 0.9); bk.rotation.z = (uh > 0.8 && uh < 1.65) ? 0.0 : (uh > 0 ? -0.06 : 0); spin = -bx * 2.2; wh.forEach((w) => { w.rotation.z = spin; });
+    S.s5.userData.sign.visible = !(uh > 0.05 && uh < 1.5); bk.position.y = uh > 0 ? 0.05 * Math.abs(Math.sin(uh * 30)) : 0.04 * Math.abs(Math.sin(u * 5));
+    if (uh > 0.8 && uh < 1.7) { camP.fov = 34; }
+    if (uh > 0) { ax = 0.15 * Math.exp(-3 * uh); sx = 1 + 0.03 * Math.sin(uh * 30) * Math.exp(-uh); }
+    if (uh > 1.65) { S.s5.userData.sign.visible = true; }
   }
   g.position.set(HX + ax, ay, az); g.rotation.z = rz; g.rotation.y = ry; g.scale.set(sx, sy, 1);
   ayam.lookAt?.(0, 0.1); // eyes toward the camera
@@ -301,9 +303,9 @@ function hit(id, sc, t) {   // the answer of the world (once per scene)
   const h = sc.hit;
   if (id === 's1') { burst(h, [HX + 0.4, 1.4, 1.4], 26, ['#FFC83D', '#E0952E', '#FFF3C4'], 4.2, 0.12, { life: 1.0 }); shake(h, 0.05); }
   if (id === 's2') { burst(h, [0.9, 0.7, 1.0], 28, ['#3DD672', '#B6FFD0', '#2FCB68'], 4.0, 0.14, { life: 1.2, g: 10 }); shake(h, 0.12); }
-  if (id === 's3') { burst(h, [0, 2.5, -3], 18, ['#FFFFFF', '#CFE8FF'], 5, 0.12, { g: 1, life: 1.2 }); shake(h, 0.18); }
+  if (id === 's3') { burst(h, [0.85, 1.5, 1.4], 26, ['#FFE9A8', '#FFFFFF', '#6CFF9A'], 4.5, 0.12, { g: 3, life: 1.2 }); shake(h, 0.1); flash(h, 0.18, 0.5); }
   if (id === 's4') { burst(h, [HX, 0.2, 0.9], 40, ['#E8D7B8', '#CDBA95', '#F5EDDC'], 5.5, 0.28, { g: 3, life: 1.2, up: 0.25 }); shake(h, 0.22); }
-  if (id === 's5') { burst(h, [0.85, 1.7, 1.6], 40, ['#FF3D5A', '#2FCB68', '#FFB020', '#3D8BFF', '#C65BFF'], 6, 0.14, { g: 2, life: 1.4 }); shake(h, 0.28); }
+  if (id === 's5') { burst(h, [0.4, 0.2, 1.4], 40, ['#E8D7B8', '#CDBA95', '#F5EDDC'], 5.5, 0.26, { g: 3, life: 1.2, up: 0.3 }); burst(h + 1.65, [0.85, 0.2, 1.4], 30, ['#E8D7B8', '#CDBA95', '#F5EDDC'], 4, 0.22, { g: 3, life: 1.0, up: 0.3 }); shake(h, 0.12); }
 }
 // a scene's previous number (for the roll)
 SC.forEach((s, i) => { s.prevNominal = i ? SC[i - 1].nominal : s.nominal; });
