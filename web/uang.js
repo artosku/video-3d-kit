@@ -145,7 +145,7 @@ const stall = (parent, x, z, sign) => {   // a small food cart
   for (const px of [-1.2, 1.2]) mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.2, 8), mat('#6B4A2B'), px, 1.6, 0.6, g);
   for (let i = 0; i < 6; i++) { const f = mesh(new THREE.SphereGeometry(0.17, 10, 8), mat('#D98A2B'), -0.8 + i * 0.32, 1.28, 0.1, g); f.scale.set(1.2, 0.8, 1); }
   mesh(new THREE.BoxGeometry(2.5, 0.08, 1.3), mat('#7A5230'), 0, 1.12, 0, g);
-  if (sign) { const sb = signBoard(sign, 2.1, 0.66); sb.position.set(0, 1.95, 0.84); g.add(sb); }
+  if (sign) { const sb = signBoard(sign, 2.1, 0.66); sb.position.set(0, 2.95, 0.5); g.add(sb); for (const px of [-0.8, 0.8]) mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.5, 8), mat('#6B4A2B'), px, 2.5, 0.5, g); }
   return g;
 };
 const items = {};   // hero props, by scene id
@@ -197,6 +197,10 @@ function build() {
     items.s5 = bk; { const sb = signBoard([['SEPEDA', 52, '#B3261E'], ['Rp1.250.000', 56, '#1B1B2F']], 1.6, 0.58); sb.position.set(0.85, 1.95, 1.3); g.add(sb); g.userData.sign = sb; } }
 }
 build();
+const crowd = [];
+{ const cols = ['#E8586B', '#4BA3E3', '#F2B134', '#7BC96F', '#B07CE8', '#F58F5C']; for (let i = 0; i < 8; i++) { const f = new THREE.Group(); scene.add(f); mesh(new THREE.CylinderGeometry(0.2, 0.26, 0.8, 10), mat(cols[i % 6]), 0, 0.5, 0, f); mesh(new THREE.SphereGeometry(0.21, 12, 10), mat('#F1C9A5'), 0, 1.12, 0, f); f.userData = { sp: 0.45 + 0.2 * (i % 3), off: i * 3.1, z: -5.4 - (i % 3) * 0.45, dir: i % 2 ? 1 : -1 }; crowd.push(f); } }
+// speed streaks glued to the camera (the sprint and the bike)
+const streaks = []; for (let i = 0; i < 16; i++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(HW * 0.55, 0.012), new THREE.MeshBasicMaterial({ color: '#FFFFFF', transparent: true, opacity: 0.55, toneMapped: false, depthTest: false })); m.renderOrder = 9; m.position.z = -HD * 0.98; m.visible = false; HUD.add(m); streaks.push(m); }
 const note = new THREE.Group(); scene.add(note);
 { const face = tex(640, 300, (g, w, h) => { const gr = g.createLinearGradient(0, 0, w, h); gr.addColorStop(0, '#B5BCC6'); gr.addColorStop(1, '#8F98A6'); g.fillStyle = gr; g.fillRect(0, 0, w, h); g.strokeStyle = '#5E6674'; g.lineWidth = 10; g.strokeRect(14, 14, w - 28, h - 28); g.fillStyle = 'rgba(255,255,255,0.25)'; g.beginPath(); g.arc(w - 150, h / 2, 90, 0, 6.283); g.fill(); g.fillStyle = '#2B3340'; g.font = "900 130px 'Arial Black'"; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('2.000', 250, h / 2 - 20); g.font = "900 40px 'Arial Black'"; g.fillText('DUA RIBU RUPIAH', 280, h - 60); }).t;
   const m = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.8, 0.03), [mat('#8F98A6'), mat('#8F98A6'), mat('#8F98A6'), mat('#8F98A6'), new THREE.MeshBasicMaterial({ map: face, toneMapped: false }), mat('#8F98A6')]); m.castShadow = false; note.add(m); }
@@ -236,7 +240,7 @@ function stepFrame(f) {
   if (!SC.length) return;
   // generic cues per scene (once each)
   const K = id + ':';
-  if (t >= sc.mid) cue(K + 'mid', 1, () => { ayam.setExpression(FACE[id][0], 8); });
+  if (t >= sc.mid) cue(K + 'mid', 1, () => { ayam.setExpression(FACE[id][0], 8); ayam.act('tilt', 0.6); });
   if (t >= sc.hit) cue(K + 'hit', 1, () => { ayam.setExpression(FACE[id][1], 6); hit(id, sc, t); });
   // ----- ayam transform and props
   const g = ayam.group; let ax = 0, ay = 0, az = 0, rz = 0, ry = 0, sx = 1, sy = 1;
@@ -244,7 +248,7 @@ function stepFrame(f) {
   const popIn = pop(u / 0.32);
   if (id === 's1') {
     const bw = items.s1; const prog = clamp((uh) / 0.5);
-    { const fly = uh > 0 ? easeOut(uh / 0.3) : 0; bw.position.set(lerp(0.85, HX + 0.15, fly), lerp(1.7 + 0.08 * Math.sin(u * 5), 1.35, fly), 1.2); bw.scale.setScalar(Math.max(0.001, popIn) * 0.8 * (uh > 0.3 ? Math.max(0.001, 1 - (uh - 0.3) / 0.3) : 1)); bw.rotation.z = Math.sin(u * 4) * 0.08; }
+    { const fly = uh > 0 ? easeOut(uh / 0.3) : 0; bw.position.set(lerp(0.85, HX + 0.15, fly), lerp(1.45 + 0.1 * Math.sin(u * 5), 1.35, fly), 1.2); bw.scale.setScalar(Math.max(0.001, popIn) * 0.8 * (uh > 0.3 ? Math.max(0.001, 1 - (uh - 0.3) / 0.3) : 1)); bw.rotation.z = Math.sin(u * 4) * 0.08; }
     ay = 0.06 * Math.abs(Math.sin(u * 6)); if (uh > 0) { sy = 1 - 0.12 * Math.exp(-6 * uh) * Math.cos(uh * 18); sx = 2 - sy; }
     S.s1.userData.cart.rotation.z = uh > 0 ? 0.08 * Math.exp(-4 * uh) * Math.sin(uh * 26) : 0; S.s1.userData.cart.position.y = uh > 0 ? 0.25 * Math.exp(-5 * uh) * Math.abs(Math.sin(uh * 16)) : 0;
   } else if (id === 's2') {
@@ -276,18 +280,28 @@ function stepFrame(f) {
     if (uh > 0) { ax = 0.15 * Math.exp(-3 * uh); sx = 1 + 0.03 * Math.sin(uh * 30) * Math.exp(-uh); }
     if (uh > 1.65) { S.s5.userData.sign.visible = true; }
   }
+  { const bp = Math.exp(-9 * ((((t - OFF) % BEAT) + BEAT) % BEAT)); sy *= 1 + 0.035 * bp; sx *= 1 - 0.015 * bp; }
   g.position.set(HX + ax, ay, az); g.rotation.z = rz; g.rotation.y = ry; g.scale.set(sx, sy, 1);
   ayam.lookAt?.(0, 0.1); // eyes toward the camera
   // ----- camera: slow push-in per scene, kick on the hit
-  const push = clamp(u / (sc.t1 - sc.t0)); const dist = camP.z - 1.4 * easeOut(push) - (uh > 0 ? 0.35 * Math.exp(-5 * uh) : 0);
+  const push = clamp(u / (sc.t1 - sc.t0)), Z0 = camP.z;
+  const cam = { x: 0, y: camP.y, z: Z0, lx: 0, ly: camP.ly, fov: camP.fov, roll: 0 };
+  if (id === 's1') { const p = uh > 0 ? Math.exp(-3.2 * uh) : 0; cam.z = Z0 - 2.2 * easeOut(push) - 2.4 * p; cam.x = -0.5 + 0.7 * push; cam.fov = 34 - 6 * p; cam.lx = -0.5 * p; cam.ly = lerp(camP.ly, 1.15, p); }
+  if (id === 's2') { cam.y = 0.9 + 0.8 * easeOut(push); cam.ly = 1.5; cam.z = Z0 - 1.0 * push; const sl = uh > 0.2 ? clamp((uh - 0.2) / 0.9) : 0; cam.roll = 0.09 * Math.sin(sl * Math.PI); cam.x = 0.4 * sl; }
+  if (id === 's3') { const p = uh > 0 ? easeOut(uh / 0.7) : 0; cam.z = Z0 - 0.8 + 3.0 * p; cam.y = camP.y + 1.0 * p; cam.fov = 32 + 4 * p; }
+  if (id === 's4') { cam.z = Z0 - 1.2 * easeOut(push); if (uh > 0 && uh < 1.0) { const p = clamp(uh / 0.5); cam.x = -2.6 * easeOut(p) * (uh < 0.6 ? 1 : 1 - clamp((uh - 0.6) / 0.4)); cam.fov = 34 + 3 * Math.sin(Math.min(1, uh) * Math.PI); } }
+  if (id === 's5') { const bxp = items.s5.position.x; cam.x = uh > 0 ? clamp(bxp * 0.5, -3.2, 1.5) * 0.7 : 0.2 * push; cam.lx = cam.x; cam.z = Z0 - 1.5 * easeOut(push); cam.roll = uh > 0 && uh < 0.9 ? -0.05 : 0; }
   let sxk = 0, syk = 0; { const s = t - shakeT; if (s >= 0 && s < 0.7) { const a = shakeAmp * Math.exp(-5 * s); sxk = Math.sin(s * 70) * a; syk = Math.cos(s * 83) * a * 0.7; } }
-  camera.position.set(camP.x + sxk, camP.y + syk, dist); camera.lookAt(0, camP.ly, 0); camera.fov = camP.fov; camera.updateProjectionMatrix();
+  camera.position.set(cam.x + sxk, cam.y + syk, cam.z); camera.lookAt(cam.lx, cam.ly, 0); camera.rotateZ(cam.roll); camera.fov = cam.fov; camera.updateProjectionMatrix();
+  HUD.scale.setScalar(Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) / Math.tan(THREE.MathUtils.degToRad(17))); HUD.rotation.z = -cam.roll;
+  { const on = (id === 's4' && uh > 0 && uh < 1.0) || (id === 's5' && uh > 0 && uh < 0.95); streaks.forEach((m, i2) => { m.visible = on; if (!on) return; const k = (t * 11 + i2 * 0.37) % 2.4; m.position.x = (k - 1.2) * HW; m.position.y = (((i2 * 0.6180339) % 1) - 0.5) * HH * 0.8; m.scale.x = 0.6 + 0.8 * ((i2 * 0.31) % 1); }); }
   // ----- hud
   const HOOK_END = SC[0].t0; const inHook = t < HOOK_END; hookP.visible = inHook; if (inHook) { drawHook(t); hookP.scale.setScalar(Math.max(0.01, pop(t / 0.35)) * (1 - 0.9 * clamp((t - (HOOK_END - 0.2)) / 0.2))); } nomP.visible = !inHook; lblP.visible = !inHook; fmP.visible = !inHook && SC.indexOf(sc) >= 1; for (const k of Object.keys(S)) S[k].visible = !inHook && k === id; ayam.group.visible = !inHook; car.visible = !inHook && id !== 's3';
   const nm = nominalAt(t); drawNominal(nm.v, nm.glow, nm.k < 1); const uN = u; const sNom = 1 + 0.18 * Math.exp(-9 * Math.max(0, uN)) * Math.cos(Math.max(0, uN) * 20); nomP.scale.setScalar(Math.max(0.5, sNom));
   drawLabel(sc, clamp((u - 0.2) / 0.15) * (1 - clamp((t - (sc.t1 - 0.1)) / 0.1))); if (!inHook && fmP.userData.lastScene !== sc.id) { fmP.userData.lastScene = sc.id; const ix = SC.indexOf(sc); if (ix >= 1) drawFormula(SC[ix - 1].nominal, sc.nominal); }
   { const tu = u - 0.0; if (tu >= 0 && tu < 0.9 && sc !== SC[0]) { drawTag('×5'); tagP.scale.setScalar(Math.max(0.01, pop(tu / 0.3))); tagP.visible = true; } else { tagP.visible = false; } }
   { const nu = t - SC[0].t0; note.visible = nu >= 0 && nu < 0.5; const fl = clamp((nu - 0.2) / 0.28); note.position.set(lerp(0.85, 1.2, easeOut(fl)), lerp(1.7, 1.3, easeOut(fl)) + 0.06 * Math.sin(t * 4), lerp(1.2, -2.2, easeOut(fl))); note.scale.setScalar(Math.max(0.001, 0.8 * pop(nu / 0.2) * (1 - fl * 0.85))); note.rotation.set(0, Math.sin(t * 2.4) * 0.2, Math.sin(t * 3) * 0.06 + fl * 1.5); }
+  crowd.forEach((f, i2) => { const d = f.userData; const x = ((((t * d.sp * d.dir + d.off) % 24) + 24) % 24) - 12; f.position.set(x, 0.05 * Math.abs(Math.sin(t * 9 + i2)) + (uh > 0 && uh < 0.7 ? 0.28 * Math.abs(Math.sin(uh * 14 + i2)) : 0), d.z); f.visible = !inHook && (id !== 's3' || uh > 0.2); });
   // environment that is always alive: a car crossing far behind, the skyline drifting, steam from the cart, skid marks after the sprint
   car.visible = !inHook && id !== 's3'; car.position.set(((t * 3.2 + 6) % 26) - 13, 0, -6.5); far.position.x = -0.12 * t;
   skid.visible = id === 's4' && uh > 0.05; if (skid.visible) { const k = easeOut(uh / 0.5); skid.scale.set(Math.max(0.01, 6.5 * k), 1, 1); skid.position.x = HX - 3.0 * k; skid.rotation.z = 0; }
@@ -300,7 +314,7 @@ function stepFrame(f) {
 }
 const registered = new Set();
 function hit(id, sc, t) {   // the answer of the world (once per scene)
-  const h = sc.hit;
+  const h = sc.hit; const A = { s1: 'nod', s2: 'panic', s3: 'wings_up', s4: 'cheer', s5: 'jolt' }; ayam.act(A[id], 0.9);
   if (id === 's1') { burst(h, [HX + 0.4, 1.4, 1.4], 26, ['#FFC83D', '#E0952E', '#FFF3C4'], 4.2, 0.12, { life: 1.0 }); shake(h, 0.05); }
   if (id === 's2') { burst(h, [0.9, 0.7, 1.0], 28, ['#3DD672', '#B6FFD0', '#2FCB68'], 4.0, 0.14, { life: 1.2, g: 10 }); shake(h, 0.12); }
   if (id === 's3') { burst(h, [0.85, 1.5, 1.4], 26, ['#FFE9A8', '#FFFFFF', '#6CFF9A'], 4.5, 0.12, { g: 3, life: 1.2 }); shake(h, 0.1); flash(h, 0.18, 0.5); }
